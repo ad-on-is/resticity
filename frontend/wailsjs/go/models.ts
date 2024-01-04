@@ -1,8 +1,14 @@
 export namespace main {
 	
+	export interface BackupJob {
+	    backup_id: string;
+	    repository_id: string;
+	    job_id: number[];
+	}
 	export interface Settings {
 	    repositories: restic.Repository[];
 	    backups: restic.Backup[];
+	    schedules: restic.Schedule[];
 	}
 
 }
@@ -34,6 +40,12 @@ export namespace restic {
 	    password: string;
 	    // Go type: Options
 	    options: any;
+	}
+	export interface Schedule {
+	    backup_id: string;
+	    to_repository_id: string;
+	    from_repository_id: string;
+	    cron: string;
 	}
 	export interface Snapshot {
 	    id: string;

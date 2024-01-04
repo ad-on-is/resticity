@@ -19,6 +19,9 @@
 			<div class="p-5">
 				<h3 class="m-0 text-info"><FaIcon icon="folder-open" class="mr-2" />{{ backup.name }}</h3>
 				<p class="text-sm">{{ backup.path }}</p>
+				<div class="flex animate-pulse" v-if="useJobs().backupIsRunning(backup.id)">
+					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Backup running</span>
+				</div>
 			</div>
 		</NuxtLink>
 	</div>

@@ -1,6 +1,6 @@
 <template>
 	<div class="collapse bg-base-200 mb-5">
-		<input type="radio" name="backup-accordion" />
+		<input type="radio" name="backup-accordion" checked />
 		<h3 class="collapse-title m-0 text-error"><FaIcon icon="folder-minus" class="mr-2" />Exclude</h3>
 		<div class="collapse-content">
 			<div class="grid grid-cols-2 gap-10">
@@ -44,13 +44,41 @@
 </template>
 
 <script lang="ts" setup>
-	const filesAndFolders = ref('')
-	const ifPresent = ref('')
-	const listedInFiles = ref('')
-	const cacheDir = ref(false)
-	const largerThan = ref(0)
-	const largerThanUnit = ref('K')
+	const props = defineProps({
+		excludes: {
+			default: [[]],
+		},
+	})
+
+	const filesAndFolders = ref(fromPropsArray('--exclude'))
+	const ifPresent = ref(fromPropsArray('--exclude-if-present'))
+	const listedInFiles = ref(fromPropsArray('--exclude-file'))
+	const cacheDir = ref(props.excludes.some((e) => e[0] === '--exclude-caches'))
+	const largerThan = ref(fromPropsArray('--exclude-if-larger-than', '').replace(/[^0-9]/g, '') || 0)
+	const largerThanUnit = ref(fromPropsArray('--exclude-if-larger-than', '').replace(/[0-9]/g, '') || 'K')
 	const emit = defineEmits(['update'])
+
+	// onMounted(() => {
+	//
+	// 	listedInFiles.value = props.excludes
+	// 		.filter((e) => e[0] === '--exclude-file')
+	// 		.map((e) => e[1])
+	// 		.join('\n')
+	// 	cacheDir.value = props.excludes.some((e) => e[0] === '--exclude-caches')
+	// 	largerThan.value =
+	// 		parseInt(
+	// 			props.excludes
+	// 				.filter((e) => e[0] === '--exclude-if-larger-than')
+	// 				.map((e) => e[1])
+	// 				.join('')
+	// 				.replace(/[^0-9]/g, '')
+	// 		) || 0
+	// 	largerThanUnit.value = props.excludes
+	// 		.filter((e) => e[0] === '--exclude-if-larger-than')
+	// 		.map((e) => e[1])
+	// 		.join('')
+	// 		.replace(/[0-9]/g, '')
+	// })
 
 	function toParamArray(str: string, param: string): any {
 		return str
@@ -60,13 +88,20 @@
 			.map((f) => [param, f])
 	}
 
+	function fromPropsArray(param: string, j: string = '\n'): string {
+		return props.excludes
+			.filter((e) => e[0] === param)
+			.map((e) => e[1])
+			.join(j)
+	}
+
 	watch([filesAndFolders, ifPresent, listedInFiles, cacheDir, largerThan, largerThanUnit], () => {
 		emit('update', [
 			...toParamArray(filesAndFolders.value, '--exclude'),
 			...toParamArray(ifPresent.value, '--exclude-if-present'),
 			...toParamArray(listedInFiles.value, '--exclude-file'),
 			...(cacheDir.value ? [['--exclude-caches', '']] : []),
-			...(largerThan.value > 0 ? [['--exclude-if-larger-than', `${largerThan.value}${largerThanUnit.value}`]] : []),
+			...(parseInt(largerThan.value as string) > 0 ? [['--exclude-if-larger-than', `${largerThan.value}${largerThanUnit.value}`]] : []),
 		])
 	})
 </script>

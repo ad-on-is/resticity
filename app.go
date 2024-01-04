@@ -8,23 +8,35 @@ import (
 	"log"
 	"os"
 	"resticity/restic"
+	"sync"
+	"time"
 
 	"github.com/adrg/xdg"
 	"github.com/energye/systray"
 	"github.com/energye/systray/icon"
 	"github.com/go-co-op/gocron/v2"
+	"github.com/google/uuid"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
-	ctx       context.Context
-	scheduler gocron.Scheduler
+	ctx         context.Context
+	jmu         sync.Mutex
+	scheduler   gocron.Scheduler
+	runningJobs []BackupJob
+}
+
+type BackupJob struct {
+	BackupId     string    `json:"backup_id"`
+	RepositoryId string    `json:"repository_id"`
+	JobId        uuid.UUID `json:"job_id"`
 }
 
 type Settings struct {
 	Repositories []restic.Repository `json:"repositories"`
 	Backups      []restic.Backup     `json:"backups"`
+	Schedules    []restic.Schedule   `json:"schedules"`
 }
 
 func settingsFile() string {
@@ -57,17 +69,18 @@ func (a *App) systemTray() {
 	fmt.Println(len(ico))
 
 	systray.SetTitle("resticity")
-	systray.SetTooltip("yeaaah baby")
+	systray.SetTooltip("Resticity")
 
-	show := systray.AddMenuItem("Show", "Show The Window")
+	show := systray.AddMenuItem("Open resticity", "Show the main window")
 	systray.AddSeparator()
-	// exit := systray.AddMenuItem("Exit", "Quit The Program")cd
+
+	exit := systray.AddMenuItem("Quit", "Quit resticity")
 
 	show.Click(func() {
 
-		runtime.WindowToggleMaximise(a.ctx)
+		runtime.WindowShow(a.ctx)
 	})
-	// exit.Click(func() { os.Exit(0) })
+	exit.Click(func() { os.Exit(0) })
 
 	systray.SetOnClick(func(menu systray.IMenu) { runtime.WindowShow(a.ctx) })
 	// systray.SetOnRClick(func(menu systray.IMenu) { menu.ShowMenu() })
@@ -92,8 +105,11 @@ func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
+func (a *App) GetBackupJobs() []BackupJob {
+	return a.runningJobs
+}
+
 func (a *App) Snapshots(id string) []restic.Snapshot {
-	fmt.Println("IIIID", id)
 	s := GetSettings()
 	var r *restic.Repository
 	for i := range s.Repositories {
@@ -114,7 +130,7 @@ func (a *App) Settings() Settings {
 }
 
 func (a *App) SaveSettings(data Settings) {
-
+	a.RescheduleBackups()
 	fmt.Println("Saving settings")
 	if str, err := json.MarshalIndent(data, " ", " "); err == nil {
 		fmt.Println("Settings saved")
@@ -128,19 +144,15 @@ func (a *App) SaveSettings(data Settings) {
 	}
 }
 
+func (a *App) StopBackup(id uuid.UUID) {
+	a.scheduler.RemoveJob(id)
+	a.RescheduleBackups()
+}
+
 func (a *App) RescheduleBackups() {
 	s := GetSettings()
-	for b := range s.Backups {
-		var job gocron.Job
-		for j := range a.scheduler.Jobs() {
-			if a.scheduler.Jobs()[j].Name() == s.Backups[b].Name {
-				job = a.scheduler.Jobs()[j]
-				break
-			}
-		}
-		if job != nil {
-			a.scheduler.RemoveJob(job.ID())
-		}
+	for _, b := range s.Backups {
+
 		// todo: run missed backups
 		/*
 			- get last snapshot
@@ -148,14 +160,80 @@ func (a *App) RescheduleBackups() {
 			- compare last snapshot date with cron date and job.NextRun()
 		*/
 
-		a.scheduler.NewJob(
-			gocron.CronJob("*/1 * * * *", false),
-			gocron.NewTask(func(backup restic.Backup) {
-				log.Print("doing job", backup.Name)
-			}, s.Backups[b]),
-			gocron.WithTags("backup", "bdonis"),
-			gocron.WithName(s.Backups[b].Name),
-		)
+		for _, t := range b.Targets {
+
+			jobName := "BACKUP-" + b.Id + "-TARGET-" + t
+			var job gocron.Job
+			for j := range a.scheduler.Jobs() {
+				if a.scheduler.Jobs()[j].Name() == jobName {
+					job = a.scheduler.Jobs()[j]
+					break
+				}
+			}
+			if job != nil {
+				a.scheduler.RemoveJob(job.ID())
+			}
+			if b.Cron == "" {
+				continue
+			}
+			a.scheduler.NewJob(
+				gocron.CronJob(b.Cron, false),
+				gocron.NewTask(func(backup restic.Backup) {
+					// actual backup
+					log.Print("doing job", backup.Name)
+					time.Sleep(30 * time.Second)
+				}, b),
+				gocron.WithTags("backup:"+b.Id, "repository:"+t),
+				gocron.WithName(jobName),
+				gocron.WithEventListeners(
+					gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
+						a.jmu.Lock()
+						defer a.jmu.Unlock()
+						a.runningJobs = append(
+							a.runningJobs,
+							BackupJob{
+								BackupId:     b.Id,
+								RepositoryId: t,
+								JobId:        jobID,
+							},
+						)
+					}),
+					gocron.AfterJobRuns(
+						func(jobID uuid.UUID, jobName string) {
+							a.jmu.Lock()
+							defer a.jmu.Unlock()
+							for i := range a.runningJobs {
+								if a.runningJobs[i].BackupId == b.Id &&
+									a.runningJobs[i].RepositoryId == t {
+									a.runningJobs = append(
+										a.runningJobs[:i],
+										a.runningJobs[i+1:]...)
+									break
+								}
+							}
+							// do something after the job completes
+
+						},
+					),
+					gocron.AfterJobRunsWithError(
+						func(jobID uuid.UUID, jobName string, err error) {
+							a.jmu.Lock()
+							defer a.jmu.Unlock()
+							for i := range a.runningJobs {
+								if a.runningJobs[i].BackupId == b.Id &&
+									a.runningJobs[i].RepositoryId == t {
+									a.runningJobs = append(
+										a.runningJobs[:i],
+										a.runningJobs[i+1:]...)
+									break
+								}
+							}
+						},
+					),
+				),
+			)
+		}
+
 	}
 
 }

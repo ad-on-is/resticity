@@ -6,3 +6,7 @@
 		</div>
 	</div>
 </template>
+
+<script lang="ts" setup>
+	useJobs().init()
+</script>

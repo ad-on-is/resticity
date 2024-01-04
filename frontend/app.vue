@@ -8,7 +8,6 @@
 
 <script setup lang="ts">
 	onMounted(() => {
-		console.log('MOUNTED')
 		useSettings().init()
 	})
 </script>

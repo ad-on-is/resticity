@@ -14,7 +14,7 @@
 						<NuxtLink to="/backups" :class="useRoute().path.includes('backups') ? 'active' : ''"><FaIcon icon="fa-upload" />Backups</NuxtLink>
 					</li>
 					<li>
-						<NuxtLink to="/settings"><FaIcon icon="fa-gears" />Settings</NuxtLink>
+						<NuxtLink to="/schedules" :class="useRoute().path.includes('schedules') ? 'active' : ''"><FaIcon icon="clock" />Schedules</NuxtLink>
 					</li>
 				</ul>
 			</div>

@@ -82,6 +82,13 @@ type Backup struct {
 	Targets      []string   `json:"targets"`
 }
 
+type Schedule struct {
+	BackupId         string `json:"backup_id"`
+	ToRepositoryId   string `json:"to_repository_id"`
+	FromRepositoryId string `json:"from_repository_id"`
+	Cron             string `json:"cron"`
+}
+
 func core(r Repository, cmd ...string) (string, error) {
 	var errb bytes.Buffer
 	cmds := []string{"-r", r.Path, "--json"}

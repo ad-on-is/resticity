@@ -6,6 +6,10 @@ export function CheckRepository(arg1) {
   return window['go']['main']['App']['CheckRepository'](arg1);
 }
 
+export function GetBackupJobs() {
+  return window['go']['main']['App']['GetBackupJobs']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
@@ -32,4 +36,8 @@ export function Settings() {
 
 export function Snapshots(arg1) {
   return window['go']['main']['App']['Snapshots'](arg1);
+}
+
+export function StopBackup(arg1) {
+  return window['go']['main']['App']['StopBackup'](arg1);
 }
