@@ -22,6 +22,9 @@
 				<div class="flex animate-pulse" v-if="useJobs().repoIsRunning(repo.id)">
 					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Backup running</span>
 				</div>
+				<div class="flex animate-pulse" v-if="useJobs().repoIsSynching(repo.id)">
+					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Sync running</span>
+				</div>
 			</div>
 		</NuxtLink>
 	</div>

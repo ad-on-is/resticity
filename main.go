@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"embed"
+	"fmt"
 
 	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
@@ -12,13 +15,30 @@ import (
 var assets embed.FS
 
 func main() {
+	var errb bytes.Buffer
+	var outb bytes.Buffer
+	restic := NewRestic(&errb, &outb)
+	settings := NewSettings()
+	if scheduler, err := NewScheduler(settings, restic); err == nil {
+		scheduler.RescheduleBackups()
+		go RunServer(scheduler, restic, settings, &errb, &outb)
+		Desktop(scheduler, restic, settings)
+	} else {
+		fmt.Println("SCHEDULER ERROR", err)
+	}
+
+}
+
+func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings) {
 	// Create an instance of the app structure
-	app := NewApp()
+	app := NewApp(restic, scheduler, settings)
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "resticity",
-		Width:  1024,
-		Height: 768,
+		Title:             "resticity",
+		Width:             1024,
+		Height:            768,
+		HideWindowOnClose: true,
+		LogLevel:          logger.ERROR,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

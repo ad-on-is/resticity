@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	ssr: false,
-	modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
+	modules: ['@pinia/nuxt', '@nuxt/ui'],
 	devtools: { enabled: true },
 	nitro: { static: true },
 

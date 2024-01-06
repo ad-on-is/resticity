@@ -10,28 +10,12 @@ export function GetBackupJobs() {
   return window['go']['main']['App']['GetBackupJobs']();
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
-}
-
 export function InitializeRepository(arg1) {
   return window['go']['main']['App']['InitializeRepository'](arg1);
 }
 
-export function RescheduleBackups() {
-  return window['go']['main']['App']['RescheduleBackups']();
-}
-
-export function SaveSettings(arg1) {
-  return window['go']['main']['App']['SaveSettings'](arg1);
-}
-
 export function SelectDirectory(arg1) {
   return window['go']['main']['App']['SelectDirectory'](arg1);
-}
-
-export function Settings() {
-  return window['go']['main']['App']['Settings']();
 }
 
 export function Snapshots(arg1) {

@@ -9,6 +9,7 @@
 <script setup lang="ts">
 	onMounted(() => {
 		useSettings().init()
+		useSocket().init()
 	})
 </script>
 

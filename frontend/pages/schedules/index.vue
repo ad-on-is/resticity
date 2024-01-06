@@ -1,6 +1,3 @@
 <template>
-	<div>
-		<h1>Schedules</h1>
-		<BackupTargets />
-	</div>
+	<div><ScheduleList /></div>
 </template>

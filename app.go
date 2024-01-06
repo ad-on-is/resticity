@@ -2,64 +2,31 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"os"
-	"resticity/restic"
-	"sync"
-	"time"
 
-	"github.com/adrg/xdg"
 	"github.com/energye/systray"
 	"github.com/energye/systray/icon"
-	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
-	ctx         context.Context
-	jmu         sync.Mutex
-	scheduler   gocron.Scheduler
-	runningJobs []BackupJob
+	ctx       context.Context
+	scheduler *Scheduler
+	restic    *Restic
+	settings  *Settings
 }
 
 type BackupJob struct {
-	BackupId     string    `json:"backup_id"`
-	RepositoryId string    `json:"repository_id"`
-	JobId        uuid.UUID `json:"job_id"`
-}
-
-type Settings struct {
-	Repositories []restic.Repository `json:"repositories"`
-	Backups      []restic.Backup     `json:"backups"`
-	Schedules    []restic.Schedule   `json:"schedules"`
-}
-
-func settingsFile() string {
-	return xdg.ConfigHome + "/resticity.json"
-}
-
-func GetSettings() Settings {
-	data := Settings{}
-	if file, err := os.Open(settingsFile()); err == nil {
-		if str, err := io.ReadAll(file); err == nil {
-			if err := json.Unmarshal([]byte(str), &data); err == nil {
-				return data
-			}
-		}
-	} else {
-		fmt.Println("error", err)
-	}
-	return data
+	JobId    uuid.UUID `json:"job_id"`
+	Schedule Schedule  `json:"schedule"`
 }
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
+func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings) *App {
+	return &App{restic: restic, scheduler: scheduler, settings: settings}
 }
 
 func (a *App) systemTray() {
@@ -92,26 +59,16 @@ func (a *App) systemTray() {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	go systray.Run(a.systemTray, func() {})
-	if s, err := gocron.NewScheduler(); err == nil {
-		go s.Start()
-		a.scheduler = s
-		a.RescheduleBackups()
-	}
 
-}
-
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
 func (a *App) GetBackupJobs() []BackupJob {
-	return a.runningJobs
+	return a.scheduler.RunningJobs
 }
 
-func (a *App) Snapshots(id string) []restic.Snapshot {
-	s := GetSettings()
-	var r *restic.Repository
+func (a *App) Snapshots(id string) []Snapshot {
+	s := a.settings.Config
+	var r *Repository
 	for i := range s.Repositories {
 		if s.Repositories[i].Id == id {
 			r = &s.Repositories[i]
@@ -119,132 +76,24 @@ func (a *App) Snapshots(id string) []restic.Snapshot {
 	}
 	fmt.Println(r)
 	if r != nil {
-		return restic.Snapshots(*r)
+		return a.restic.Snapshots(*r)
 	}
-	return []restic.Snapshot{}
+	return []Snapshot{}
 
-}
-
-func (a *App) Settings() Settings {
-	return GetSettings()
-}
-
-func (a *App) SaveSettings(data Settings) {
-	a.RescheduleBackups()
-	fmt.Println("Saving settings")
-	if str, err := json.MarshalIndent(data, " ", " "); err == nil {
-		fmt.Println("Settings saved")
-		if err := os.WriteFile(settingsFile(), str, 0644); err != nil {
-			fmt.Println("error", err)
-		} else {
-			a.RescheduleBackups()
-		}
-	} else {
-		fmt.Println("error", err)
-	}
 }
 
 func (a *App) StopBackup(id uuid.UUID) {
-	a.scheduler.RemoveJob(id)
-	a.RescheduleBackups()
+	// a.scheduler.RemoveJob(id)
+	// a.RescheduleBackups()
 }
 
-func (a *App) RescheduleBackups() {
-	s := GetSettings()
-	for _, b := range s.Backups {
-
-		// todo: run missed backups
-		/*
-			- get last snapshot
-			- parse cron as date/duration whatever
-			- compare last snapshot date with cron date and job.NextRun()
-		*/
-
-		for _, t := range b.Targets {
-
-			jobName := "BACKUP-" + b.Id + "-TARGET-" + t
-			var job gocron.Job
-			for j := range a.scheduler.Jobs() {
-				if a.scheduler.Jobs()[j].Name() == jobName {
-					job = a.scheduler.Jobs()[j]
-					break
-				}
-			}
-			if job != nil {
-				a.scheduler.RemoveJob(job.ID())
-			}
-			if b.Cron == "" {
-				continue
-			}
-			a.scheduler.NewJob(
-				gocron.CronJob(b.Cron, false),
-				gocron.NewTask(func(backup restic.Backup) {
-					// actual backup
-					log.Print("doing job", backup.Name)
-					time.Sleep(30 * time.Second)
-				}, b),
-				gocron.WithTags("backup:"+b.Id, "repository:"+t),
-				gocron.WithName(jobName),
-				gocron.WithEventListeners(
-					gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
-						a.jmu.Lock()
-						defer a.jmu.Unlock()
-						a.runningJobs = append(
-							a.runningJobs,
-							BackupJob{
-								BackupId:     b.Id,
-								RepositoryId: t,
-								JobId:        jobID,
-							},
-						)
-					}),
-					gocron.AfterJobRuns(
-						func(jobID uuid.UUID, jobName string) {
-							a.jmu.Lock()
-							defer a.jmu.Unlock()
-							for i := range a.runningJobs {
-								if a.runningJobs[i].BackupId == b.Id &&
-									a.runningJobs[i].RepositoryId == t {
-									a.runningJobs = append(
-										a.runningJobs[:i],
-										a.runningJobs[i+1:]...)
-									break
-								}
-							}
-							// do something after the job completes
-
-						},
-					),
-					gocron.AfterJobRunsWithError(
-						func(jobID uuid.UUID, jobName string, err error) {
-							a.jmu.Lock()
-							defer a.jmu.Unlock()
-							for i := range a.runningJobs {
-								if a.runningJobs[i].BackupId == b.Id &&
-									a.runningJobs[i].RepositoryId == t {
-									a.runningJobs = append(
-										a.runningJobs[:i],
-										a.runningJobs[i+1:]...)
-									break
-								}
-							}
-						},
-					),
-				),
-			)
-		}
-
-	}
-
-}
-
-func (a *App) CheckRepository(r restic.Repository) string {
+func (a *App) CheckRepository(r Repository) string {
 	files, err := os.ReadDir(r.Path)
 	if err != nil {
 		return err.Error()
 	}
 	if len(files) > 0 {
-		if err := restic.Check(r); err != nil {
+		if err := a.restic.Check(r); err != nil {
 			return err.Error()
 		} else {
 			return "REPO_OK_EXISTING"
@@ -254,8 +103,8 @@ func (a *App) CheckRepository(r restic.Repository) string {
 	return "REPO_OK_EMPTY"
 }
 
-func (a *App) InitializeRepository(r restic.Repository) string {
-	if err := restic.Initialize(r); err != nil {
+func (a *App) InitializeRepository(r Repository) string {
+	if err := a.restic.Initialize(r); err != nil {
 		return err.Error()
 	}
 

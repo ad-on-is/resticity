@@ -7,36 +7,31 @@
 				<div>
 					<h4 class="text-primary">Files and Folders</h4>
 					<p class="opacity-50">Pattern for files and folders to exclude. One per line.</p>
-					<textarea class="textarea textarea-bordered w-full h-32" placeholder="foo/**/bar" v-model="filesAndFolders"></textarea>
+					<UTextarea :rows="7" placeholder="foo/**/bar" v-model="filesAndFolders"></UTextarea>
 					<h4 class="text-primary">File</h4>
 					<p class="opacity-50">Exclude items listed in specific files.</p>
-					<textarea class="textarea textarea-bordered w-full h-32" placeholder="exclude.txt" v-model="listedInFiles"></textarea>
+					<UTextarea :padded="true" :rows="7" placeholder="exclude.txt" v-model="listedInFiles"></UTextarea>
 				</div>
 				<div>
 					<h4 class="text-primary">Exclude if present</h4>
 					<p class="opacity-50">Excludes a folder if it contains any of these files.</p>
-					<textarea class="textarea textarea-bordered w-full h-32" placeholder=".nobackup" v-model="ifPresent"></textarea>
-					<div class="form-control">
-						<label class="cursor-pointer label justify-normal">
-							<input type="checkbox" class="checkbox checkbox-info mr-3" v-model="cacheDir" />
-							<span class="label-text"
+					<UTextarea :rows="7" placeholder=".nobackup" v-model="ifPresent"></UTextarea>
+					<UCheckbox v-model="cacheDir" class="mt-5 mb-5">
+						<template #label>
+							<span
 								>Exclude if
 								<code class="text-warning">CACHEDIR.TAG</code>
 								file is present</span
 							>
-						</label>
-					</div>
+						</template>
+					</UCheckbox>
+
 					<h4 class="text-primary">Exclude files larger than</h4>
 					<p class="opacity-50">Exclude files if they exceed a specific file size</p>
-					<div class="join">
-						<input class="input input-bordered join-item input-sm w-32" placeholder="0" v-model="largerThan" />
-						<select class="select select-bordered select-sm join-item w-32" v-model="largerThanUnit">
-							<option value="K" selected>KiB</option>
-							<option value="M">MiB</option>
-							<option value="G">GiB</option>
-							<option value="T">TiB</option>
-						</select>
-					</div>
+					<UButtonGroup>
+						<UInput v-model="largerThan" type="number" placeholder="0" />
+						<USelect v-model="largerThanUnit" :options="units" option-attribute="name" class="w-20"></USelect>
+					</UButtonGroup>
 				</div>
 			</div>
 		</div>
@@ -49,6 +44,13 @@
 			default: [[]],
 		},
 	})
+
+	const units = [
+		{ name: 'KiB', value: 'K' },
+		{ name: 'MiB', value: 'M' },
+		{ name: 'GiB', value: 'G' },
+		{ name: 'TiB', value: 'T' },
+	]
 
 	const filesAndFolders = ref(fromPropsArray('--exclude'))
 	const ifPresent = ref(fromPropsArray('--exclude-if-present'))

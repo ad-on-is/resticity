@@ -25,6 +25,8 @@
     "@fortawesome/free-regular-svg-icons": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/vue-fontawesome": "^3.0.5",
+    "@iconify-json/fa6-regular": "^1.1.18",
+    "@iconify-json/logos": "^1.1.42",
     "@nuxt/ui": "^2.11.1",
     "@pinia/nuxt": "^0.5.1",
     "@tailwindcss/typography": "^0.5.10",

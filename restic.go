@@ -1,14 +1,27 @@
-package restic
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"time"
 
 	"github.com/go-errors/errors"
 	"github.com/labstack/gommon/log"
 )
+
+type Restic struct {
+	errb *bytes.Buffer
+	outb *bytes.Buffer
+}
+
+func NewRestic(outb *bytes.Buffer, errb *bytes.Buffer) *Restic {
+	r := &Restic{}
+	r.errb = errb
+	r.outb = outb
+	return r
+}
 
 type B2Options struct {
 	B2AccountId  string `json:"b2_account_id"`
@@ -37,29 +50,6 @@ const (
 	GOOGLE RepositoryType = iota
 )
 
-type Param struct {
-	k string
-	v string
-}
-
-type BackupParam struct {
-	Param
-}
-
-type PruneParam struct {
-	Param
-}
-
-type Repository struct {
-	Id          string         `json:"id"`
-	Name        string         `json:"name"`
-	Type        RepositoryType `json:"type"`
-	PruneParams []Param        `json:"prune_params"`
-	Path        string         `json:"path"`
-	Password    string         `json:"password"`
-	Options     Options        `json:"options"`
-}
-
 type Snapshot struct {
 	Id             string   `json:"id"`
 	Time           string   `json:"time"`
@@ -73,34 +63,19 @@ type Snapshot struct {
 	ProgramVersion string   `json:"program_version"`
 }
 
-type Backup struct {
-	Id           string     `json:"id"`
-	Path         string     `json:"path"`
-	Name         string     `json:"name"`
-	Cron         string     `json:"cron"`
-	BackupParams [][]string `json:"backup_params"`
-	Targets      []string   `json:"targets"`
-}
+func (r *Restic) core(repository Repository, cmd ...string) (string, error) {
 
-type Schedule struct {
-	BackupId         string `json:"backup_id"`
-	ToRepositoryId   string `json:"to_repository_id"`
-	FromRepositoryId string `json:"from_repository_id"`
-	Cron             string `json:"cron"`
-}
-
-func core(r Repository, cmd ...string) (string, error) {
-	var errb bytes.Buffer
-	cmds := []string{"-r", r.Path, "--json"}
+	cmds := []string{"-r", repository.Path, "--json"}
 	cmds = append(cmds, cmd...)
 	c := exec.Command("/usr/bin/restic", cmds...)
-	c.Stderr = &errb
-	c.Env = append(c.Env, "RESTIC_PASSWORD="+r.Password)
+	c.Stderr = r.errb
+	c.Stdout = r.outb
+	c.Env = append(c.Env, "RESTIC_PASSWORD="+repository.Password)
 	log.Print(c.Env)
 
 	if out, err := c.Output(); err != nil {
-		fmt.Println(errb.String())
-		return "", errors.New(errb.String())
+		fmt.Println(r.errb.String())
+		return "", errors.New(r.errb.String())
 	} else {
 		fmt.Println(string(out))
 		return string(out), nil
@@ -108,22 +83,22 @@ func core(r Repository, cmd ...string) (string, error) {
 
 }
 
-func Check(r Repository) error {
-	if _, err := core(r, "check"); err != nil {
+func (r *Restic) Check(repository Repository) error {
+	if _, err := r.core(repository, "check"); err != nil {
 		return err
 	}
 	return nil
 }
 
-func Initialize(r Repository) error {
-	if _, err := core(r, "init"); err != nil {
+func (r *Restic) Initialize(repository Repository) error {
+	if _, err := r.core(repository, "init"); err != nil {
 		return err
 	}
 	return nil
 }
 
-func Snapshots(r Repository) []Snapshot {
-	if res, err := core(r, "snapshots"); err == nil {
+func (r *Restic) Snapshots(repository Repository) []Snapshot {
+	if res, err := r.core(repository, "snapshots"); err == nil {
 		var data []Snapshot
 		if err := json.Unmarshal([]byte(res), &data); err == nil {
 			return data
@@ -131,4 +106,10 @@ func Snapshots(r Repository) []Snapshot {
 	}
 
 	return []Snapshot{}
+}
+
+func (r *Restic) RunBackup(backup Backup, toRepository Repository, fromRepository Repository) {
+	fmt.Println("RUNNING BACKUP")
+	time.Sleep(30 * time.Second)
+	// r.Snapshots(toRepository)
 }
