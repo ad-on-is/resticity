@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/energye/systray"
-	"github.com/energye/systray/icon"
+	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -29,11 +30,43 @@ func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings) *App {
 	return &App{restic: restic, scheduler: scheduler, settings: settings}
 }
 
-func (a *App) systemTray() {
-	ico, _ := os.ReadFile("/home/adonis/Development/Flutter/Sdk/dev/docs/favicon.ico")
+func (a *App) toggleSysTrayIcon() {
+	default_icon, _ := os.ReadFile(
+		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon.png",
+	)
+	active_icon, _ := os.ReadFile(
+		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon_active.png",
+	)
+	def := true
+	_, err := a.scheduler.gocron.NewJob(
+		gocron.DurationJob(500*time.Millisecond),
+		gocron.NewTask(func() {
+			fmt.Println("toggle")
+			if def {
+				if len(a.scheduler.RunningJobs) > 0 {
+					systray.SetIcon(active_icon)
+				}
+				def = false
+			} else {
+				systray.SetIcon(default_icon)
+				def = true
+			}
+		}),
+	)
+	if err != nil {
+		fmt.Println("Error creating job", err)
+	}
 
-	systray.SetIcon(icon.Data) // read the icon from a file
-	fmt.Println(len(ico))
+}
+
+func (a *App) systemTray() {
+	ico, _ := os.ReadFile(
+		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon.png",
+	)
+
+	systray.CreateMenu()
+
+	systray.SetIcon(ico) // read the icon from a file
 
 	systray.SetTitle("resticity")
 	systray.SetTooltip("Resticity")
@@ -58,6 +91,7 @@ func (a *App) systemTray() {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.toggleSysTrayIcon()
 	go systray.Run(a.systemTray, func() {})
 
 }

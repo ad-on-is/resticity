@@ -15,13 +15,13 @@ import (
 var assets embed.FS
 
 func main() {
-	var errb bytes.Buffer
-	var outb bytes.Buffer
-	restic := NewRestic(&errb, &outb)
+	errb := bytes.NewBuffer([]byte{})
+	outb := bytes.NewBuffer([]byte{})
+	restic := NewRestic(errb, outb)
 	settings := NewSettings()
 	if scheduler, err := NewScheduler(settings, restic); err == nil {
-		scheduler.RescheduleBackups()
-		go RunServer(scheduler, restic, settings, &errb, &outb)
+		(scheduler).RescheduleBackups()
+		go RunServer(scheduler, restic, settings, errb, outb)
 		Desktop(scheduler, restic, settings)
 	} else {
 		fmt.Println("SCHEDULER ERROR", err)

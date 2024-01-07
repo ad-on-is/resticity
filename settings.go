@@ -38,6 +38,7 @@ type Schedule struct {
 	ToRepositoryId   string `json:"to_repository_id"`
 	FromRepositoryId string `json:"from_repository_id"`
 	Cron             string `json:"cron"`
+	Active           bool   `json:"active"`
 }
 
 type Config struct {
@@ -50,6 +51,24 @@ func NewSettings() *Settings {
 	s := &Settings{}
 	s.Config = s.readFile()
 	return s
+}
+
+func (s *Settings) GetRepositoryById(id string) *Repository {
+	for _, r := range s.Config.Repositories {
+		if r.Id == id {
+			return &r
+		}
+	}
+	return nil
+}
+
+func (s *Settings) GetBackupById(id string) *Backup {
+	for _, b := range s.Config.Backups {
+		if b.Id == id {
+			return &b
+		}
+	}
+	return nil
 }
 
 func (s *Settings) readFile() Config {

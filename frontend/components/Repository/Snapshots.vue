@@ -97,7 +97,9 @@
 	]
 
 	onMounted(async () => {
-		snapshots.value = await Snapshots(useRoute().params.id as string)
+		const res = await useFetch(`http://localhost:11278/api/snapshots/${useRoute().params.id}`, { cache: 'no-cache' })
+		console.log(res.data.value)
+		snapshots.value = res.data.value || []
 		loading.value = false
 	})
 </script>

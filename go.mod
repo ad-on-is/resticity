@@ -8,12 +8,10 @@ require (
 	github.com/adrg/xdg v0.4.0
 	github.com/energye/systray v1.0.2
 	github.com/go-co-op/gocron/v2 v2.1.1
-	github.com/go-errors/errors v1.5.1
 	github.com/goccy/go-json v0.10.2
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/google/uuid v1.5.0
-	github.com/labstack/gommon v0.4.0
 	github.com/wailsapp/wails/v2 v2.7.1
 )
 
@@ -27,6 +25,7 @@ require (
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leaanthony/go-ansi-parser v1.6.0 // indirect
 	github.com/leaanthony/gosod v1.0.3 // indirect
 	github.com/leaanthony/slicer v1.6.0 // indirect

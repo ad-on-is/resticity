@@ -47,6 +47,14 @@ import type settingsVue from '~/pages/settings.vue';
 	const items = (row: any) => [
 		[
 			{
+				label: 'Run now',
+				icon: 'i-heroicons-arrow-uturn-right',
+				click: async () => {
+					const t = await useFetch(`http://localhost:11278/api/schedules/run/${row.id}`)
+					console.log(t.data.value)
+				},
+			},
+			{
 				label: 'Delete',
 				icon: 'i-heroicons-trash',
 				click: () => {

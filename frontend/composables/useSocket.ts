@@ -4,10 +4,10 @@ export const useSocket = defineStore('useSocket', () => {
 		jobsocket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
-				useJobs().running = data.jobs
+				useJobs().running = data.jobs || []
 				useLogs().out = data.out
 				useLogs().err = data.err
-				console.log(data)
+				// console.log(data)
 			} catch (e) {
 				useJobs().running = []
 				console.error(e)

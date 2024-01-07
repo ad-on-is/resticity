@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"time"
-
-	"github.com/go-errors/errors"
-	"github.com/labstack/gommon/log"
 )
 
 type Restic struct {
@@ -16,7 +14,7 @@ type Restic struct {
 	outb *bytes.Buffer
 }
 
-func NewRestic(outb *bytes.Buffer, errb *bytes.Buffer) *Restic {
+func NewRestic(errb *bytes.Buffer, outb *bytes.Buffer) *Restic {
 	r := &Restic{}
 	r.errb = errb
 	r.outb = outb
@@ -63,53 +61,90 @@ type Snapshot struct {
 	ProgramVersion string   `json:"program_version"`
 }
 
-func (r *Restic) core(repository Repository, cmd ...string) (string, error) {
+func (r *Restic) core(repository Repository, cmd []string, envs []string) (string, error) {
 
 	cmds := []string{"-r", repository.Path, "--json"}
 	cmds = append(cmds, cmd...)
+	var sout bytes.Buffer
+	var serr bytes.Buffer
 	c := exec.Command("/usr/bin/restic", cmds...)
-	c.Stderr = r.errb
-	c.Stdout = r.outb
-	c.Env = append(c.Env, "RESTIC_PASSWORD="+repository.Password)
-	log.Print(c.Env)
+	c.Stderr = &serr
+	c.Stdout = &sout
+	c.Env = append(os.Environ(), "RESTIC_PASSWORD="+repository.Password)
 
-	if out, err := c.Output(); err != nil {
-		fmt.Println(r.errb.String())
-		return "", errors.New(r.errb.String())
-	} else {
-		fmt.Println(string(out))
-		return string(out), nil
+	err := c.Start()
+	if err != nil {
+		fmt.Println(err)
 	}
+	c.Wait()
+	r.errb.Write(serr.Bytes())
+	r.outb.Write(sout.Bytes())
+
+	return sout.String(), nil
 
 }
 
+func (r *Restic) Unlock(repository Repository) {
+	if _, err := r.core(repository, []string{"unlock"}, []string{}); err != nil {
+		fmt.Println("ERROR", err)
+	}
+}
+
 func (r *Restic) Check(repository Repository) error {
-	if _, err := r.core(repository, "check"); err != nil {
+	if _, err := r.core(repository, []string{"check"}, []string{}); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (r *Restic) Initialize(repository Repository) error {
-	if _, err := r.core(repository, "init"); err != nil {
+	if _, err := r.core(repository, []string{"init"}, []string{}); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (r *Restic) Snapshots(repository Repository) []Snapshot {
-	if res, err := r.core(repository, "snapshots"); err == nil {
+	if res, err := r.core(repository, []string{"snapshots"}, []string{}); err == nil {
 		var data []Snapshot
 		if err := json.Unmarshal([]byte(res), &data); err == nil {
 			return data
 		}
+	} else {
+		fmt.Println("ERROR", err)
 	}
 
 	return []Snapshot{}
 }
 
-func (r *Restic) RunBackup(backup Backup, toRepository Repository, fromRepository Repository) {
-	fmt.Println("RUNNING BACKUP")
+func (r *Restic) RunBackup(backup *Backup, toRepository *Repository, fromRepository *Repository) {
 	time.Sleep(30 * time.Second)
-	// r.Snapshots(toRepository)
+
+	if backup == nil && toRepository == nil || fromRepository == nil && toRepository == nil {
+		fmt.Println("Nope!")
+		return
+	}
+
+	if backup != nil && fromRepository != nil {
+		fmt.Println("Nope!")
+		return
+	}
+
+	if backup != nil {
+		cmds := []string{"backup"}
+		for _, p := range backup.BackupParams {
+			cmds = append(cmds, p...)
+		}
+		fmt.Println(cmds)
+		// r.core(*toRepository, cmds, []string{})
+	}
+
+	if fromRepository != nil {
+		cmds := []string{"copy", "--from-repo", fromRepository.Path}
+		envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
+		fmt.Println(cmds)
+		fmt.Println(envs)
+		// r.core(*toRepository, cmds, []string{})
+	}
+
 }

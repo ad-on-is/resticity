@@ -43,9 +43,8 @@ func RunServer(
 			jobs := scheduler.GetRunningJobs()
 			data := make(map[string]any)
 			data["jobs"] = jobs
-			data["out"] = outb.String()
-			data["err"] = errb.String()
-			fmt.Println(data)
+			data["out"] = string(outb.Bytes())
+			data["err"] = string(errb.Bytes())
 			if d, err := json.Marshal(data); err == nil {
 				if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
 					log.Println("Error writing to socket:", err)
@@ -59,7 +58,6 @@ func RunServer(
 	}))
 
 	config := api.Group("/config")
-	repositories := api.Group("/repositories")
 	backups := api.Group("/backups")
 	config.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(settings.Config)
@@ -76,8 +74,18 @@ func RunServer(
 		return c.SendString("OK")
 	})
 
-	repositories.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
+	api.Get("/snapshots/:id", func(c *fiber.Ctx) error {
+		s := restic.Snapshots(*settings.GetRepositoryById(c.Params("id")))
+		fmt.Println(c.Params("id"))
+		fmt.Println(s)
+		return c.JSON(s)
+
+	})
+
+	api.Get("/schedules/run/:id", func(c *fiber.Ctx) error {
+		scheduler.RunJobByName(c.Params("id"))
+
+		return c.SendString("Running schedule in the background")
 	})
 
 	backups.Get("/", func(c *fiber.Ctx) error {

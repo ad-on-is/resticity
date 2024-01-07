@@ -1,7 +1,7 @@
 <template>
 	<div class="bg-base-300 relative">
 		<div class="navbar md:container md:mx-auto">
-			<div class="navbar-start"><Logo class="h-10 w-auto fill-white stroke-white" /><span class="ml-3 font-bold text-2xl">resticity</span></div>
+			<div class="navbar-start"><Logo class="h-8 w-auto fill-white stroke-white" /><span class="ml-2 font-bold text-2xl">resticity</span></div>
 			<div class="navbar-center hidden lg:flex">
 				<ul class="menu menu-horizontal px-1 gap-3">
 					<li>
