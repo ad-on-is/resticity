@@ -1,7 +1,10 @@
 <template>
 	<div>
-		<div class="mt-20"><RepositoryList /></div>
-		<div class="mt-20"><BackupList /></div>
+		<div class="mt-0"><RepositoryList /></div>
+		<UDivider class="my-10" />
+		<div><BackupList /></div>
+		<UDivider class="my-10" />
+		<div><ScheduleList /></div>
 	</div>
 </template>
 

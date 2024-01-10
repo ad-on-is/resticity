@@ -1,48 +1,67 @@
-import type settingsVue from '~/pages/settings.vue';
 <template>
 	<div>
-		<h1>Schedules</h1>
+		<h1 class="text-yellow-500 font-bold mb-3"><UIcon name="i-heroicons-clock" class="mr-2" dynamic />Schedules</h1>
 
-		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="mt-10">
+		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg" @select="">
 			<template #task-data="{ row }">
 				<div class="inline-flex items-center gap-1">
-					<UBadge v-if="useJobs().scheduleIsRunning(row.id)" color="orange">Running</UBadge>
-					<span v-if="row.backup_id !== ''">Backup from</span>
-					<span v-if="row.backup_id !== ''" class="">
-						<span class="text-primary"
-							><UIcon name="i-heroicons-folder" class="h-2.5" />{{ useSettings().settings?.backups.find((b: Backup) => b.id === row.backup_id)?.name || '' }}</span
-						>
+					<span v-if="row.backup_id !== ''"
+						>Backup folders from
+
+						<span class="text-primary">{{ useSettings().settings?.backups.find((b: Backup) => b.id === row.backup_id)?.name || '' }}</span>
 					</span>
-					<span v-if="row.from_repository_id !== ''">Copy snapshots from</span>
-					<span v-if="row.from_repository_id !== ''">
-						<span class="text-primary"
-							><UIcon name="i-heroicons-server" class="h-2.5 text-primary" />
-							{{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.from_repository_id)?.name || '' }}</span
-						>
-					</span>
-					<span>to</span>
-					<span class="text-primary">
-						<UIcon name="i-heroicons-server" class="h-2.5 text-primary" /><span>{{
-							useSettings().settings?.repositories.find((r: Repository) => r?.id === row.to_repository_id)?.name || ''
-						}}</span></span
+					<span v-if="row.from_repository_id !== ''"
+						>Copy snapshots from
+
+						<span class="text-purple-500"> {{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.from_repository_id)?.name || '' }}</span></span
+					>
+
+					<UIcon name="i-heroicons-chevron-double-right" />
+					<span class="text-purple-500">
+						<span>{{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.to_repository_id)?.name || '' }}</span></span
 					>
 				</div>
 			</template>
+			<template #status-data="{ row }">
+				<div v-if="row.active">
+					<UBadge v-if="useJobs().scheduleIsRunning(row.id)" color="green">Running</UBadge>
+					<UBadge v-else color="primary" variant="outline">Scheduled</UBadge>
+				</div>
+				<div v-else>
+					<UBadge v-if="useJobs().scheduleIsRunning(row.id)" color="green">Running</UBadge>
+					<UBadge v-else color="gray" class="opacity-40">Inactive</UBadge>
+				</div>
+			</template>
 			<template #cron-data="{ row }">
-				<code class="text-warning bg-gray-950 p-1">{{ row.cron }}</code>
+				<UBadge color="gray" v-if="row.cron !== ''">{{ cronToHuman(row.cron) }}</UBadge>
+				<UBadge color="indigo" variant="outline" v-else>Manually</UBadge>
 			</template>
 			<template #actions-data="{ row }">
+				<UToggle v-model="row.active" color="green" />
 				<UDropdown :items="items(row)">
-					<UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
+					<UButton color="gray" variant="ghost" class="ml-3" icon="i-heroicons-ellipsis-horizontal-20-solid" />
 				</UDropdown>
 			</template>
 		</UTable>
-		<ScheduleNew />
 	</div>
 </template>
 
 <script setup lang="ts">
-	const columns = [{ key: 'task', label: 'Task' }, { key: 'cron', label: 'Cron' }, { key: 'actions' }]
+	import cronstrue from 'cronstrue'
+	const columns = [
+		{ key: 'status', label: 'Status', class: 'w-32' },
+		{ key: 'task', label: 'Task' },
+		{ key: 'cron', label: 'Scheduled' },
+		{ key: 'actions', class: 'w-10' },
+	]
+
+	const cronToHuman = (cron: string) => {
+		try {
+			return cronstrue.toString(cron)
+		} catch (e) {
+			return cron
+		}
+	}
 
 	const items = (row: any) => [
 		[
@@ -50,8 +69,8 @@ import type settingsVue from '~/pages/settings.vue';
 				label: 'Run now',
 				icon: 'i-heroicons-arrow-uturn-right',
 				click: async () => {
-					const t = await useFetch(`http://localhost:11278/api/schedules/run/${row.id}`)
-					console.log(t.data.value)
+					const t = await useApi().runSchedule(row.id)
+					console.log(t)
 				},
 			},
 			{

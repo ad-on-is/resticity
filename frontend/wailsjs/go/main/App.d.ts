@@ -3,14 +3,8 @@
 import {main} from '../models';
 import {uuid} from '../models';
 
-export function CheckRepository(arg1:main.Repository):Promise<string>;
-
 export function GetBackupJobs():Promise<Array<main.BackupJob>>;
 
-export function InitializeRepository(arg1:main.Repository):Promise<string>;
-
 export function SelectDirectory(arg1:string):Promise<string>;
-
-export function Snapshots(arg1:string):Promise<Array<main.Snapshot>>;
 
 export function StopBackup(arg1:uuid.UUID):Promise<void>;

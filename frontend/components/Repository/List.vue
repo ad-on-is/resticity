@@ -1,64 +1,72 @@
 <template>
-	<h1 class="text-primary"><FaIcon icon="fa-server" class="mr-3" />Repositories</h1>
+	<h1 class="text-purple-500 font-bold mb-3"><UIcon name="i-heroicons-server-stack" class="mr-2" dynamic />Repositories</h1>
 	<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-		<NuxtLink
-			to="#"
-			class="opacity-40 border border-dashed border-success border-opacity-40 hover:opacity-100 shadow-lg bg-base-300 rounded-lg no-underline hover:bg-success transition-all hover:bg-opacity-10"
-			@click="dialog?.showModal()"
+		<div
+			class="cursor-pointer opacity-40 border border-dashed border-purple-500 border-opacity-40 hover:opacity-100 shadow-lg bg-base-300 rounded-lg no-underline hover:bg-purple-500 transition-all hover:bg-opacity-10"
+			@click="isOpen = true"
 		>
 			<div class="p-5">
-				<h3 class="m-0 text-success"><FaIcon icon="fa-plus-circle" class="mr-2" />Add Repository</h3>
+				<h3 class="m-0 text-purple-500 p-0"><FaIcon icon="fa-plus-circle" class="mr-2" />Add Repository</h3>
 				<p class="text-sm opacity-40">Initialize a new or connect an existing repository</p>
 			</div>
-		</NuxtLink>
+		</div>
 		<NuxtLink
 			:to="`/repositories/${repo.id}`"
 			v-for="repo in useSettings().settings?.repositories"
-			class="shadow-lg bg-base-300 rounded-lg no-underline hover:bg-primary transition-all hover:bg-opacity-10"
+			class="shadow-lg bg-base-300 rounded-lg no-underline hover:bg-purple-500 transition-all hover:bg-opacity-10"
 		>
-			<div class="p-5">
-				<h3 class="m-0 text-info"><FaIcon icon="fa-hard-drive" class="mr-2" />{{ repo.name }}</h3>
-				<p class="text-sm break-words">{{ repo.path }}</p>
-				<div class="flex animate-pulse" v-if="useJobs().repoIsRunning(repo.id)">
-					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Backup running</span>
-				</div>
-				<div class="flex animate-pulse" v-if="useJobs().repoIsSynching(repo.id)">
-					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Sync running</span>
+			<div class="p-5 pb-0">
+				<h3 class="m-0 font-medium text-purple-500 p-0"><FaIcon icon="fa-hard-drive" class="mr-2" />{{ repo.name }}</h3>
+				<p class="text-xs break-words opacity-50 p-0 m-0">{{ repo.path }}</p>
+
+				<div :class="useJobs().repoIsSynching(repo.id) || useJobs().repoIsRunning(repo.id) ? 'opacity-100' : 'opacity-0'">
+					<span class="loading loading-infinity loading-sm text-orange-500"></span>
 				</div>
 			</div>
 		</NuxtLink>
 	</div>
 
-	<dialog class="modal" ref="dialog">
-		<div class="modal-box">
-			<h2 class="m-0 mb-3">New repository</h2>
-			<p v-if="checkStatus === ''" class="text-sm opacity-40">Initialize a new or connect an existing repository</p>
-			<p v-if="checkStatus !== '' && checkStatus.includes('REPO_OK')" class="text-sm text-success"><FaIcon icon="check" class="mr-2" />All checks passed</p>
-			<p v-if="checkStatus !== '' && !checkStatus.includes('REPO_OK')" class="text-sm text-error"><FaIcon icon="warning" class="mr-2" />{{ checkStatus }}</p>
-			<div class="">
-				<input class="input input-bordered input-sm mb-5 min-w-full" placeholder="Name" v-model="newRepository.name" />
+	<UModal v-model="isOpen">
+		<UCard>
+			<template #header>
+				<h2 class="text-purple-500 font-bold">New Repository</h2>
+				<p v-if="checkStatus === ''" class="text-sm opacity-40">Initialize a new or connect an existing repository</p>
 
-				<div class="join min-w-full">
-					<input :type="pwType" class="flex-grow input input-bordered join-item input-sm mb-5" placeholder="Password" v-model="newRepository.password" />
-					<button class="btn join-item btn-sm input-bordered" @click="togglePw"><FaIcon icon="fa-eye" /></button>
-				</div>
-				<div class="join w-full">
-					<input class="input input-bordered join-item input-sm flex-grow" disabled placeholder="Location" v-model="newRepository.path" />
-					<button class="btn join-item btn-sm input-bordered" @click="openDir()"><FaIcon icon="folder" /></button>
-				</div>
-			</div>
-			<div class="modal-action">
-				<button v-if="checkStatus.includes('REPO_OK')" class="btn btn-sm btn-success" @click="save"><FaIcon icon="plus-circle" />Add Repository</button>
-				<button v-else class="btn btn-sm btn-warning btn-outline" @click="check">Check Repository</button>
-			</div>
-		</div>
-	</dialog>
+				<p v-if="checkStatus !== '' && checkStatus.includes('REPO_OK')" class="text-sm text-success">
+					<FaIcon icon="check" class="mr-2" />All checks passed: {{ checkStatus === 'REPO_OK_EMPTY' ? 'Folder is empty' : 'Repository is valid' }}
+				</p>
+				<p v-if="checkStatus !== '' && !checkStatus.includes('REPO_OK')" class="text-sm text-error"><FaIcon icon="warning" class="mr-2" />Cannot use this repository</p>
+			</template>
+			<template #footer>
+				<UButton
+					v-if="checkStatus.includes('REPO_OK')"
+					@click="save"
+					color="purple"
+					icon="i-heroicons-plus-circle"
+					:disabled="newRepository.path === '' || newRepository.name === '' || newRepository.password === ''"
+					>{{ checkStatus === 'REPO_OK_EMPTY' ? 'Initialize' : 'Add' }} Repository</UButton
+				>
+				<UButton v-else @click="check" color="yellow" variant="outline" icon="i-heroicons-plus-circle" :disabled="newRepository.path === '' || newRepository.password === ''"
+					>Check Repository</UButton
+				>
+			</template>
+			<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
+			<UButtonGroup class="flex">
+				<UInput v-model="newRepository.path" placeholder="/path/to/repository" class="flex-grow" />
+				<UButton icon="i-heroicons-folder-open" color="indigo" @click="openDir()" />
+			</UButtonGroup>
+			<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
+			<UButtonGroup class="flex mt-5">
+				<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
+				<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
+			</UButtonGroup>
+		</UCard>
+	</UModal>
 </template>
 
 <script setup lang="ts">
 	import { generateUUID } from '~/utils'
-
-	const dialog = ref<HTMLDialogElement>()
+	const isOpen = ref(false)
 	const pwType = ref('password')
 	const newRepository = ref({
 		id: generateUUID(),
@@ -79,32 +87,38 @@
 			checkStatus.value = `${dir} is already a repository`
 			return
 		}
-		if (dir !== '') {
-			checkStatus.value = ''
-			newRepository.value.path = dir
-		}
+		newRepository.value.path = dir
 	}
 
+	watch(
+		() => JSON.stringify(newRepository.value),
+		(_, o) => {
+			const old = JSON.parse(o)
+			if (old.path !== newRepository.value.path) {
+				checkStatus.value = ''
+			}
+		}
+	)
+
 	const check = async () => {
-		checkStatus.value = await CheckRepository(newRepository.value)
+		checkStatus.value = await useApi().checkRepository(newRepository.value)
 	}
 
 	const save = async () => {
 		if (!checkStatus.value.includes('REPO_OK')) {
 			return
 		}
-		if (checkStatus.value == 'REPO_OK_EMPTY') {
-			const res = await InitializeRepository(newRepository.value)
-			if (res === null) {
+		if (checkStatus.value === 'REPO_OK_EMPTY') {
+			const res = await useApi().initRepository(newRepository.value)
+			if (res === 'OK') {
 				useSettings().settings?.repositories.push(newRepository.value)
 				await useSettings().save()
-				dialog.value?.close()
-			} else {
+				isOpen.value = false
 			}
 		} else {
 			useSettings().settings?.repositories.push(newRepository.value)
 			await useSettings().save()
-			dialog.value?.close()
+			isOpen.value = false
 		}
 	}
 </script>

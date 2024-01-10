@@ -30,6 +30,8 @@
     "@nuxt/ui": "^2.11.1",
     "@pinia/nuxt": "^0.5.1",
     "@tailwindcss/typography": "^0.5.10",
+    "cron-parser": "^4.9.0",
+    "cronstrue": "^2.47.0",
     "daisyui": "^4.4.20",
     "date-fns": "^3.0.6",
     "lodash": "^4.17.21",

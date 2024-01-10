@@ -41,7 +41,6 @@ func (a *App) toggleSysTrayIcon() {
 	_, err := a.scheduler.gocron.NewJob(
 		gocron.DurationJob(500*time.Millisecond),
 		gocron.NewTask(func() {
-			fmt.Println("toggle")
 			if def {
 				if len(a.scheduler.RunningJobs) > 0 {
 					systray.SetIcon(active_icon)
@@ -100,49 +99,9 @@ func (a *App) GetBackupJobs() []BackupJob {
 	return a.scheduler.RunningJobs
 }
 
-func (a *App) Snapshots(id string) []Snapshot {
-	s := a.settings.Config
-	var r *Repository
-	for i := range s.Repositories {
-		if s.Repositories[i].Id == id {
-			r = &s.Repositories[i]
-		}
-	}
-	fmt.Println(r)
-	if r != nil {
-		return a.restic.Snapshots(*r)
-	}
-	return []Snapshot{}
-
-}
-
 func (a *App) StopBackup(id uuid.UUID) {
 	// a.scheduler.RemoveJob(id)
 	// a.RescheduleBackups()
-}
-
-func (a *App) CheckRepository(r Repository) string {
-	files, err := os.ReadDir(r.Path)
-	if err != nil {
-		return err.Error()
-	}
-	if len(files) > 0 {
-		if err := a.restic.Check(r); err != nil {
-			return err.Error()
-		} else {
-			return "REPO_OK_EXISTING"
-		}
-	}
-
-	return "REPO_OK_EMPTY"
-}
-
-func (a *App) InitializeRepository(r Repository) string {
-	if err := a.restic.Initialize(r); err != nil {
-		return err.Error()
-	}
-
-	return ""
 }
 
 func (a *App) SelectDirectory(title string) string {

@@ -1,3 +1,3 @@
 <template>
-	<div><ScheduleList /></div>
+	<div><ScheduleList /> <ScheduleNew /></div>
 </template>

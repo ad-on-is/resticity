@@ -102,7 +102,6 @@ func (s *Scheduler) RescheduleBackups() {
 				toRepository := s.settings.GetRepositoryById(schedule.ToRepositoryId)
 				fromRepository := s.settings.GetRepositoryById(schedule.FromRepositoryId)
 				backup := s.settings.GetBackupById(schedule.BackupId)
-
 				if !schedule.Active && !StringArrayContains(s.ManualJobs, schedule.Id) {
 					return
 				}
@@ -116,6 +115,7 @@ func (s *Scheduler) RescheduleBackups() {
 			),
 			gocron.WithEventListeners(
 				gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
+					fmt.Println("before job run")
 					s.jmu.Lock()
 					defer s.jmu.Unlock()
 					s.RunningJobs = append(

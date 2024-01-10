@@ -7,7 +7,6 @@ export const useSocket = defineStore('useSocket', () => {
 				useJobs().running = data.jobs || []
 				useLogs().out = data.out
 				useLogs().err = data.err
-				// console.log(data)
 			} catch (e) {
 				useJobs().running = []
 				console.error(e)

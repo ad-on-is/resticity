@@ -12,5 +12,8 @@ export default defineNuxtConfig({
 
 	app: {
 		pageTransition: { name: 'page', mode: 'out-in' },
+		head: {
+			script: [{ src: 'https://unpkg.com/cronstrue@latest/dist/cronstrue.min.js' }],
+		},
 	},
 })

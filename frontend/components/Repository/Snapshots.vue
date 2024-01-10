@@ -1,44 +1,55 @@
 <template>
-	<div class="collapse bg-base-200 mb-5">
-		<input type="radio" name="repository-accordion" checked />
-		<h3 class="collapse-title m-0 text-primary"><FaIcon icon="table-list" class="mr-2" />Snapshots</h3>
-		<div class="collapse-content">
-			<UButton :color="selected.length > 0 ? 'primary' : 'primary'" :disabled="selected.length === 0" :variant="selected.length === 0 ? 'outline' : 'solid'"
-				>Prune selected Snapshots</UButton
-			>
-			<UTable :rows="snapshots" v-model="selected" :columns="columns" @select="" :loading="loading">
-				<template #tags-data="{ row }">
-					<UBadge v-for="tag in row.tags" variant="outline" color="blue">{{ tag }}</UBadge>
-				</template>
-				<template #time-data="{ row }">
-					{{ format(new Date(row.time), 'dd.MM.yyyy H:I:s') }}
-				</template>
-				<template #paths-data="{ row }">
-					{{ row.paths.join(',') }}
-				</template>
-				<template #actions-data="{ row }">
-					<UDropdown :items="items(row)">
-						<UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" :disabled="selected.length > 0" />
-					</UDropdown>
-				</template>
-			</UTable>
-		</div>
-	</div>
+	<h3 class="text-purple-500 mb-3"><FaIcon icon="table-list" class="mr-2" />Snapshots</h3>
+
+	<UTable :rows="snapshots" v-model="selected" :columns="columns" @select="" :loading="loading" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
+		<template #tags-data="{ row }">
+			<UBadge v-for="tag in row.tags" variant="outline" color="indigo">{{ tag }}</UBadge>
+		</template>
+		<template #time-data="{ row }">
+			{{ format(new Date(row.time), 'dd.MM.yyyy H:I:s') }}
+		</template>
+		<template #paths-data="{ row }">
+			{{ row.paths.join(',') }}
+		</template>
+		<template #actions-data="{ row }">
+			<UDropdown :items="items(row)">
+				<UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" :disabled="selected.length > 0" />
+			</UDropdown>
+		</template>
+	</UTable>
+	<UButton
+		icon="i-heroicons-trash"
+		class="mt-3"
+		:disabled="selected.length === 0"
+		:color="selected.length === 0 ? 'gray' : 'indigo'"
+		:variant="selected.length === 0 ? 'solid' : 'outline'"
+		>Prune snapshots</UButton
+	>
 </template>
 
 <script setup lang="ts">
 	import { onMounted } from 'vue'
 	import { format } from 'date-fns'
+	import _ from 'lodash'
 	const snapshots = ref<Array<Snapshot>>([])
 	const loading = ref(true)
 	const selected = ref<Array<Snapshot>>([])
 	const mounted = ref<Array<string>>([])
 
+	const paths = ref<Array<string>>([])
+
 	const items = (row: any) => [
 		[
+			...paths.value.map((p) => ({
+				label: 'Browse ' + p,
+				icon: 'i-heroicons-document-magnifying-glass',
+				click: () => {
+					navigateTo({ path: `/repositories/${useRoute().params.id}/snapshots/${row.id}`, query: { path: p } })
+				},
+			})),
 			{
 				label: mounted.value.includes(row.id) ? 'Unmount' : 'Mount',
-				icon: mounted.value.includes(row.id) ? 'i-iconify-folder' : 'i-heroicons-folder-open',
+				icon: mounted.value.includes(row.id) ? 'i-heroicons-server' : 'i-heroicons-server',
 				click: () => {
 					if (mounted.value.includes(row.id)) {
 						mounted.value = mounted.value.filter((item) => item !== row.id)
@@ -48,12 +59,6 @@
 						// Mount(row.id, true)
 					}
 				},
-			},
-		],
-		[
-			{
-				label: 'Prune',
-				icon: 'i-heroicons-trash',
 			},
 		],
 	]
@@ -97,9 +102,9 @@
 	]
 
 	onMounted(async () => {
-		const res = await useFetch(`http://localhost:11278/api/snapshots/${useRoute().params.id}`, { cache: 'no-cache' })
-		console.log(res.data.value)
-		snapshots.value = res.data.value || []
+		const res = await useApi().getSnapshots(useRoute().params.id as string)
+		snapshots.value = res || []
+		paths.value = _.uniq(snapshots.value.map((snapshot: Snapshot) => snapshot.paths).flat())
 		loading.value = false
 	})
 </script>

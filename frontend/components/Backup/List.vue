@@ -1,55 +1,52 @@
 <template>
-	<h1 class="text-primary"><FaIcon icon="upload" class="mr-3" />Backups</h1>
+	<h1 class="text-sky-500 font-bold mb-3"><FaIcon icon="upload" class="mr-3" />Backups</h1>
 	<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-		<NuxtLink
-			to="#"
-			class="opacity-40 border border-dashed border-success border-opacity-40 hover:opacity-100 shadow-lg bg-base-300 rounded-lg no-underline hover:bg-success transition-all hover:bg-opacity-10"
-			@click="dialog?.showModal()"
+		<div
+			class="opacity-40 border cursor-pointer border-dashed border-sky-500 border-opacity-40 hover:opacity-100 shadow-lg bg-base-300 rounded-lg no-underline hover:bg-sky-500 transition-all hover:bg-opacity-10"
+			@click="isOpen = true"
 		>
 			<div class="p-5">
-				<h3 class="m-0 text-success"><FaIcon icon="fa-plus-circle" class="mr-2" />Add Backup</h3>
+				<h3 class="m-0 text-sky-500 font-medium"><FaIcon icon="fa-plus-circle" class="mr-2" />Add Backup</h3>
 				<p class="text-sm opacity-40">Add a new Backup</p>
 			</div>
-		</NuxtLink>
+		</div>
 		<NuxtLink
 			:to="`/backups/${backup.id}`"
 			v-for="backup in useSettings().settings?.backups"
-			class="shadow-lg bg-base-300 rounded-lg no-underline hover:bg-primary transition-all hover:bg-opacity-10"
+			class="shadow-lg bg-base-300 rounded-lg no-underline hover:bg-sky-500 transition-all hover:bg-opacity-10"
 		>
-			<div class="p-5">
-				<h3 class="m-0 text-info"><FaIcon icon="folder-open" class="mr-2" />{{ backup.name }}</h3>
-				<p class="text-sm">{{ backup.path }}</p>
-				<div class="flex animate-pulse" v-if="useJobs().backupIsRunning(backup.id)">
-					<span class="loading loading-infinity loading-sm text-warning"></span><span class="text-sm ml-2 text-warning">Backup running</span>
+			<div class="p-5 pb-0">
+				<h3 class="m-0 text-sky-500 font-medium"><FaIcon icon="folder-open" class="mr-2" />{{ backup.name }}</h3>
+				<p class="text-xs opacity-50 break-words">{{ backup.path }}</p>
+				<div :class="useJobs().backupIsRunning(backup.id) ? 'opacity-100' : 'opacity-0'">
+					<span class="loading loading-infinity loading-sm text-orange-500"></span>
 				</div>
 			</div>
 		</NuxtLink>
 	</div>
 
-	<dialog class="modal" ref="dialog">
-		<div class="modal-box">
-			<h2 class="m-0 mb-3">New Backup</h2>
-			<p v-if="error === ''" class="text-sm opacity-40">Add a new Backup</p>
-			<p v-else class="text-sm text-error"><FaIcon icon="warning" class="mr-2" />{{ error }}</p>
-			<div class="">
-				<input class="input input-bordered input-sm mb-5 min-w-full" placeholder="Name" v-model="newBackup.name" />
-
-				<div class="join w-full">
-					<input class="input input-bordered join-item input-sm flex-grow" disabled placeholder="Location" v-model="newBackup.path" />
-					<button class="btn join-item btn-sm input-bordered" @click="openDir()"><FaIcon icon="folder" /></button>
-				</div>
-				<div class="modal-action">
-					<button class="btn btn-sm btn-success" @click="save"><FaIcon icon="plus-circle" />Add Backup</button>
-				</div>
-			</div>
-		</div>
-	</dialog>
+	<UModal v-model="isOpen">
+		<UCard>
+			<template #header>
+				<h2 class="text-sky-500 font-bold">New Backup</h2>
+				<p v-if="error === ''" class="text-sm opacity-40">Add a new backup location</p>
+				<p v-else class="text-sm text-error"><FaIcon icon="warning" class="mr-2" />{{ error }}</p>
+			</template>
+			<template #footer>
+				<UButton @click="save" icon="i-heroicons-plus-circle" :disabled="newBackup.path === '' || newBackup.name === ''">Add Backup</UButton>
+			</template>
+			<UInput v-model="newBackup.name" placeholder="Name" class="mb-5" />
+			<UButtonGroup class="flex">
+				<UInput v-model="newBackup.path" placeholder="/path/to/backup" class="flex-grow" />
+				<UButton icon="i-heroicons-folder-open" color="indigo" @click="openDir()" />
+			</UButtonGroup>
+		</UCard>
+	</UModal>
 </template>
 
 <script setup lang="ts">
 	import { generateUUID } from '~/utils'
-
-	const dialog = ref<HTMLDialogElement>()
+	const isOpen = ref(false)
 	const newBackup = ref({
 		id: generateUUID(),
 		name: '',
@@ -75,6 +72,6 @@
 	const save = async () => {
 		useSettings().settings?.backups.push(newBackup.value)
 		await useSettings().save()
-		dialog.value?.close()
+		isOpen.value = false
 	}
 </script>

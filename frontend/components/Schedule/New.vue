@@ -1,6 +1,6 @@
 <template>
-	<div class="bg-gray-950 p-5 rounded-md mt-10 bg-opacity-50">
-		<h1 class="text-primary">Add a new task to schedule</h1>
+	<div class="bg-gray-950 p-5 rounded-lg mt-10 bg-opacity-50 shadow-lg">
+		<h1 class="text-yellow-700 font-bold">Add a new task to schedule</h1>
 		<p class="opacity-40 mb-3">Create a new schedule to either run manually or in the background at a specific time.</p>
 		<UButtonGroup class="">
 			<USelectMenu v-model="selectedType" :options="typeOptions" class="w-44">
@@ -22,8 +22,8 @@
 				</template>
 			</USelectMenu>
 			<USelectMenu v-model="selectedCron" :options="cronOptions" class="w-48"></USelectMenu>
-			<UInput class="w-48" v-model="cron" placeholder="" />
-			<UButton @click="addSchedule" icon="i-heroicons-plus-circle">Add Schedule</UButton>
+			<UInput class="w-32" v-model="cron" placeholder="" />
+			<UButton @click="addSchedule" color="yellow" icon="i-heroicons-plus-circle">Add Schedule</UButton>
 		</UButtonGroup>
 	</div>
 </template>
@@ -85,6 +85,7 @@
 			to_repository_id: selectedTo.value.id,
 			from_repository_id: selectedType.value.id === 'repository' ? selectedFrom.value.id : '',
 			cron: cron.value,
+			active: false,
 		})
 
 		selectedType.value = typeOptions[0]
