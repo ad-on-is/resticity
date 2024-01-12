@@ -133,20 +133,19 @@ func (r *Restic) BrowseSnapshot(
 
 }
 
-func (r *Restic) RunBackup(
+func (r *Restic) RunSchedule(
 	action string,
 	backup *Backup,
 	toRepository *Repository,
 	fromRepository *Repository,
 ) {
-	fmt.Println("RUNNING BACKUP", action)
 	switch action {
 	case "backup":
 		if backup == nil || toRepository == nil {
 			fmt.Println("Nope!")
 			return
 		}
-		cmds := []string{"backup", backup.Path}
+		cmds := []string{"backup", backup.Path, "--tag", "resticity"}
 		for _, p := range backup.BackupParams {
 			cmds = append(cmds, p...)
 		}
@@ -163,23 +162,30 @@ func (r *Restic) RunBackup(
 			fmt.Println("Nope!")
 			return
 		}
-	case "prune":
+		cmds := []string{"copy", "--from-repo", fromRepository.Path}
+		envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
+		fmt.Println(cmds)
+		fmt.Println(envs)
+		// r.core(*toRepository, cmds, envs)
+		break
+	case "prune-repository":
 		if toRepository == nil {
 			fmt.Println("Nope!")
 			return
 		}
-	}
-	if toRepository == nil {
-		fmt.Println("Nope!")
-		return
-	}
+		cmds := []string{"forget", "--prune"}
+		for _, p := range toRepository.PruneParams {
+			cmds = append(cmds, p...)
+		}
+		_, err := r.core(*toRepository, []string{"unlock"}, []string{})
+		if err == nil {
+			_, err := r.core(*toRepository, cmds, []string{})
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 
-	// if fromRepository != nil {
-	// 	cmds := []string{"copy", "--from-repo", fromRepository.Path}
-	// 	envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
-	// 	fmt.Println(cmds)
-	// 	fmt.Println(envs)
-	// 	// r.core(*toRepository, cmds, []string{})
-	// }
+		break
+	}
 
 }

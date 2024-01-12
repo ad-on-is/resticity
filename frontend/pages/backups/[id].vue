@@ -13,7 +13,6 @@
 
 	const backup = ref<Backup>()
 	const excludes = ref<[]>([])
-	const cron = ref<string>('')
 	const init = ref(true)
 	const idx = ref(-1)
 
@@ -24,13 +23,12 @@
 			return
 		}
 		backup.value.backup_params = excludes.value
-		backup.value.cron = cron.value
 		useSettings().settings!.backups[idx.value] = backup.value
 		useSettings().save()
 	}, 300)
 
 	watch(
-		() => [JSON.stringify(excludes.value), JSON.stringify(cron.value)],
+		() => [JSON.stringify(excludes.value)],
 		() => {
 			update()
 		}
@@ -40,7 +38,6 @@
 		backup.value = useSettings().settings!.backups.find((b: Backup) => b.id === useRoute().params.id)
 		idx.value = useSettings().settings!.backups.findIndex((b: Backup) => b.id === backup.value.id)
 		excludes.value = backup.value.backup_params
-		cron.value = backup.value.cron
 
 		console.log(useSettings().settings!.backups)
 	})

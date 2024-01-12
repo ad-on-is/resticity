@@ -22,9 +22,9 @@
 				</template>
 			</USelectMenu>
 			<USelectMenu
-				v-if="selectedBackup.id !== '' || selectedFromRepository.id !== ''"
+				v-if="selectedBackup.id !== '' || selectedFromRepository.id !== '' || selectedAction.id === 'prune-repository'"
 				v-model="selectedToRepository"
-				:options="repositories('To Repository', 'to ')"
+				:options="repositories('Repository', '')"
 				option-attribute="name"
 				class="w-48"
 			>

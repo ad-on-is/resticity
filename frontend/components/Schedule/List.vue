@@ -5,17 +5,21 @@
 		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg" @select="">
 			<template #task-data="{ row }">
 				<div class="inline-flex items-center gap-1">
-					<span v-if="row.backup_id !== ''"
+					<span v-if="row.action === 'backup'"
 						>Backup folders from
 
 						<span class="text-primary">{{ useSettings().settings?.backups.find((b: Backup) => b.id === row.backup_id)?.name || '' }}</span>
 					</span>
-					<span v-if="row.from_repository_id !== ''"
+					<span v-if="row.action === 'copy-snapshots'"
 						>Copy snapshots from
+
+						<span class="text-purple-500"> {{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.from_repository_id)?.name || '' }}</span>
+					</span>
+					<span v-if="row.action === 'prune-repository'"
+						>Prune
 
 						<span class="text-purple-500"> {{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.from_repository_id)?.name || '' }}</span></span
 					>
-
 					<UIcon name="i-heroicons-chevron-double-right" />
 					<span class="text-purple-500">
 						<span>{{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.to_repository_id)?.name || '' }}</span></span

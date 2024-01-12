@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div v-if="repo">
 		<h1 class="text-purple-500 font-bold"><UIcon name="i-heroicons-server" class="mr-3" />{{ repo.name }}</h1>
 		<h2 class="my-2 opacity-50">{{ repo.path }}</h2>
 		<div v-if="stats" class="flex text-xs gap-2">
@@ -19,15 +19,18 @@
 			<RepositorySnapshots />
 		</div>
 		<UDivider class="my-10" />
-		<div><RepositoryPruneOptions /></div>
+		<div><RepositoryPruneOptions @update="(val) => (prunes = val)" :prunes="prunes" /></div>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { onMounted } from 'vue'
+	import _ from 'lodash'
 	const stats = ref()
 	const mountPath = ref('')
-
+	const prunes = ref<[]>([])
+	const init = ref(true)
+	const idx = ref(-1)
 	const mount = async () => {
 		const dir = await SelectDirectory('Select a mount point')
 		if (!dir) return
@@ -46,12 +49,29 @@
 		mountPath.value = ''
 	}
 
-	const repo = ref<Repository>({})
+	const update = _.debounce(() => {
+		if (init.value) {
+			init.value = false
+			return
+		}
+		repo.value.prune_params = prunes.value
+		useSettings().settings!.repositories[idx.value] = repo.value
+		useSettings().save()
+	}, 300)
+
+	watch(
+		() => [JSON.stringify(prunes.value)],
+		() => {
+			update()
+		}
+	)
+
+	const repo = ref()
 
 	onMounted(async () => {
 		repo.value = useSettings().settings?.repositories.find((r: Repository) => r.id === useRoute().params.id)
-		// stats.value = await useApi().statRepository(useRoute().params.id as string)
-		console.log(stats.value)
+		prunes.value = repo.value.prune_params
+		idx.value = useSettings().settings!.repositories.findIndex((r: Repository) => r.id === repo.value.id)
 		mountPath.value = useSettings().settings.mounts.find((m: Mount) => m.id === useRoute().params.id)?.path ?? ''
 	})
 </script>

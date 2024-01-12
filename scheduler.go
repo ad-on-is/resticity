@@ -105,7 +105,7 @@ func (s *Scheduler) RescheduleBackups() {
 				if !schedule.Active && !StringArrayContains(s.ManualJobs, schedule.Id) {
 					return
 				}
-				s.restic.RunBackup(schedule.Action, backup, toRepository, fromRepository)
+				s.restic.RunSchedule(schedule.Action, backup, toRepository, fromRepository)
 			}),
 			gocron.WithName(schedule.Id),
 			gocron.WithTags(
