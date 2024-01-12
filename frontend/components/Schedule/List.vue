@@ -37,7 +37,7 @@
 				<UBadge color="indigo" variant="outline" v-else>Manually</UBadge>
 			</template>
 			<template #actions-data="{ row }">
-				<UToggle v-model="row.active" color="green" />
+				<UToggle v-model="row.active" color="green" @update:model-value="useSettings().save()" />
 				<UDropdown :items="items(row)">
 					<UButton color="gray" variant="ghost" class="ml-3" icon="i-heroicons-ellipsis-horizontal-20-solid" />
 				</UDropdown>

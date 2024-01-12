@@ -13,6 +13,11 @@ type Settings struct {
 	Config Config
 }
 
+type Mount struct {
+	RepositoryId string `json:"repository_id"`
+	Path         string `json:"path"`
+}
+
 type Repository struct {
 	Id          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -34,6 +39,7 @@ type Backup struct {
 
 type Schedule struct {
 	Id               string `json:"id"`
+	Action           string `json:"action"`
 	BackupId         string `json:"backup_id"`
 	ToRepositoryId   string `json:"to_repository_id"`
 	FromRepositoryId string `json:"from_repository_id"`
@@ -42,6 +48,7 @@ type Schedule struct {
 }
 
 type Config struct {
+	Mounts       []Mount      `json:"mounts"`
 	Repositories []Repository `json:"repositories"`
 	Backups      []Backup     `json:"backups"`
 	Schedules    []Schedule   `json:"schedules"`

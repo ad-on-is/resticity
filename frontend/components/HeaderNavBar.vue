@@ -1,7 +1,7 @@
 <template>
-	<div class="bg-base-300 py-3">
+	<div class="bg-gray-950 py-3">
 		<div class="md:container md:mx-auto flex justify-between">
-			<div class="flex"><Logo class="h-8 w-auto fill-orange-500 stroke-orange-500" /><span class="ml-2 font-bold text-2xl text-orange-500">resticity</span></div>
+			<div class=""><Logo class="h-10 w-10" /></div>
 			<div class="">
 				<ul class="flex">
 					<li>

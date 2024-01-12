@@ -3,7 +3,7 @@ type FetchMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'optio
 export default class HttpClient {
 	public static get = async (url: string, notify: false | { title: string; text: string; type?: string } = false) => await this.doFetch(url, { method: 'get' }, notify)
 	public static del = async (url: string, notify: false | { title: string; text: string; type?: string } = false) => await this.doFetch(url, { method: 'delete' }, notify)
-	public static post = async (url: string, data: any, notify: false | { title: string; text: string; type?: string } = false) =>
+	public static post = async (url: string, data: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
 		await this.doFetch(url, { method: 'post', body: data }, notify)
 	public static put = async (url: string, data: any, notify: false | { title: string; text: string; type?: string } = false) =>
 		await this.doFetch(url, { method: 'put', body: data }, notify)

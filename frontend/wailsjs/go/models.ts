@@ -2,6 +2,7 @@ export namespace main {
 	
 	export interface Schedule {
 	    id: string;
+	    action: string;
 	    backup_id: string;
 	    to_repository_id: string;
 	    from_repository_id: string;

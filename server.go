@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -12,6 +13,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
+
+type BrowseData struct {
+	Path string `json:"path"`
+}
+
+type MountData struct {
+	Path string `json:"path"`
+}
+
+type RestoreData struct {
+	RootPath string `json:"root_path"`
+	FromPath string `json:"from_path"`
+	ToPath   string `json:"to_path"`
+}
 
 func RunServer(
 	scheduler *Scheduler,
@@ -36,10 +51,8 @@ func RunServer(
 	})
 
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
-		// c.Locals is added to the *websocket.Conn
 
-		// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
-
+		defer c.Close()
 		for {
 			jobs := scheduler.GetRunningJobs()
 			data := make(map[string]any)
@@ -58,6 +71,52 @@ func RunServer(
 
 	}))
 
+	api.Get("/schedules/:id/run", func(c *fiber.Ctx) error {
+		scheduler.RunJobByName(c.Params("id"))
+
+		return c.SendString("Running schedule in the background")
+	})
+
+	api.Post("/check", func(c *fiber.Ctx) error {
+		var r Repository
+		if err := c.BodyParser(&r); err != nil {
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		}
+
+		files, err := os.ReadDir(r.Path)
+		if err != nil {
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		}
+		if len(files) > 0 {
+			if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			} else {
+				return c.SendString("OK_REPO_EXISTING")
+			}
+		}
+
+		return c.SendString("OK_REPO_EMPTY")
+	})
+	api.Post("/init", func(c *fiber.Ctx) error {
+		var r Repository
+		if err := c.BodyParser(&r); err != nil {
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		}
+		if _, err := restic.Exec(r, []string{"init"}, []string{}); err != nil {
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		}
+		return c.SendString("OK")
+	})
+
+	api.Get("/test", func(c *fiber.Ctx) error {
+		return c.SendStream(bytes.NewReader(outb.Bytes()))
+	})
+
 	config := api.Group("/config")
 	backups := api.Group("/backups")
 	config.Get("/", func(c *fiber.Ctx) error {
@@ -75,72 +134,102 @@ func RunServer(
 		return c.SendString("OK")
 	})
 
-	api.Get("/schedules/:id/run", func(c *fiber.Ctx) error {
-		scheduler.RunJobByName(c.Params("id"))
-
-		return c.SendString("Running schedule in the background")
-	})
-
 	repositories := api.Group("/repositories")
-	api.Post("/check", func(c *fiber.Ctx) error {
-		var r Repository
-		if err := c.BodyParser(&r); err != nil {
-			c.SendStatus(500)
-			return c.SendString(err.Error())
-		}
 
-		files, err := os.ReadDir(r.Path)
-		if err != nil {
-			c.SendStatus(500)
-			return c.SendString(err.Error())
-		}
-		if len(files) > 0 {
-			fmt.Println("containing files")
-			if err := restic.Verify(r); err != nil {
-				c.SendStatus(500)
-				return c.SendString(err.Error())
-			} else {
-				return c.SendString("REPO_OK_EXISTING")
-			}
-		}
+	repositories.Post("/:id/:action", func(c *fiber.Ctx) error {
+		act := c.Params("action")
 
-		return c.SendString("REPO_OK_EMPTY")
-	})
-	api.Post("/init", func(c *fiber.Ctx) error {
-		var r Repository
-		if err := c.BodyParser(&r); err != nil {
-			c.SendStatus(500)
-			return c.SendString(err.Error())
-		}
-		if err := restic.Initialize(r); err != nil {
-			c.SendStatus(500)
-			return c.SendString(err.Error())
-		}
-		return c.SendString("OK")
-	})
-	repositories.Get("/:id/snapshots", func(c *fiber.Ctx) error {
-		s := restic.ListSnapshots(*settings.GetRepositoryById(c.Params("id")))
-		return c.JSON(s)
-
-	})
-
-	type MountData struct {
-		Path string `json:"path"`
-	}
-
-	repositories.Post("/:id/snapshots/:snapshot_id/:action", func(c *fiber.Ctx) error {
-		switch c.Params("action") {
-		case "browse":
+		switch act {
+		case "mount":
 			var data MountData
 			if err := c.BodyParser(&data); err != nil {
 				c.SendStatus(500)
 				return c.SendString(err.Error())
+			}
+			fmt.Println(data.Path)
+
+			go func(id string) {
+				restic.Exec(
+					*settings.GetRepositoryById(id),
+					[]string{act, data.Path},
+					[]string{},
+				)
+			}(c.Params("id"))
+
+			return c.SendString("OK")
+		case "unmount":
+			var data MountData
+			if err := c.BodyParser(&data); err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			fmt.Println("unmounting")
+
+			e := exec.Command("/usr/bin/umount", "-l", data.Path)
+			e.Output()
+
+			return c.SendString("OK")
+		case "snapshots":
+			res, err := restic.Exec(
+				*settings.GetRepositoryById(c.Params("id")),
+				[]string{act},
+				[]string{},
+			)
+			if err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			var data []Snapshot
+
+			if err := json.Unmarshal([]byte(res), &data); err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			return c.JSON(data)
+		}
+
+		return c.SendString("Unknown action")
+
+	})
+
+	repositories.Post("/:id/snapshots/:snapshot_id/:action", func(c *fiber.Ctx) error {
+		switch c.Params("action") {
+		case "browse":
+			var data BrowseData
+			if err := c.BodyParser(&data); err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			res, err := restic.BrowseSnapshot(
+				*settings.GetRepositoryById(c.Params("id")),
+				c.Params("snapshot_id"),
+				data.Path,
+			)
+			if err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+
+			}
+			return c.JSON(res)
+
+		case "restore":
+			var data RestoreData
+			if err := c.BodyParser(&data); err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
 			} else {
-				return c.JSON(restic.BrowseSnapshot(
+				if _, err := restic.Exec(
 					*settings.GetRepositoryById(c.Params("id")),
-					c.Params("snapshot_id"),
-					data.Path,
-				))
+					[]string{"restore",
+						c.Params("snapshot_id") + ":" + data.RootPath,
+						"--target",
+						data.ToPath,
+						"--include", data.FromPath}, []string{},
+				); err != nil {
+					c.SendStatus(500)
+					return c.SendString(err.Error())
+				}
+				return c.SendString("OK")
 			}
 		}
 
@@ -148,6 +237,7 @@ func RunServer(
 	})
 
 	backups.Get("/", func(c *fiber.Ctx) error {
+
 		return c.SendString("Hello, World!")
 	})
 

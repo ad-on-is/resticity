@@ -1,12 +1,12 @@
 <template>
-	<h3 class="text-purple-500 mb-3"><FaIcon icon="table-list" class="mr-2" />Snapshots</h3>
+	<h3 class="text-purple-500 mb-3"><UIcon name="i-heroicons-queue-list" />Snapshots</h3>
 
 	<UTable :rows="snapshots" v-model="selected" :columns="columns" @select="" :loading="loading" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
 		<template #tags-data="{ row }">
 			<UBadge v-for="tag in row.tags" variant="outline" color="indigo">{{ tag }}</UBadge>
 		</template>
 		<template #time-data="{ row }">
-			{{ format(new Date(row.time), 'dd.MM.yyyy H:I:s') }}
+			{{ formatISO9075(new Date(row.time)) }}
 		</template>
 		<template #paths-data="{ row }">
 			{{ row.paths.join(',') }}
@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 	import { onMounted } from 'vue'
-	import { format } from 'date-fns'
+	import { formatISO9075 } from 'date-fns'
 	import _ from 'lodash'
 	const snapshots = ref<Array<Snapshot>>([])
 	const loading = ref(true)
@@ -40,7 +40,7 @@
 
 	const items = (row: any) => [
 		[
-			...paths.value.map((p) => ({
+			...row.paths.map((p) => ({
 				label: 'Browse ' + p,
 				icon: 'i-heroicons-document-magnifying-glass',
 				click: () => {
@@ -48,16 +48,10 @@
 				},
 			})),
 			{
-				label: mounted.value.includes(row.id) ? 'Unmount' : 'Mount',
-				icon: mounted.value.includes(row.id) ? 'i-heroicons-server' : 'i-heroicons-server',
+				label: 'Quick Restore',
+				icon: 'i-heroicons-arrow-top-right-on-square',
 				click: () => {
-					if (mounted.value.includes(row.id)) {
-						mounted.value = mounted.value.filter((item) => item !== row.id)
-						// Mount(row.id, false)
-					} else {
-						mounted.value.push(row.id)
-						// Mount(row.id, true)
-					}
+					console.log('Bong')
 				},
 			},
 		],

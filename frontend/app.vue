@@ -1,6 +1,7 @@
 <template>
 	<div class="min-h-screen overflow-hidden bg-cool" data-theme="resticity">
-		<NuxtLayout>
+		<div v-if="loading"><Logo class="h-8 w-auto fill-orange-500 stroke-orange-500" /></div>
+		<NuxtLayout v-else>
 			<NuxtPage />
 		</NuxtLayout>
 		<UNotifications />
@@ -8,9 +9,11 @@
 </template>
 
 <script setup lang="ts">
-	onMounted(() => {
-		useSettings().init()
-		useSocket().init()
+	const loading = ref(true)
+	onMounted(async () => {
+		await useSettings().init()
+		await useSocket().init()
+		loading.value = false
 	})
 </script>
 

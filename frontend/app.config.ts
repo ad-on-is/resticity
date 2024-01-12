@@ -3,8 +3,5 @@ export default defineAppConfig({
 		primary: 'sky',
 		gray: 'resticity',
 		modal: { overlay: { background: 'dark:bg-gray-950/75' } },
-		icons: {
-			dynamic: true,
-		},
 	},
 })

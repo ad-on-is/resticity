@@ -51,16 +51,16 @@ const (
 )
 
 type Snapshot struct {
-	Id             string   `json:"id"`
-	Time           string   `json:"time"`
-	Paths          []string `json:"paths"`
-	Hostname       string   `json:"hostname"`
-	Username       string   `json:"username"`
-	UID            uint32   `json:"uid"`
-	GID            uint32   `json:"gid"`
-	ShortId        string   `json:"short_id"`
-	Tags           []string `json:"tags"`
-	ProgramVersion string   `json:"program_version"`
+	Id             string    `json:"id"`
+	Time           time.Time `json:"time"`
+	Paths          []string  `json:"paths"`
+	Hostname       string    `json:"hostname"`
+	Username       string    `json:"username"`
+	UID            uint32    `json:"uid"`
+	GID            uint32    `json:"gid"`
+	ShortId        string    `json:"short_id"`
+	Tags           []string  `json:"tags"`
+	ProgramVersion string    `json:"program_version"`
 }
 
 type FileDescriptor struct {
@@ -101,56 +101,19 @@ func (r *Restic) core(repository Repository, cmd []string, envs []string) (strin
 
 }
 
-func (r *Restic) Unlock(repository Repository) {
-	if _, err := r.core(repository, []string{"unlock"}, []string{}); err != nil {
-		fmt.Println("ERROR", err)
-	}
-}
-
-func (r *Restic) Verify(repository Repository) error {
-	fmt.Println("VERIFYING")
-	if data, err := r.core(repository, []string{"cat", "config"}, []string{}); err != nil {
-		fmt.Println(err)
-		return err
+func (r *Restic) Exec(repository Repository, cmds []string, envs []string) (string, error) {
+	if data, err := r.core(repository, cmds, envs); err != nil {
+		return "", err
 	} else {
-		fmt.Println(data)
+		return data, nil
 	}
-	return nil
-}
-
-func (r *Restic) Initialize(repository Repository) error {
-	if _, err := r.core(repository, []string{"init"}, []string{}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *Restic) ListSnapshots(repository Repository) []Snapshot {
-	if res, err := r.core(repository, []string{"snapshots"}, []string{}); err == nil {
-		var data []Snapshot
-		if err := json.Unmarshal([]byte(res), &data); err == nil {
-			return data
-		}
-	} else {
-		fmt.Println("ERROR", err)
-	}
-
-	return []Snapshot{}
-}
-
-func (r *Restic) MountSnapshot(repository Repository, snapshotId string, path string) error {
-	if _, err := r.core(repository, []string{"mount", snapshotId}, []string{}); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *Restic) BrowseSnapshot(
 	repository Repository,
 	snapshotId string,
 	path string,
-) []FileDescriptor {
-	fmt.Println("BROWSIIIING")
+) ([]FileDescriptor, error) {
 	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}); err == nil {
 		res = strings.ReplaceAll(res, "}", "},")
 		res = strings.ReplaceAll(res, "\n", "")
@@ -158,49 +121,65 @@ func (r *Restic) BrowseSnapshot(
 		res = strings.ReplaceAll(res, ",]", "]")
 		var data []FileDescriptor
 		if err := json.Unmarshal([]byte(res), &data); err == nil {
-			return data
+			return data, nil
 		} else {
 			fmt.Println("Error parsing JSON", err)
+			return []FileDescriptor{}, err
 		}
 	} else {
 		fmt.Println("Error browsing snapshots", err)
+		return []FileDescriptor{}, err
 	}
 
-	return []FileDescriptor{}
 }
 
-func (r *Restic) RunBackup(backup *Backup, toRepository *Repository, fromRepository *Repository) {
-	time.Sleep(30 * time.Second)
+func (r *Restic) RunBackup(
+	action string,
+	backup *Backup,
+	toRepository *Repository,
+	fromRepository *Repository,
+) {
+	fmt.Println("RUNNING BACKUP", action)
+	switch action {
+	case "backup":
+		if backup == nil || toRepository == nil {
+			fmt.Println("Nope!")
+			return
+		}
+		cmds := []string{"backup", backup.Path}
+		for _, p := range backup.BackupParams {
+			cmds = append(cmds, p...)
+		}
+
+		fmt.Println(cmds)
+
+		_, err := r.core(*toRepository, cmds, []string{})
+		if err != nil {
+			fmt.Println(err)
+		}
+		break
+	case "copy-snapshots":
+		if fromRepository == nil || toRepository == nil {
+			fmt.Println("Nope!")
+			return
+		}
+	case "prune":
+		if toRepository == nil {
+			fmt.Println("Nope!")
+			return
+		}
+	}
 	if toRepository == nil {
 		fmt.Println("Nope!")
 		return
 	}
 
-	// must run backup and sync at once
-	if backup != nil && fromRepository != nil {
-		fmt.Println("Nope!")
-		return
-	}
-
-	if backup == nil && fromRepository == nil {
-		// rune prune options
-	}
-
-	if backup != nil {
-		cmds := []string{"backup"}
-		for _, p := range backup.BackupParams {
-			cmds = append(cmds, p...)
-		}
-		fmt.Println(cmds)
-		// r.core(*toRepository, cmds, []string{})
-	}
-
-	if fromRepository != nil {
-		cmds := []string{"copy", "--from-repo", fromRepository.Path}
-		envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
-		fmt.Println(cmds)
-		fmt.Println(envs)
-		// r.core(*toRepository, cmds, []string{})
-	}
+	// if fromRepository != nil {
+	// 	cmds := []string{"copy", "--from-repo", fromRepository.Path}
+	// 	envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
+	// 	fmt.Println(cmds)
+	// 	fmt.Println(envs)
+	// 	// r.core(*toRepository, cmds, []string{})
+	// }
 
 }

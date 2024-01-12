@@ -51,31 +51,9 @@
 	const ifPresent = ref(fromPropsArray('--exclude-if-present'))
 	const listedInFiles = ref(fromPropsArray('--exclude-file'))
 	const cacheDir = ref(props.excludes.some((e) => e[0] === '--exclude-caches'))
-	const largerThan = ref(fromPropsArray('--exclude-if-larger-than', '').replace(/[^0-9]/g, '') || 0)
-	const largerThanUnit = ref(fromPropsArray('--exclude-if-larger-than', '').replace(/[0-9]/g, '') || 'K')
+	const largerThan = ref(fromPropsArray('--exclude-larger-than', '').replace(/[^0-9]/g, '') || 0)
+	const largerThanUnit = ref(fromPropsArray('--exclude-larger-than', '').replace(/[0-9]/g, '') || 'K')
 	const emit = defineEmits(['update'])
-
-	// onMounted(() => {
-	//
-	// 	listedInFiles.value = props.excludes
-	// 		.filter((e) => e[0] === '--exclude-file')
-	// 		.map((e) => e[1])
-	// 		.join('\n')
-	// 	cacheDir.value = props.excludes.some((e) => e[0] === '--exclude-caches')
-	// 	largerThan.value =
-	// 		parseInt(
-	// 			props.excludes
-	// 				.filter((e) => e[0] === '--exclude-if-larger-than')
-	// 				.map((e) => e[1])
-	// 				.join('')
-	// 				.replace(/[^0-9]/g, '')
-	// 		) || 0
-	// 	largerThanUnit.value = props.excludes
-	// 		.filter((e) => e[0] === '--exclude-if-larger-than')
-	// 		.map((e) => e[1])
-	// 		.join('')
-	// 		.replace(/[0-9]/g, '')
-	// })
 
 	function toParamArray(str: string, param: string): any {
 		return str
@@ -98,7 +76,7 @@
 			...toParamArray(ifPresent.value, '--exclude-if-present'),
 			...toParamArray(listedInFiles.value, '--exclude-file'),
 			...(cacheDir.value ? [['--exclude-caches', '']] : []),
-			...(parseInt(largerThan.value as string) > 0 ? [['--exclude-if-larger-than', `${largerThan.value}${largerThanUnit.value}`]] : []),
+			...(parseInt(largerThan.value as string) > 0 ? [['--exclude-larger-than', `${largerThan.value}${largerThanUnit.value}`]] : []),
 		])
 	})
 </script>
