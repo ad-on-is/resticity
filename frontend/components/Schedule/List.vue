@@ -69,14 +69,24 @@
 
 	const items = (row: any) => [
 		[
-			{
-				label: 'Run now',
-				icon: 'i-heroicons-arrow-uturn-right',
-				click: async () => {
-					const t = await useApi().runSchedule(row.id)
-					console.log(t)
-				},
-			},
+			!useJobs().scheduleIsRunning(row.id)
+				? {
+						label: 'Run now',
+						icon: 'i-heroicons-arrow-uturn-right',
+						click: async () => {
+							const t = await useApi().runSchedule(row.id)
+							console.log(t)
+						},
+				  }
+				: {
+						label: 'Stop',
+						icon: 'i-heroicons-arrow-uturn-right',
+						click: async () => {
+							const t = await useApi().stopSchedule(row.id)
+							console.log(t)
+						},
+				  },
+
 			{
 				label: 'Delete',
 				icon: 'i-heroicons-trash',

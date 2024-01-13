@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -8,14 +9,31 @@ import (
 	"github.com/google/uuid"
 )
 
+type Job struct {
+	job      gocron.Job
+	schedule Schedule
+}
+
+type ScheduleContext struct {
+	Id     string
+	Ctx    context.Context
+	Cancel context.CancelFunc
+}
+
+type RunningJob struct {
+	JobId    uuid.UUID `json:"job_id"`
+	Schedule Schedule  `json:"schedule"`
+}
+
 type Scheduler struct {
-	gocron      gocron.Scheduler
-	restic      *Restic
-	RunningJobs []BackupJob
-	Jobs        []gocron.Job
-	ManualJobs  []string
-	jmu         sync.Mutex
-	settings    *Settings
+	gocron            gocron.Scheduler
+	restic            *Restic
+	RunningJobs       []RunningJob
+	ScheduleContexts  []ScheduleContext
+	Jobs              []Job
+	ForceInactiveJobs []string
+	jmu               sync.Mutex
+	settings          *Settings
 }
 
 func NewScheduler(settings *Settings, restic *Restic) (*Scheduler, error) {
@@ -23,8 +41,8 @@ func NewScheduler(settings *Settings, restic *Restic) (*Scheduler, error) {
 	s := &Scheduler{}
 	s.settings = settings
 	s.restic = restic
-	s.ManualJobs = []string{}
-	s.RunningJobs = []BackupJob{}
+	s.ForceInactiveJobs = []string{}
+	s.RunningJobs = []RunningJob{}
 	if gc, err := gocron.NewScheduler(); err == nil {
 		s.gocron = gc
 		s.gocron.Start()
@@ -36,10 +54,12 @@ func NewScheduler(settings *Settings, restic *Restic) (*Scheduler, error) {
 }
 
 func (s *Scheduler) RunJobByName(name string) {
-	for _, job := range s.Jobs {
-		if job.Name() == name {
-			s.ManualJobs = append(s.ManualJobs, name)
-			if err := job.RunNow(); err != nil {
+	fmt.Println("should run", name)
+	for _, j := range s.Jobs {
+		if j.job.Name() == name {
+			fmt.Println("Running job by name", name)
+			s.ForceInactiveJobs = append(s.ForceInactiveJobs, name)
+			if err := j.job.RunNow(); err != nil {
 				fmt.Println("Error running job manually", err)
 			}
 			break
@@ -47,11 +67,21 @@ func (s *Scheduler) RunJobByName(name string) {
 	}
 }
 
-func (s *Scheduler) DeleteBackgroundJob(jobID uuid.UUID) {
+func (s *Scheduler) StopJobByName(name string) {
+	for _, c := range s.ScheduleContexts {
+		if c.Id == name {
+			c.Cancel()
+			break
+		}
+	}
+}
+
+func (s *Scheduler) DeleteRunningJob(jobID uuid.UUID) {
 	s.jmu.Lock()
 	defer s.jmu.Unlock()
 	for i, j := range s.RunningJobs {
 		if j.JobId == jobID {
+			fmt.Println("Deleting forced inactive job", jobID)
 			s.RunningJobs = append(
 				s.RunningJobs[:i],
 				s.RunningJobs[i+1:]...)
@@ -60,36 +90,62 @@ func (s *Scheduler) DeleteBackgroundJob(jobID uuid.UUID) {
 	}
 }
 
-func (s *Scheduler) DeleteManualJob(name string) {
-	s.jmu.Lock()
-	defer s.jmu.Unlock()
-	for i, j := range s.ManualJobs {
-		if j == name {
-			s.ManualJobs = append(
-				s.ManualJobs[:i],
-				s.ManualJobs[i+1:]...)
+func (s *Scheduler) RecreateCtx(name string) {
+	for i, c := range s.ScheduleContexts {
+		if c.Id == name {
+			fmt.Println("Recreating context for job", name)
+			ctx, cancel := context.WithCancel(context.Background())
+			s.ScheduleContexts[i].Ctx = ctx
+			s.ScheduleContexts[i].Cancel = cancel
 			break
 		}
 	}
 }
 
-func (s *Scheduler) GetRunningJobs() []BackupJob {
+func (s *Scheduler) DeleteForcedInactiveJob(name string) {
+	s.jmu.Lock()
+	defer s.jmu.Unlock()
+	for i, j := range s.ForceInactiveJobs {
+		if j == name {
+			fmt.Println("Deleting forced inactive job", name)
+			s.ForceInactiveJobs = append(
+				s.ForceInactiveJobs[:i],
+				s.ForceInactiveJobs[i+1:]...)
+			break
+		}
+	}
+}
+
+func (s *Scheduler) GetRunningJobs() []RunningJob {
 	s.jmu.Lock()
 	defer s.jmu.Unlock()
 	return s.RunningJobs
 }
 
+func (s *Scheduler) GetContextById(id string) *ScheduleContext {
+	for _, sc := range s.ScheduleContexts {
+		if sc.Id == id {
+			return &sc
+		}
+	}
+	return nil
+}
+
 func (s *Scheduler) RescheduleBackups() {
 
-	s.Jobs = []gocron.Job{}
-
+	s.Jobs = []Job{}
+	s.ScheduleContexts = []ScheduleContext{}
+	s.RunningJobs = []RunningJob{}
+	s.ForceInactiveJobs = []string{}
 	fmt.Println("Rescheduling backups")
 
 	config := s.settings.Config
 
 	for i := range config.Schedules {
 		schedule := config.Schedules[i]
-
+		ctx, cancel := context.WithCancel(context.Background())
+		sctx := ScheduleContext{Id: schedule.Id, Ctx: ctx, Cancel: cancel}
+		s.ScheduleContexts = append(s.ScheduleContexts, sctx)
 		jobDef := gocron.OneTimeJob(gocron.OneTimeJobStartImmediately())
 
 		if schedule.Cron != "" {
@@ -102,10 +158,17 @@ func (s *Scheduler) RescheduleBackups() {
 				toRepository := s.settings.GetRepositoryById(schedule.ToRepositoryId)
 				fromRepository := s.settings.GetRepositoryById(schedule.FromRepositoryId)
 				backup := s.settings.GetBackupById(schedule.BackupId)
-				if !schedule.Active && !StringArrayContains(s.ManualJobs, schedule.Id) {
+				if !schedule.Active && !StringArrayContains(s.ForceInactiveJobs, schedule.Id) {
+					fmt.Println("MISSING", schedule.Id)
 					return
 				}
-				s.restic.RunSchedule(schedule.Action, backup, toRepository, fromRepository)
+				s.restic.RunSchedule(
+					s.GetContextById(schedule.Id),
+					schedule.Action,
+					backup,
+					toRepository,
+					fromRepository,
+				)
 			}),
 			gocron.WithName(schedule.Id),
 			gocron.WithTags(
@@ -120,7 +183,7 @@ func (s *Scheduler) RescheduleBackups() {
 					defer s.jmu.Unlock()
 					s.RunningJobs = append(
 						s.RunningJobs,
-						BackupJob{
+						RunningJob{
 							JobId:    jobID,
 							Schedule: schedule,
 						},
@@ -128,14 +191,18 @@ func (s *Scheduler) RescheduleBackups() {
 				}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
-						s.DeleteBackgroundJob(jobID)
-						s.DeleteManualJob(jobName)
+						fmt.Println("after job run")
+						s.DeleteRunningJob(jobID)
+						s.DeleteForcedInactiveJob(jobName)
+						s.RecreateCtx(jobName)
 					},
 				),
 				gocron.AfterJobRunsWithError(
 					func(jobID uuid.UUID, jobName string, err error) {
-						s.DeleteBackgroundJob(jobID)
-						s.DeleteManualJob(jobName)
+						fmt.Println("after job run with error", err)
+						s.DeleteRunningJob(jobID)
+						s.DeleteForcedInactiveJob(jobName)
+						s.RecreateCtx(jobName)
 					},
 				),
 			))
@@ -145,7 +212,10 @@ func (s *Scheduler) RescheduleBackups() {
 			continue
 		}
 
-		s.Jobs = append(s.Jobs, j)
+		s.Jobs = append(
+			s.Jobs,
+			Job{job: j, schedule: schedule},
+		)
 
 	}
 

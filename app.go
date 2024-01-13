@@ -20,11 +20,6 @@ type App struct {
 	settings  *Settings
 }
 
-type BackupJob struct {
-	JobId    uuid.UUID `json:"job_id"`
-	Schedule Schedule  `json:"schedule"`
-}
-
 // NewApp creates a new App application struct
 func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings) *App {
 	return &App{restic: restic, scheduler: scheduler, settings: settings}
@@ -93,10 +88,6 @@ func (a *App) startup(ctx context.Context) {
 	a.toggleSysTrayIcon()
 	go systray.Run(a.systemTray, func() {})
 
-}
-
-func (a *App) GetBackupJobs() []BackupJob {
-	return a.scheduler.RunningJobs
 }
 
 func (a *App) StopBackup(id uuid.UUID) {

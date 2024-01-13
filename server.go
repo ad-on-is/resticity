@@ -71,10 +71,17 @@ func RunServer(
 
 	}))
 
-	api.Get("/schedules/:id/run", func(c *fiber.Ctx) error {
-		scheduler.RunJobByName(c.Params("id"))
+	api.Get("/schedules/:id/:action", func(c *fiber.Ctx) error {
+		switch c.Params("action") {
+		case "run":
+			scheduler.RunJobByName(c.Params("id"))
+			break
+		case "stop":
+			scheduler.StopJobByName(c.Params("id"))
+			break
+		}
 
-		return c.SendString("Running schedule in the background")
+		return c.SendString(c.Params("action") + " schedule in the background")
 	})
 
 	api.Post("/check", func(c *fiber.Ctx) error {

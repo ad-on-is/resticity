@@ -19,6 +19,7 @@ export const useApi = defineStore('useApi', () => {
 
 	const statRepository = async (repoId: string) => (await useHttp.get(`/repositories/${repoId}/stats`)) ?? {}
 	const runSchedule = async (scheduleId: string) => (await useHttp.get(`/schedules/${scheduleId}/run`)) ?? {}
+	const stopSchedule = async (scheduleId: string) => (await useHttp.get(`/schedules/${scheduleId}/stop`)) ?? {}
 	const getConfig = async () => (await useHttp.get(`/config`)) ?? {}
 	const saveConfig = async (config: any) => (await useHttp.post(`/config`, config, { title: 'Settings', text: 'Settings saved successfully' })) ?? {}
 	const checkRepository = async (repo: any) => (await useHttp.post(`/check`, repo, { title: 'Check Repository', text: 'Repository can be used' })) ?? {}
@@ -29,6 +30,7 @@ export const useApi = defineStore('useApi', () => {
 		restoreFromSnapshot,
 		getSnapshots,
 		runSchedule,
+		stopSchedule,
 		mount,
 		unmount,
 		getConfig,

@@ -71,13 +71,24 @@ type FileDescriptor struct {
 	Mtime string `json:"mtime"`
 }
 
-func (r *Restic) core(repository Repository, cmd []string, envs []string) (string, error) {
+func (r *Restic) core(
+	repository Repository,
+	cmd []string,
+	envs []string,
+	sctx *ScheduleContext,
+) (string, error) {
 
 	cmds := []string{"-r", repository.Path, "--json"}
 	cmds = append(cmds, cmd...)
 	var sout bytes.Buffer
 	var serr bytes.Buffer
-	c := exec.Command("/usr/bin/restic", cmds...)
+	var c *exec.Cmd
+	if sctx != nil {
+		c = exec.CommandContext(sctx.Ctx, "/usr/bin/restic", cmds...)
+		defer sctx.Cancel()
+	} else {
+		c = exec.Command("/usr/bin/restic", cmds...)
+	}
 	c.Stderr = &serr
 	c.Stdout = &sout
 	c.Env = append(
@@ -102,7 +113,7 @@ func (r *Restic) core(repository Repository, cmd []string, envs []string) (strin
 }
 
 func (r *Restic) Exec(repository Repository, cmds []string, envs []string) (string, error) {
-	if data, err := r.core(repository, cmds, envs); err != nil {
+	if data, err := r.core(repository, cmds, envs, nil); err != nil {
 		return "", err
 	} else {
 		return data, nil
@@ -114,7 +125,7 @@ func (r *Restic) BrowseSnapshot(
 	snapshotId string,
 	path string,
 ) ([]FileDescriptor, error) {
-	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}); err == nil {
+	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil); err == nil {
 		res = strings.ReplaceAll(res, "}", "},")
 		res = strings.ReplaceAll(res, "\n", "")
 		res = "[" + res + "]"
@@ -134,11 +145,13 @@ func (r *Restic) BrowseSnapshot(
 }
 
 func (r *Restic) RunSchedule(
+	sctx *ScheduleContext,
 	action string,
 	backup *Backup,
 	toRepository *Repository,
 	fromRepository *Repository,
 ) {
+
 	switch action {
 	case "backup":
 		if backup == nil || toRepository == nil {
@@ -152,7 +165,7 @@ func (r *Restic) RunSchedule(
 
 		fmt.Println(cmds)
 
-		_, err := r.core(*toRepository, cmds, []string{})
+		_, err := r.core(*toRepository, cmds, []string{}, sctx)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -177,9 +190,9 @@ func (r *Restic) RunSchedule(
 		for _, p := range toRepository.PruneParams {
 			cmds = append(cmds, p...)
 		}
-		_, err := r.core(*toRepository, []string{"unlock"}, []string{})
+		_, err := r.core(*toRepository, []string{"unlock"}, []string{}, sctx)
 		if err == nil {
-			_, err := r.core(*toRepository, cmds, []string{})
+			_, err := r.core(*toRepository, cmds, []string{}, sctx)
 			if err != nil {
 				fmt.Println(err)
 			}

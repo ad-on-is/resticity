@@ -97,6 +97,7 @@ func settingsFile() string {
 }
 
 func (s *Settings) Save(data Config) error {
+
 	s.Config = data
 	fmt.Println("Saving settings")
 	if str, err := json.MarshalIndent(s.Config, " ", " "); err == nil {
