@@ -3,6 +3,13 @@
 		<h1 class="text-yellow-500 font-bold mb-3"><UIcon name="i-heroicons-clock" class="mr-2" dynamic />Schedules</h1>
 
 		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg" @select="">
+			<template #id-data="{ row }">
+				<div class="inline-flex items-center gap-1">
+					<UTooltip :text="row.id"
+						><span class="text-gray-400">{{ row.id.split('-')[0] }}...</span></UTooltip
+					>
+				</div>
+			</template>
 			<template #task-data="{ row }">
 				<div class="inline-flex items-center gap-1">
 					<span v-if="row.action === 'backup'"
@@ -24,6 +31,14 @@
 					<span class="text-purple-500">
 						<span>{{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.to_repository_id)?.name || '' }}</span></span
 					>
+				</div>
+				<div v-if="useJobs().scheduleProgress(row.id) !== null">
+					<UProgress :value="useJobs().scheduleProgress(row.id).percent_done * 100" class="mt-2" color="sky" />
+					<div class="text-xs opacity-50 flex justify-between mt-2">
+						<span>{{ useJobs().scheduleProgress(row.id).files_done }}/{{ useJobs().scheduleProgress(row.id).total_files }} files</span>
+						<span>{{ humanFileSize(useJobs().scheduleProgress(row.id).bytes_done) }}/{{ humanFileSize(useJobs().scheduleProgress(row.id).total_bytes) }}</span>
+						<span>{{ useJobs().scheduleProgress(row.id).seconds_remaining || 'unknown' }} seconds remaining</span>
+					</div>
 				</div>
 			</template>
 			<template #status-data="{ row }">
@@ -53,9 +68,10 @@
 <script setup lang="ts">
 	import cronstrue from 'cronstrue'
 	const columns = [
+		{ key: 'id', class: 'w-32', label: 'ID' },
 		{ key: 'status', label: 'Status', class: 'w-32' },
-		{ key: 'task', label: 'Task' },
-		{ key: 'cron', label: 'Scheduled' },
+		{ key: 'task', label: 'Task', class: 'w-128' },
+		{ key: 'cron', label: 'Scheduled', class: 'w-32' },
 		{ key: 'actions', class: 'w-10' },
 	]
 

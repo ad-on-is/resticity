@@ -1,8 +1,15 @@
 export const useJobs = defineStore('useJobs', () => {
-	const running = ref<Awaited<ReturnType<typeof GetBackupJobs>>>([])
+	const running = ref([])
+	const progress = ref([])
 
 	function scheduleIsRunning(id: string) {
-		return running.value?.find((job: BackupJob) => job.schedule.id === id) ? true : false
+		return running.value?.find((job: any) => job.id === id) ? true : false
+	}
+
+	function scheduleProgress(id: string): any | null {
+		const job: any = running.value?.find((job: any) => job.id === id)
+		if (job) return job.out
+		return null
 	}
 
 	function repoIsRunning(id: string) {
@@ -18,7 +25,9 @@ export const useJobs = defineStore('useJobs', () => {
 
 	return {
 		running,
+		progress,
 		scheduleIsRunning,
+		scheduleProgress,
 		repoIsRunning,
 		repoIsSynching,
 		backupIsRunning,

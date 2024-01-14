@@ -6,12 +6,12 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/thoas/go-funk"
 )
 
 type BrowseData struct {
@@ -28,12 +28,25 @@ type RestoreData struct {
 	ToPath   string `json:"to_path"`
 }
 
+type Output struct {
+	Id  string `json:"id"`
+	Out any    `json:"out"`
+}
+
+type MsgJob struct {
+	Id       string   `json:"id"`
+	Schedule Schedule `json:"schedule"`
+	Running  bool     `json:"running"`
+	Force    bool     `json:"force"`
+}
+
 func RunServer(
 	scheduler *Scheduler,
 	restic *Restic,
 	settings *Settings,
 	errb *bytes.Buffer,
 	outb *bytes.Buffer,
+	outputChan *chan ChanMsg,
 ) {
 	server := fiber.New()
 	server.Use(cors.New())
@@ -53,31 +66,120 @@ func RunServer(
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
 		defer c.Close()
+
+		// outs := []Output{}
+
+		// listen := func() {
+		// 	for {
+		// 		jobs := scheduler.GetRunningJobs()
+		// 		for _, j := range jobs {
+		// 			if funk.Find(outs, func(out Output) bool { return out.Id == j.Id }) == nil {
+		// 				outs = append(outs, Output{Id: j.Id, Out: map[string]string{}})
+		// 			}
+		// 			go func(j Job) {
+		// 				d := <-j.Chan
+		// 				for i, out := range outs {
+		// 					if out.Id == j.Id {
+		// 						var data any
+		// 						if err := json.Unmarshal([]byte(d), &data); err == nil {
+		// 							outs[i].Out = data
+		// 						} else {
+		// 							outs[i].Out = map[string]string{}
+		// 						}
+		// 						break
+		// 					}
+		// 				}
+		// 				data := make(map[string]any)
+		// 				data["jobs"] = funk.Map(jobs, func(j Job) MsgJob {
+		// 					return MsgJob{
+		// 						Id:       j.Id,
+		// 						Schedule: j.Schedule,
+		// 						Running:  j.Running,
+		// 						Force:    j.Force,
+		// 					}
+		// 				})
+		// 				data["outputs"] = outs
+		// 				time.Sleep(100 * time.Millisecond)
+
+		// 				if d, err := json.Marshal(data); err == nil {
+		// 					if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
+		// 						log.Println("Error writing to socket:", err)
+		// 					}
+		// 				} else {
+		// 					log.Println("Error marshalling data:", err)
+		// 				}
+		// 				time.Sleep(100 * time.Millisecond)
+		// 			}(j)
+
+		// 		}
+
+		// 	}
+
+		// }
+
+		outputs := []ChanMsg{}
+
 		for {
-			jobs := scheduler.GetRunningJobs()
-			data := make(map[string]any)
-			data["jobs"] = jobs
-			data["out"] = string(outb.Bytes())
-			data["err"] = string(errb.Bytes())
-			if d, err := json.Marshal(data); err == nil {
-				if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
-					log.Println("Error writing to socket:", err)
+			select {
+			case d := <-*outputChan:
+				if funk.Find(
+					outputs,
+					func(out ChanMsg) bool { return out.Id == d.Id },
+				) == nil {
+					outputs = append(outputs, d)
+				} else {
+					for i, out := range outputs {
+						if out.Id == d.Id {
+							outputs[i] = d
+							break
+						}
+					}
 				}
-			} else {
-				log.Println("Error marshalling data:", err)
+				// var data map[string]any
+				// data["jobs"] = outputs
+				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
+					if err = c.WriteMessage(websocket.TextMessage, j); err != nil {
+						log.Println("Error writing to socket:", err)
+					}
+				} else {
+					log.Println("Error marshalling data:", err)
+				}
+				fmt.Println(d)
 			}
-			time.Sleep(1 * time.Second)
 		}
+
+		// for {
+		// time.Sleep(1 * time.Second)
+		// fmt.Println(outputs)
+
+		// data["out"] = string(outb.Bytes())
+
+		// data["outputs"] = funk.Map(filtered, func(o ScheduleOutput) *ScheduleOutput {
+		// 	u := scheduler.GetOutputById(o.Id)
+		// 	// fmt.Println(*u)
+		// 	return u
+		// })
+		// fmt.Println(data["outputs"])
+		// data["err"] = string(errb.Bytes())
+		// if d, err := json.Marshal(data); err == nil {
+		// 	if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
+		// 		log.Println("Error writing to socket:", err)
+		// 	}
+		// } else {
+		// 	log.Println("Error marshalling data:", err)
+		// }
+		// time.Sleep(300 * time.Millisecond)
+		// }
 
 	}))
 
 	api.Get("/schedules/:id/:action", func(c *fiber.Ctx) error {
 		switch c.Params("action") {
 		case "run":
-			scheduler.RunJobByName(c.Params("id"))
+			scheduler.RunJobById(c.Params("id"))
 			break
 		case "stop":
-			scheduler.StopJobByName(c.Params("id"))
+			scheduler.StopJobById(c.Params("id"))
 			break
 		}
 
@@ -153,7 +255,6 @@ func RunServer(
 				c.SendStatus(500)
 				return c.SendString(err.Error())
 			}
-			fmt.Println(data.Path)
 
 			go func(id string) {
 				restic.Exec(
@@ -170,7 +271,6 @@ func RunServer(
 				c.SendStatus(500)
 				return c.SendString(err.Error())
 			}
-			fmt.Println("unmounting")
 
 			e := exec.Command("/usr/bin/umount", "-l", data.Path)
 			e.Output()

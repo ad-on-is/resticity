@@ -12,6 +12,7 @@ require (
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/google/uuid v1.5.0
+	github.com/thoas/go-funk v0.9.3
 	github.com/wailsapp/wails/v2 v2.7.1
 )
 

@@ -14,14 +14,21 @@ import (
 //go:embed all:frontend/.output/public
 var assets embed.FS
 
+type ChanMsg struct {
+	Id       string   `json:"id"`
+	Out      string   `json:"out"`
+	Schedule Schedule `json:"schedule"`
+}
+
 func main() {
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
-	restic := NewRestic(errb, outb)
+	outputChan := make(chan ChanMsg)
 	settings := NewSettings()
-	if scheduler, err := NewScheduler(settings, restic); err == nil {
+	restic := NewRestic(errb, outb, settings)
+	if scheduler, err := NewScheduler(settings, restic, &outputChan); err == nil {
 		(scheduler).RescheduleBackups()
-		go RunServer(scheduler, restic, settings, errb, outb)
+		go RunServer(scheduler, restic, settings, errb, outb, &outputChan)
 		Desktop(scheduler, restic, settings)
 	} else {
 		fmt.Println("SCHEDULER ERROR", err)

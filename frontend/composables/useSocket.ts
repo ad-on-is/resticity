@@ -1,12 +1,21 @@
 export const useSocket = defineStore('useSocket', () => {
 	function init() {
-		const jobsocket = new WebSocket('ws://127.0.0.1:11278/api/ws')
-		jobsocket.onmessage = (event) => {
+		const socket = new WebSocket('ws://127.0.0.1:11278/api/ws')
+		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
-				useJobs().running = data.jobs || []
-				useLogs().out = data.out
-				useLogs().err = data.err
+				console.log(data)
+				useJobs().running =
+					data.map((j: any) => {
+						try {
+							j.out = JSON.parse(j.out)
+						} catch {
+							j.out = {}
+						}
+						return j
+					}) || []
+				// useLogs().out = data.out
+				// useLogs().err = data.err
 			} catch (e) {
 				useJobs().running = []
 				console.error(e)

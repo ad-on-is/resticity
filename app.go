@@ -9,6 +9,7 @@ import (
 	"github.com/energye/systray"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
+	"github.com/thoas/go-funk"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -18,6 +19,99 @@ type App struct {
 	scheduler *Scheduler
 	restic    *Restic
 	settings  *Settings
+}
+
+type Settings struct {
+	Config Config `json:"config"`
+}
+
+type B2Options struct {
+	B2AccountId  string `json:"b2_account_id"`
+	B2AccountKey string `json:"b2_account_key"`
+}
+
+type AzureOptions struct {
+	AzureAccountName    string `json:"azure_account_name"`
+	AzureAccountKey     string `json:"azure_account_key"`
+	AzureAccountSas     string `json:"azure_account_sas"`
+	AzureEndpointSuffix string `json:"azure_endpoint_suffix"`
+}
+
+type Options struct {
+	B2Options
+	AzureOptions
+}
+
+type RepositoryType int32
+
+const (
+	LOCAL  RepositoryType = iota
+	B2     RepositoryType = iota
+	AWS    RepositoryType = iota
+	AZURE  RepositoryType = iota
+	GOOGLE RepositoryType = iota
+)
+
+type Snapshot struct {
+	Id             string    `json:"id"`
+	Time           time.Time `json:"time"`
+	Paths          []string  `json:"paths"`
+	Hostname       string    `json:"hostname"`
+	Username       string    `json:"username"`
+	UID            uint32    `json:"uid"`
+	GID            uint32    `json:"gid"`
+	ShortId        string    `json:"short_id"`
+	Tags           []string  `json:"tags"`
+	ProgramVersion string    `json:"program_version"`
+}
+
+type FileDescriptor struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Path  string `json:"path"`
+	Size  uint32 `json:"size"`
+	Mtime string `json:"mtime"`
+}
+
+type Mount struct {
+	RepositoryId string `json:"repository_id"`
+	Path         string `json:"path"`
+}
+
+type Repository struct {
+	Id          string         `json:"id"`
+	Name        string         `json:"name"`
+	Type        RepositoryType `json:"type"`
+	PruneParams [][]string     `json:"prune_params"`
+	Path        string         `json:"path"`
+	Password    string         `json:"password"`
+	Options     Options        `json:"options"`
+}
+
+type Backup struct {
+	Id           string     `json:"id"`
+	Path         string     `json:"path"`
+	Name         string     `json:"name"`
+	Cron         string     `json:"cron"`
+	BackupParams [][]string `json:"backup_params"`
+	Targets      []string   `json:"targets"`
+}
+
+type Schedule struct {
+	Id               string `json:"id"`
+	Action           string `json:"action"`
+	BackupId         string `json:"backup_id"`
+	ToRepositoryId   string `json:"to_repository_id"`
+	FromRepositoryId string `json:"from_repository_id"`
+	Cron             string `json:"cron"`
+	Active           bool   `json:"active"`
+}
+
+type Config struct {
+	Mounts       []Mount      `json:"mounts"`
+	Repositories []Repository `json:"repositories"`
+	Backups      []Backup     `json:"backups"`
+	Schedules    []Schedule   `json:"schedules"`
 }
 
 // NewApp creates a new App application struct
@@ -37,7 +131,11 @@ func (a *App) toggleSysTrayIcon() {
 		gocron.DurationJob(500*time.Millisecond),
 		gocron.NewTask(func() {
 			if def {
-				if len(a.scheduler.RunningJobs) > 0 {
+				running := funk.Filter(
+					a.scheduler.Jobs,
+					func(j Job) bool { return j.Running == true },
+				).([]Job)
+				if len(running) > 0 {
 					systray.SetIcon(active_icon)
 				}
 				def = false

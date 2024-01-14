@@ -9,51 +9,6 @@ import (
 	"github.com/adrg/xdg"
 )
 
-type Settings struct {
-	Config Config
-}
-
-type Mount struct {
-	RepositoryId string `json:"repository_id"`
-	Path         string `json:"path"`
-}
-
-type Repository struct {
-	Id          string         `json:"id"`
-	Name        string         `json:"name"`
-	Type        RepositoryType `json:"type"`
-	PruneParams [][]string     `json:"prune_params"`
-	Path        string         `json:"path"`
-	Password    string         `json:"password"`
-	Options     Options        `json:"options"`
-}
-
-type Backup struct {
-	Id           string     `json:"id"`
-	Path         string     `json:"path"`
-	Name         string     `json:"name"`
-	Cron         string     `json:"cron"`
-	BackupParams [][]string `json:"backup_params"`
-	Targets      []string   `json:"targets"`
-}
-
-type Schedule struct {
-	Id               string `json:"id"`
-	Action           string `json:"action"`
-	BackupId         string `json:"backup_id"`
-	ToRepositoryId   string `json:"to_repository_id"`
-	FromRepositoryId string `json:"from_repository_id"`
-	Cron             string `json:"cron"`
-	Active           bool   `json:"active"`
-}
-
-type Config struct {
-	Mounts       []Mount      `json:"mounts"`
-	Repositories []Repository `json:"repositories"`
-	Backups      []Backup     `json:"backups"`
-	Schedules    []Schedule   `json:"schedules"`
-}
-
 func NewSettings() *Settings {
 	s := &Settings{}
 	s.Config = s.readFile()
@@ -97,7 +52,6 @@ func settingsFile() string {
 }
 
 func (s *Settings) Save(data Config) error {
-
 	s.Config = data
 	fmt.Println("Saving settings")
 	if str, err := json.MarshalIndent(s.Config, " ", " "); err == nil {
