@@ -6,9 +6,10 @@
   "frontend:build": "pnpm run build",
   "frontend:dev:watcher": "pnpm run dev",
   "frontend:dev:serverUrl": "auto",
+  "appargs": "--server=true",
   "author": {
     "name": "Adis Durakovic",
-    "email": "adis.durakovic@gmail.com"
+    "email": "github@mail.adisdurakovic.com"
   },
   "bindings": {
     "ts_generation": {

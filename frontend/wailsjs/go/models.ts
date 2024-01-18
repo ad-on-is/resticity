@@ -54,8 +54,8 @@ export namespace main {
 	}
 	export interface GroupKey {
 	    hostname: string;
-	    paths: string;
-	    tags: string;
+	    paths: string[];
+	    tags: string[];
 	}
 	
 	

@@ -54,9 +54,9 @@ const (
 )
 
 type GroupKey struct {
-	Hostname string `json:"hostname"`
-	Paths    string `json:"paths"`
-	Tags     string `json:"tags"`
+	Hostname string   `json:"hostname"`
+	Paths    []string `json:"paths"`
+	Tags     []string `json:"tags"`
 }
 
 type SnapshotGroup struct {

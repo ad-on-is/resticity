@@ -1,5 +1,5 @@
 <template>
-	<div class="min-h-screen overflow-hidden bg-cool" data-theme="resticity">
+	<div class="min-h-screen overflow-hidden bg-cool pb-40" data-theme="resticity">
 		<div v-if="loading"><Logo class="h-8 w-auto fill-orange-500 stroke-orange-500" /></div>
 		<NuxtLayout v-else>
 			<NuxtPage />

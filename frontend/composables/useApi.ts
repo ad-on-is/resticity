@@ -10,8 +10,8 @@ export const useApi = defineStore('useApi', () => {
 			{ title: 'Restoring', text: 'Successfully restored' }
 		)) ?? []
 	const getSnapshots = async (repoId: string, groupBy: string = 'host'): Promise<SnapshotGroup[]> => {
+		console.log(groupBy)
 		const data = (await useHttp.post(`/repositories/${repoId}/snapshots?group_by=${groupBy}`)) ?? []
-		console.log(data)
 		return _.orderBy(data, ['time'], ['desc'])
 	}
 	const mount = async (repoId: string, path: string) => (await useHttp.post(`/repositories/${repoId}/mount`, { path: path }, { title: 'Mount', text: `Mounted to ${path}` })) ?? {}
