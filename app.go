@@ -22,6 +22,7 @@ type App struct {
 }
 
 type Settings struct {
+	file   string
 	Config Config `json:"config"`
 }
 
@@ -51,6 +52,17 @@ const (
 	AZURE  RepositoryType = iota
 	GOOGLE RepositoryType = iota
 )
+
+type GroupKey struct {
+	Hostname string `json:"hostname"`
+	Paths    string `json:"paths"`
+	Tags     string `json:"tags"`
+}
+
+type SnapshotGroup struct {
+	GroupKey  GroupKey   `json:"group_key"`
+	Snapshots []Snapshot `json:"snapshots"`
+}
 
 type Snapshot struct {
 	Id             string    `json:"id"`
@@ -201,4 +213,8 @@ func (a *App) SelectDirectory(title string) string {
 	}
 
 	return ""
+}
+
+func (a *App) FakeCreateForModels() (SnapshotGroup, Repository, Backup, Config, Schedule, FileDescriptor) {
+	return SnapshotGroup{}, Repository{}, Backup{}, Config{}, Schedule{}, FileDescriptor{}
 }

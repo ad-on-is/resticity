@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
+	"flag"
 	"fmt"
 
 	"github.com/wailsapp/wails/v2"
@@ -21,15 +22,27 @@ type ChanMsg struct {
 }
 
 func main() {
+	flagConfigFile := ""
+	flagServer := false
+	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
+	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
+	flag.BoolVar(&flagServer, "server", false, "Run as server")
+	flag.BoolVar(&flagServer, "s", false, "Run as server")
+	flag.Parse()
+	fmt.Println("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
 	outputChan := make(chan ChanMsg)
-	settings := NewSettings()
+	settings := NewSettings(flagConfigFile)
 	restic := NewRestic(errb, outb, settings)
 	if scheduler, err := NewScheduler(settings, restic, &outputChan); err == nil {
 		(scheduler).RescheduleBackups()
-		go RunServer(scheduler, restic, settings, errb, outb, &outputChan)
-		Desktop(scheduler, restic, settings)
+		if flagServer {
+			RunServer(scheduler, restic, settings, errb, outb, &outputChan)
+		} else {
+			go RunServer(scheduler, restic, settings, errb, outb, &outputChan)
+			Desktop(scheduler, restic, settings)
+		}
 	} else {
 		fmt.Println("SCHEDULER ERROR", err)
 	}

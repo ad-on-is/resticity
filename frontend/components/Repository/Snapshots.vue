@@ -1,22 +1,24 @@
 <template>
 	<h3 class="text-purple-500 mb-3"><UIcon name="i-heroicons-queue-list" />Snapshots</h3>
 
-	<UTable :rows="snapshots" v-model="selected" :columns="columns" @select="" :loading="loading" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
-		<template #tags-data="{ row }">
-			<UBadge v-for="tag in row.tags" variant="outline" color="indigo">{{ tag }}</UBadge>
-		</template>
-		<template #time-data="{ row }">
-			{{ formatISO9075(new Date(row.time)) }}
-		</template>
-		<template #paths-data="{ row }">
-			{{ row.paths.join(',') }}
-		</template>
-		<template #actions-data="{ row }">
-			<UDropdown :items="items(row)">
-				<UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" :disabled="selected.length > 0" />
-			</UDropdown>
-		</template>
-	</UTable>
+	<div v-for="group in snapshotGroups">
+		<UTable :rows="group.snapshots" v-model="selected" :columns="columns" @select="" :loading="loading" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
+			<template #tags-data="{ row }">
+				<UBadge v-for="tag in row.tags" variant="outline" color="indigo">{{ tag }}</UBadge>
+			</template>
+			<template #time-data="{ row }">
+				{{ formatISO9075(new Date(row.time)) }}
+			</template>
+			<template #paths-data="{ row }">
+				{{ row.paths.join(',') }}
+			</template>
+			<template #actions-data="{ row }">
+				<UDropdown :items="items(row)">
+					<UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" :disabled="selected.length > 0" />
+				</UDropdown>
+			</template>
+		</UTable>
+	</div>
 	<UButton
 		icon="i-heroicons-trash"
 		class="mt-3"
@@ -31,7 +33,7 @@
 	import { onMounted } from 'vue'
 	import { formatISO9075 } from 'date-fns'
 	import _ from 'lodash'
-	const snapshots = ref<Array<Snapshot>>([])
+	const snapshotGroups = ref<Array<SnapshotGroup>>([])
 	const loading = ref(true)
 	const selected = ref<Array<Snapshot>>([])
 	const mounted = ref<Array<string>>([])
@@ -97,8 +99,9 @@
 
 	onMounted(async () => {
 		const res = await useApi().getSnapshots(useRoute().params.id as string)
-		snapshots.value = res || []
-		paths.value = _.uniq(snapshots.value.map((snapshot: Snapshot) => snapshot.paths).flat())
+		snapshotGroups.value = res || []
+		console.log(snapshotGroups.value)
+		paths.value = _.uniq(snapshotGroups.value.map((snapshot: Snapshot) => snapshot.paths).flat())
 		loading.value = false
 	})
 </script>

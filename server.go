@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -50,6 +49,7 @@ func RunServer(
 ) {
 	server := fiber.New()
 	server.Use(cors.New())
+	server.Static("/", "./public")
 
 	api := server.Group("/api")
 
@@ -144,7 +144,6 @@ func RunServer(
 				} else {
 					log.Println("Error marshalling data:", err)
 				}
-				fmt.Println(d)
 			}
 		}
 
@@ -277,16 +276,20 @@ func RunServer(
 
 			return c.SendString("OK")
 		case "snapshots":
+			groupBy := c.Query("group_by")
+			if groupBy == "" {
+				groupBy = "host"
+			}
 			res, err := restic.Exec(
 				*settings.GetRepositoryById(c.Params("id")),
-				[]string{act},
+				[]string{act, "--group-by", groupBy},
 				[]string{},
 			)
 			if err != nil {
 				c.SendStatus(500)
 				return c.SendString(err.Error())
 			}
-			var data []Snapshot
+			var data []SnapshotGroup
 
 			if err := json.Unmarshal([]byte(res), &data); err != nil {
 				c.SendStatus(500)
