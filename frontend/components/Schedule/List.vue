@@ -56,17 +56,27 @@
 				<UBadge color="indigo" variant="outline" v-else>Manually</UBadge>
 			</template>
 			<template #actions-data="{ row }">
-				<UToggle v-model="row.active" color="green" @update:model-value="useSettings().save()" />
+				<UToggle v-model="row.active" color="green" @update:model-value="useSettings().save()" :disabled="row.cron === ''" />
 				<UDropdown :items="items(row)">
 					<UButton color="gray" variant="ghost" class="ml-3" icon="i-heroicons-ellipsis-horizontal-20-solid" />
 				</UDropdown>
 			</template>
 		</UTable>
+		<UModal v-model="openDelete">
+			<UCard>
+				<template #header><span class="text-red-500">Delete schedule</span> </template>
+				<p>Do you really want to delete this schedule?</p>
+				<template #footer><UButton color="red" icon="i-heroicons-trash" @click="deleteSchedule">Yes, delete</UButton></template>
+			</UCard>
+		</UModal>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import cronstrue from 'cronstrue'
+
+	const openDelete = ref(false)
+	let toDelete: any = null
 	const columns = [
 		{ key: 'id', class: 'w-32', label: 'ID' },
 		{ key: 'status', label: 'Status', class: 'w-32' },
@@ -81,6 +91,17 @@
 		} catch (e) {
 			return cron
 		}
+	}
+
+	const deleteSchedule = async () => {
+		if (toDelete === null) {
+			openDelete.value = false
+			return
+		}
+		useSettings().settings!.schedules = useSettings().settings!.schedules.filter((item: any) => item.id !== toDelete.id)
+		await useSettings().save()
+		openDelete.value = false
+		toDelete = null
 	}
 
 	const items = (row: any) => [
@@ -107,8 +128,8 @@
 				label: 'Delete',
 				icon: 'i-heroicons-trash',
 				click: () => {
-					useSettings().settings!.schedules = useSettings().settings!.schedules.filter((item: any) => item.id !== row.id)
-					useSettings().save()
+					toDelete = row
+					openDelete.value = true
 				},
 			},
 		],

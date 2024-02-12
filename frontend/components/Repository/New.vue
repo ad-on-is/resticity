@@ -48,10 +48,8 @@
 		</div>
 		<div v-else>
 			<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
-			<UButtonGroup class="flex">
-				<UInput v-model="newRepository.path" placeholder="/path/to/repository" class="flex-grow" />
-				<UButton icon="i-heroicons-folder-open" color="indigo" @click="openDir()" />
-			</UButtonGroup>
+			<PathAutocomplete @selected="(p) => (newRepository.path = p)" />
+
 			<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
 			<UButtonGroup class="flex mt-5">
 				<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
@@ -137,5 +135,6 @@
 			useSettings().settings?.repositories.push(newRepository.value)
 			await useSettings().save()
 		}
+		finish()
 	}
 </script>

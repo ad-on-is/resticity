@@ -7,6 +7,7 @@ export const useApi = defineStore('useApi', () => {
 		(await useHttp.post(
 			`/repositories/${repoId}/snapshots/${snapshotId}/restore`,
 			{ root_path: rootPath, from_path: fromPath.replaceAll(rootPath, ''), to_path: toPath },
+			{},
 			{ title: 'Restoring', text: 'Successfully restored' }
 		)) ?? []
 	const getSnapshots = async (repoId: string, groupBy: string = 'host'): Promise<SnapshotGroup[]> => {
@@ -14,17 +15,19 @@ export const useApi = defineStore('useApi', () => {
 		const data = (await useHttp.post(`/repositories/${repoId}/snapshots?group_by=${groupBy}`)) ?? []
 		return _.orderBy(data, ['time'], ['desc'])
 	}
-	const mount = async (repoId: string, path: string) => (await useHttp.post(`/repositories/${repoId}/mount`, { path: path }, { title: 'Mount', text: `Mounted to ${path}` })) ?? {}
+	const mount = async (repoId: string, path: string) =>
+		(await useHttp.post(`/repositories/${repoId}/mount`, { path: path }, {}, { title: 'Mount', text: `Mounted to ${path}` })) ?? {}
 	const unmount = async (repoId: string, path: string) =>
-		(await useHttp.post(`/repositories/${repoId}/unmount`, { path: path }, { title: 'Unmount', text: `Unmounted: ${path}` })) ?? {}
+		(await useHttp.post(`/repositories/${repoId}/unmount`, { path: path }, {}, { title: 'Unmount', text: `Unmounted: ${path}` })) ?? {}
 
 	const statRepository = async (repoId: string) => (await useHttp.get(`/repositories/${repoId}/stats`)) ?? {}
 	const runSchedule = async (scheduleId: string) => (await useHttp.get(`/schedules/${scheduleId}/run`)) ?? {}
 	const stopSchedule = async (scheduleId: string) => (await useHttp.get(`/schedules/${scheduleId}/stop`)) ?? {}
 	const getConfig = async (): Promise<Config> => (await useHttp.get(`/config`)) ?? {}
-	const saveConfig = async (config: any) => (await useHttp.post(`/config`, config, { title: 'Settings', text: 'Settings saved successfully' })) ?? {}
-	const checkRepository = async (repo: any) => (await useHttp.post(`/check`, repo, { title: 'Check Repository', text: 'Repository can be used' })) ?? {}
-	const initRepository = async (repo: any) => (await useHttp.post(`/init`, repo, { title: 'Init Repository', text: 'Repository initialized' })) ?? {}
+	const saveConfig = async (config: any) => (await useHttp.post(`/config`, config, {}, { title: 'Settings', text: 'Settings saved successfully' })) ?? {}
+	const checkRepository = async (repo: any) => (await useHttp.post(`/check`, repo, {}, { title: 'Check Repository', text: 'Repository can be used' })) ?? {}
+	const initRepository = async (repo: any) => (await useHttp.post(`/init`, repo, {}, { title: 'Init Repository', text: 'Repository initialized' })) ?? {}
+	const autoCompletePath = async (path: string) => (await useHttp.get(`/path/autocomplete`, { path })) ?? []
 
 	return {
 		browseSnapshot,
@@ -39,5 +42,6 @@ export const useApi = defineStore('useApi', () => {
 		checkRepository,
 		initRepository,
 		statRepository,
+		autoCompletePath,
 	}
 })

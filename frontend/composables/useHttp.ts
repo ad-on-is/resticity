@@ -1,14 +1,16 @@
 type FetchMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'options'
 
 export default class HttpClient {
-	public static get = async (url: string, notify: false | { title: string; text: string; type?: string } = false) => await this.doFetch(url, { method: 'get' }, notify)
-	public static del = async (url: string, notify: false | { title: string; text: string; type?: string } = false) => await this.doFetch(url, { method: 'delete' }, notify)
-	public static post = async (url: string, data: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
-		await this.doFetch(url, { method: 'post', body: data }, notify)
-	public static put = async (url: string, data: any, notify: false | { title: string; text: string; type?: string } = false) =>
-		await this.doFetch(url, { method: 'put', body: data }, notify)
+	public static get = async (url: string, query: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
+		await this.doFetch(url, { method: 'get', query }, notify)
+	public static del = async (url: string, query: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
+		await this.doFetch(url, { method: 'delete', query }, notify)
+	public static post = async (url: string, data: any = {}, query: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
+		await this.doFetch(url, { method: 'post', query, body: data }, notify)
+	public static put = async (url: string, data: any, query: any = {}, notify: false | { title: string; text: string; type?: string } = false) =>
+		await this.doFetch(url, { method: 'put', query, body: data }, notify)
 
-	public static doFetch = async (url: string, opts: { method: FetchMethod; body?: any }, notify: false | { title: string; text: string; type?: string } = false) => {
+	public static doFetch = async (url: string, opts: { method: FetchMethod; body?: any; query?: any }, notify: false | { title: string; text: string; type?: string } = false) => {
 		// let baseUrl = useRuntimeConfig().public.apiURL
 		// if (url.includes('clients') || url.includes('invoicesoroffers') || url.includes('timetracks') || url.includes('profile') || url.includes('auth')) {
 		const baseUrl = 'http://localhost:11278/api'
@@ -17,6 +19,7 @@ export default class HttpClient {
 			const res = await $fetch.raw(`${baseUrl}${url}`, {
 				method: opts.method,
 				body: JSON.stringify(opts.body),
+				query: opts.query,
 				headers: {
 					'content-type': 'application/json',
 				},

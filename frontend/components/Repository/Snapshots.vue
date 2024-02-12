@@ -35,15 +35,7 @@
 					>
 					<template #info-data="{ row }">
 						<div class="mb-2">
-							<UButton
-								@click="navigateTo({ path: `/repositories/${useRoute().params.id}/snapshots/${row.id}`, query: { path: path } })"
-								v-for="path in row.paths"
-								size="xs"
-								color="yellow"
-								variant="link"
-								icon="i-heroicons-folder"
-								>{{ path }}</UButton
-							>
+							<UButton @click="browse(path, row.id)" v-for="path in row.paths" size="xs" color="yellow" variant="link" icon="i-heroicons-folder">{{ path }}</UButton>
 						</div>
 						<div class="gap-2 flex">
 							<UBadge v-for="tag in row.tags" :variant="tag === 'resticity' ? 'outline' : 'solid'" :color="tag === 'resticity' ? 'sky' : 'gray'" size="xs"
@@ -54,18 +46,38 @@
 				</UTable>
 			</template>
 		</UAccordion>
+		<UModal v-model="isOpen" fullscreen>
+			<UCard>
+				<template #header>
+					<div class="flex items-center justify-between">
+						<h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">Browsing snapshot</h3>
+						<UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+					</div>
+				</template>
+				<RepositoryBrowseSnapshot :path="path" :repository-id="(useRoute().params.id as string)" :snapshot-id="snapshotId" />
+			</UCard>
+		</UModal>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { onMounted } from 'vue'
 	import { formatISO9075 } from 'date-fns'
+	const isOpen = ref(false)
 	import _ from 'lodash'
+	const path = ref('')
+	const snapshotId = ref('')
 	const groupByOptions = [
 		{ id: 'host', label: 'Host', icon: 'i-heroicons-tv' },
 		{ id: 'path', label: 'Path', icon: 'i-heroicons-folder' },
 		{ id: 'tag', label: 'Tag', icon: 'i-heroicons-tag' },
 	]
+
+	function browse(p: string, id: string) {
+		path.value = p
+		snapshotId.value = id
+		isOpen.value = true
+	}
 	const snapshotGroups = ref<Array<SnapshotGroup>>([])
 	const loading = ref(true)
 	const selected = ref<Array<Snapshot>>([])
@@ -74,23 +86,6 @@
 	const groupBy = ref('')
 
 	const paths = ref<Array<string>>([])
-
-	const items = (row: any) => [
-		[
-			...row.paths.map((p) => ({
-				label: 'Browse ' + p,
-				icon: 'i-heroicons-document-magnifying-glass',
-				click: () => {
-					navigateTo({ path: `/repositories/${useRoute().params.id}/snapshots/${row.id}`, query: { path: p } })
-				},
-			})),
-			{
-				label: 'Quick Restore',
-				icon: 'i-heroicons-arrow-top-right-on-square',
-				click: () => {},
-			},
-		],
-	]
 
 	function select(row: Snapshot) {
 		const index = selected.value.findIndex((item: Snapshot) => item.id === row.id)
@@ -110,7 +105,7 @@
 			key: 'time',
 			label: 'Time',
 			class: 'w-32',
-			format: (value: string) => format(new Date(value), 'dd.MM.yyyy H:I:s'),
+			format: (value: string) => formatISO9075(new Date(value)),
 		},
 		{
 			key: 'hostname',

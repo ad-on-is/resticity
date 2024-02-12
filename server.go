@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -67,56 +68,6 @@ func RunServer(
 
 		defer c.Close()
 
-		// outs := []Output{}
-
-		// listen := func() {
-		// 	for {
-		// 		jobs := scheduler.GetRunningJobs()
-		// 		for _, j := range jobs {
-		// 			if funk.Find(outs, func(out Output) bool { return out.Id == j.Id }) == nil {
-		// 				outs = append(outs, Output{Id: j.Id, Out: map[string]string{}})
-		// 			}
-		// 			go func(j Job) {
-		// 				d := <-j.Chan
-		// 				for i, out := range outs {
-		// 					if out.Id == j.Id {
-		// 						var data any
-		// 						if err := json.Unmarshal([]byte(d), &data); err == nil {
-		// 							outs[i].Out = data
-		// 						} else {
-		// 							outs[i].Out = map[string]string{}
-		// 						}
-		// 						break
-		// 					}
-		// 				}
-		// 				data := make(map[string]any)
-		// 				data["jobs"] = funk.Map(jobs, func(j Job) MsgJob {
-		// 					return MsgJob{
-		// 						Id:       j.Id,
-		// 						Schedule: j.Schedule,
-		// 						Running:  j.Running,
-		// 						Force:    j.Force,
-		// 					}
-		// 				})
-		// 				data["outputs"] = outs
-		// 				time.Sleep(100 * time.Millisecond)
-
-		// 				if d, err := json.Marshal(data); err == nil {
-		// 					if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
-		// 						log.Println("Error writing to socket:", err)
-		// 					}
-		// 				} else {
-		// 					log.Println("Error marshalling data:", err)
-		// 				}
-		// 				time.Sleep(100 * time.Millisecond)
-		// 			}(j)
-
-		// 		}
-
-		// 	}
-
-		// }
-
 		outputs := []ChanMsg{}
 
 		for {
@@ -135,8 +86,6 @@ func RunServer(
 						}
 					}
 				}
-				// var data map[string]any
-				// data["jobs"] = outputs
 				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
 					if err = c.WriteMessage(websocket.TextMessage, j); err != nil {
 						log.Println("Error writing to socket:", err)
@@ -147,30 +96,23 @@ func RunServer(
 			}
 		}
 
-		// for {
-		// time.Sleep(1 * time.Second)
-		// fmt.Println(outputs)
-
-		// data["out"] = string(outb.Bytes())
-
-		// data["outputs"] = funk.Map(filtered, func(o ScheduleOutput) *ScheduleOutput {
-		// 	u := scheduler.GetOutputById(o.Id)
-		// 	// fmt.Println(*u)
-		// 	return u
-		// })
-		// fmt.Println(data["outputs"])
-		// data["err"] = string(errb.Bytes())
-		// if d, err := json.Marshal(data); err == nil {
-		// 	if err = c.WriteMessage(websocket.TextMessage, d); err != nil {
-		// 		log.Println("Error writing to socket:", err)
-		// 	}
-		// } else {
-		// 	log.Println("Error marshalling data:", err)
-		// }
-		// time.Sleep(300 * time.Millisecond)
-		// }
-
 	}))
+
+	api.Get("/path/autocomplete", func(c *fiber.Ctx) error {
+		paths := []string{}
+		path := c.Query("path")
+		fmt.Println("DOING", path)
+		if files, err := os.ReadDir(path); err == nil {
+			for _, f := range files {
+				if f.IsDir() {
+					paths = append(paths, f.Name())
+				}
+			}
+		} else {
+			fmt.Println(err.Error())
+		}
+		return c.JSON(paths)
+	})
 
 	api.Get("/schedules/:id/:action", func(c *fiber.Ctx) error {
 		switch c.Params("action") {

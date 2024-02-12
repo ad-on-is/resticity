@@ -36,10 +36,7 @@
 				<UButton @click="save" icon="i-heroicons-plus-circle" :disabled="newBackup.path === '' || newBackup.name === ''">Add Backup</UButton>
 			</template>
 			<UInput v-model="newBackup.name" placeholder="Name" class="mb-5" />
-			<UButtonGroup class="flex">
-				<UInput v-model="newBackup.path" placeholder="/path/to/backup" class="flex-grow" />
-				<UButton icon="i-heroicons-folder-open" color="indigo" @click="openDir()" />
-			</UButtonGroup>
+			<PathAutocomplete @selected="(p) => (newBackup.path = p)" />
 		</UCard>
 	</UModal>
 </template>
@@ -70,7 +67,7 @@
 	}
 
 	const save = async () => {
-		useSettings().settings?.backups.push(newBackup.value)
+		useSettings().settings!.backups.push(newBackup.value)
 		await useSettings().save()
 		isOpen.value = false
 	}

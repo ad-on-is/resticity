@@ -1,18 +1,20 @@
 <template>
 	<div v-if="repo">
-		<h1 class="text-purple-500 font-bold"><UIcon name="i-heroicons-server" class="mr-3" />{{ repo.name }}</h1>
-		<h2 class="my-2 opacity-50">{{ repo.path }}</h2>
-		<div v-if="stats" class="flex text-xs gap-2">
-			<UBadge color="gray"><UIcon name="i-heroicons-server" class="mr-1" />{{ humanFileSize(stats.total_size) }} used</UBadge>
-			<UBadge color="gray"><UIcon name="i-heroicons-document-duplicate" class="mr-1" />{{ stats.total_file_count }} files</UBadge>
-			<UBadge color="gray"><UIcon name="i-heroicons-queue-list" class="mr-1" />{{ stats.snapshots_count }} snapshots</UBadge>
+		<div class="flex justify-between">
+			<div>
+				<h1 class="text-purple-500 font-bold"><UIcon name="i-heroicons-server" class="mr-3" />{{ repo.name }}</h1>
+				<h2 class="mb-5">{{ repo.path }}</h2>
+			</div>
+			<div class="mt-3">
+				<UButton v-if="mountPath === ''" color="yellow" variant="outline" icon="i-heroicons-folder" @click="isOpen = true">Mount</UButton>
+				<UButtonGroup v-else>
+					<UButton color="gray" disabled icon="i-heroicons-folder">{{ mountPath }}</UButton>
+					<UButton @click="unmount" color="indigo">Unmount</UButton>
+				</UButtonGroup>
+				<UButton icon="i-heroicons-trash" color="red" class="ml-2" @click="openDelete = true">Delete</UButton>
+			</div>
 		</div>
 
-		<UButton v-if="mountPath === ''" color="indigo" variant="outline" icon="i-heroicons-folder" @click="mount">Mount</UButton>
-		<UButtonGroup v-else>
-			<UButton color="gray" disabled icon="i-heroicons-folder">{{ mountPath }}</UButton>
-			<UButton @click="unmount" color="indigo">Unmount</UButton>
-		</UButtonGroup>
 		<UDivider class="my-5" />
 		<div></div>
 		<div>
@@ -20,27 +22,52 @@
 		</div>
 		<UDivider class="my-10" />
 		<div><RepositoryPruneOptions @update="(val) => (prunes = val)" :prunes="prunes" /></div>
+		<UModal v-model="isOpen">
+			<UCard>
+				<template #header> Select a mount point </template>
+				<PathAutocomplete @selected="(p) => (shouldMountPath = p)" />
+				<template #footer><UButton color="orange" icon="i-heroicons-folder-open" @click="mount">Mount</UButton> {{ shouldMountPath }}</template>
+			</UCard>
+		</UModal>
+		<UModal v-model="openDelete">
+			<UCard>
+				<template #header><span class="text-red-500">Delete repository</span> </template>
+				<p>Do you really want to delete this repository and its associated schedules? <br /><span class="opacity-50 text-sm">This will not delete actual files.</span></p>
+				<template #footer><UButton color="red" icon="i-heroicons-trash" @click="deleteRepo">Yes, delete</UButton></template>
+			</UCard>
+		</UModal>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { onMounted } from 'vue'
 	import _ from 'lodash'
-	const stats = ref()
+	const isOpen = ref(false)
+	const openDelete = ref(false)
 	const mountPath = ref('')
+	const shouldMountPath = ref('')
 	const prunes = ref<[]>([])
 	const init = ref(true)
 	const idx = ref(-1)
+	const deleteRepo = async () => {
+		useSettings().settings!.repositories = useSettings().settings!.repositories.filter((item: Repository) => item.id !== repo.value.id)
+		useSettings().settings!.schedules = useSettings().settings!.schedules.filter(
+			(item: Schedule) => item.to_repository_id !== repo.value.id && item.from_repository_id !== repo.value.id
+		)
+		useSettings().save()
+		openDelete.value = false
+		return navigateTo('/repositories')
+	}
 	const mount = async () => {
-		const dir = await SelectDirectory('Select a mount point')
-		if (!dir) return
-		mountPath.value = dir
+		mountPath.value = shouldMountPath.value
 		useSettings().settings.mounts.push({
 			id: useRoute().params.id as string,
 			path: mountPath.value,
 		})
 		useSettings().save()
 		useApi().mount(useRoute().params.id as string, mountPath.value)
+
+		isOpen.value = false
 	}
 	const unmount = () => {
 		useSettings().settings.mounts = useSettings().settings.mounts.filter((m: Mount) => m.id !== useRoute().params.id)
