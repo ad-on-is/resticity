@@ -60,7 +60,5 @@
 		backup.value = useSettings().settings!.backups.find((b: Backup) => b.id === useRoute().params.id)
 		idx.value = useSettings().settings!.backups.findIndex((b: Backup) => b.id === backup.value.id)
 		excludes.value = backup.value.backup_params
-
-		console.log(useSettings().settings!.backups)
 	})
 </script>

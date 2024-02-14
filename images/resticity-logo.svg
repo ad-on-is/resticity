@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="50.911621mm"
+   height="62.873646mm"
+   viewBox="0 0 50.911621 62.873646"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       xlink:href="#linearGradient10"
+       id="linearGradient11"
+       x1="92.065735"
+       y1="51.307709"
+       x2="74.01078"
+       y2="77.02681"
+       gradientUnits="userSpaceOnUse"
+       spreadMethod="pad"
+       gradientTransform="translate(39.18417,20.577037)" />
+    <linearGradient
+       id="linearGradient10">
+      <stop
+         style="stop-color:#0291d7;stop-opacity:1;"
+         offset="0"
+         id="stop10" />
+      <stop
+         style="stop-color:#000534;stop-opacity:1;"
+         offset="1"
+         id="stop11" />
+    </linearGradient>
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-83.608335,-55.827081)">
+    <path
+       id="path6-2"
+       style="color:#000000;fill:url(#linearGradient11);fill-rule:evenodd;stroke:none;stroke-width:2.8;-inkscape-stroke:none"
+       d="m 83.608332,55.827082 v 10.808642 h 25.695588 c 6.84074,0.01697 12.24783,5.43191 12.24783,12.277287 0,6.856073 -5.4233,12.279356 -12.27935,12.279354 -1.69927,0.07427 -2.85601,-0.364308 -3.85506,-1.09399 l 10.83344,10.715105 c 9.29848,-2.985477 16.10187,-11.651999 16.10186,-21.900469 0,-12.209123 -9.64291,-22.334054 -21.67361,-23.079211 z" />
+    <path
+       style="font-variation-settings:normal;vector-effect:none;fill:#811cc8;fill-opacity:1;stroke:none;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;-inkscape-stroke:none;stop-color:#000000"
+       d="m 83.608332,77.987972 26.990078,-0.109553 -8.59017,8.658386 32.51171,32.163925 h -18.79679 l -23.023398,-22.778969 -8.9824,9.054749 z"
+       id="path10" />
+  </g>
+</svg>

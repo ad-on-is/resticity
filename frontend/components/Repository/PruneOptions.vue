@@ -86,8 +86,6 @@
 		yearly: fromPropsArrayToNumber('--keep-yearly'),
 	})
 
-	console.log(keep.value)
-
 	const keepWithin = ref({
 		last: fromPropsArrayToNumber('--keep-within-last'),
 		hourly: fromPropsArrayToNumber('--keep-within-hourly'),

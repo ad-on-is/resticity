@@ -143,7 +143,6 @@
 	async function load() {
 		loading.value = true
 		const res = await useApi().getSnapshots(useRoute().params.id as string, selectedGroupBy.value.id)
-		console.log(res)
 		snapshotGroups.value = res.map((r: SnapshotGroup) => ({ ...r, ...getLabel(r.group_key) })) || []
 		paths.value = _.uniq(snapshotGroups.value.map((snapshot: Snapshot) => snapshot.paths).flat())
 		loading.value = false

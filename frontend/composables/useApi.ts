@@ -11,7 +11,6 @@ export const useApi = defineStore('useApi', () => {
 			{ title: 'Restoring', text: 'Successfully restored' }
 		)) ?? []
 	const getSnapshots = async (repoId: string, groupBy: string = 'host'): Promise<SnapshotGroup[]> => {
-		console.log(groupBy)
 		const data = (await useHttp.post(`/repositories/${repoId}/snapshots?group_by=${groupBy}`)) ?? []
 		return _.orderBy(data, ['time'], ['desc'])
 	}

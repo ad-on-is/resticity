@@ -4,7 +4,6 @@ export const useSocket = defineStore('useSocket', () => {
 		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
-				console.log(data)
 				useJobs().running =
 					data.map((j: any) => {
 						try {

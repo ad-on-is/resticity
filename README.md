@@ -1,16 +1,81 @@
-# README
+<h1 align="center">
+  <br>
+  <a href="https://github.com/ad-on-is/resticity"><img src="./images/resticity-logo.svg" alt="Resticity" width="100"></a>
+  <br>
+  Resticity
+  <br>
+</h1>
 
-## About
+<h4 align="center">A beautiful cross-platform UI for <a href="https://restic.readthedocs.io/en/stable/" target="_blank">restic</a>, built with <a href="https://wails.io" target="_blank">Wails</a>.</h4>
 
-This is the official Wails Svelte template.
+![screenshot](./images/resticity_screenshot.png)
 
-## Live Development
+## Key Features
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
+- Easy to use
+- Cross platform
+  - Linux
+  - Windows
+  - MacOS
+- Docker image to run on self-hosted servers
+- Scheduled backups
+- Supports local and remote repositories
+  - Local folder or mounted network drive
+  - AWS/Backblaze
+  - Google
+- System tray support
 
-## Building
+## How To Use
 
-To build a redistributable, production mode package, use `wails build`.
+```bash
+# Run in GUI mode
+$ resticity
+
+# Run in background mode (useful for autostart)
+$ resticity --no-gui
+
+# Run in server-only mode (this is the default mode for Docker images)
+$ resticity --server
+
+# Run with custom configuration path
+$ resticity --config /path/to/resticity.json
+
+# Run with Docker
+# Assign the volumes/paths that you want resticity to grant access to
+$ docker run -d --name resticity -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity/resticity
+```
+
+## Configuration
+
+Resticity looks for a configuration file in the following order:
+
+1. Custom file location with the `--config path/to/config.json` flag
+2. `RESTICITY_SETTINGS_FILE` environment variable
+3. `$XDG_CONFIG_HOME/resticity/config.json`
+
+## Installation
+
+## Build yourself
+
+```bash
+# Clone this repo
+$ git clone https://github.com/ad-on-is/resticity
+
+# cd into resticity
+$ cd resticity
+
+# Build using wails
+$ GOOS=linux wails build
+
+```
+
+## Support
+
+## License
+
+MIT
+
+---
+
+> [adisdurakovic.com](https://adisdurakovic.com) &nbsp;&middot;&nbsp;
+> GitHub [@ad-on-is](https://github.com/ad-on-is)

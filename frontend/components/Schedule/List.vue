@@ -112,7 +112,6 @@
 						icon: 'i-heroicons-arrow-uturn-right',
 						click: async () => {
 							const t = await useApi().runSchedule(row.id)
-							console.log(t)
 						},
 				  }
 				: {
@@ -120,7 +119,6 @@
 						icon: 'i-heroicons-arrow-uturn-right',
 						click: async () => {
 							const t = await useApi().stopSchedule(row.id)
-							console.log(t)
 						},
 				  },
 

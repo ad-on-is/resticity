@@ -24,10 +24,13 @@ type ChanMsg struct {
 func main() {
 	flagConfigFile := ""
 	flagServer := false
+	flagBackground := false
 	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
 	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
 	flag.BoolVar(&flagServer, "server", false, "Run as server")
 	flag.BoolVar(&flagServer, "s", false, "Run as server")
+	flag.BoolVar(&flagBackground, "background", false, "Run in background mode")
+	flag.BoolVar(&flagBackground, "b", false, "Run in background mode")
 	flag.Parse()
 	fmt.Println("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
@@ -41,7 +44,7 @@ func main() {
 			RunServer(scheduler, restic, settings, errb, outb, &outputChan)
 		} else {
 			go RunServer(scheduler, restic, settings, errb, outb, &outputChan)
-			Desktop(scheduler, restic, settings)
+			Desktop(scheduler, restic, settings, flagBackground)
 		}
 	} else {
 		fmt.Println("SCHEDULER ERROR", err)
@@ -49,7 +52,7 @@ func main() {
 
 }
 
-func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings) {
+func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden bool) {
 	// Create an instance of the app structure
 	app := NewApp(restic, scheduler, settings)
 	// Create application with options
@@ -58,6 +61,7 @@ func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings) {
 		Width:             1024,
 		Height:            768,
 		HideWindowOnClose: true,
+		StartHidden:       isHidden,
 		LogLevel:          logger.ERROR,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
@@ -66,6 +70,9 @@ func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings) {
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
+		},
+		EnumBind: []interface{}{
+			RepositoryTypes,
 		},
 	})
 

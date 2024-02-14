@@ -26,9 +26,9 @@ type Settings struct {
 	Config Config `json:"config"`
 }
 
-type B2Options struct {
-	B2AccountId  string `json:"b2_account_id"`
-	B2AccountKey string `json:"b2_account_key"`
+type S3Options struct {
+	S3Key    string `json:"s3_key"`
+	S3Secret string `json:"s3_secret"`
 }
 
 type AzureOptions struct {
@@ -39,19 +39,28 @@ type AzureOptions struct {
 }
 
 type Options struct {
-	B2Options
+	S3Options
 	AzureOptions
 }
 
-type RepositoryType int32
+type RepositoryType string
 
 const (
-	LOCAL  RepositoryType = iota
-	B2     RepositoryType = iota
-	AWS    RepositoryType = iota
-	AZURE  RepositoryType = iota
-	GOOGLE RepositoryType = iota
+	Local  RepositoryType = "Local"
+	S3     RepositoryType = "S3"
+	Azure  RepositoryType = "Azure"
+	Google RepositoryType = "Google"
 )
+
+var RepositoryTypes = []struct {
+	Value  RepositoryType
+	TSName string
+}{
+	{Local, "LOCAL"},
+	{S3, "S3"},
+	{Azure, "AZURE"},
+	{Google, "GOOGLE"},
+}
 
 type GroupKey struct {
 	Hostname string   `json:"hostname"`

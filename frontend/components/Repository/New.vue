@@ -47,14 +47,31 @@
 			</div>
 		</div>
 		<div v-else>
-			<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
-			<PathAutocomplete @selected="(p) => (newRepository.path = p)" />
+			<UTabs :items="items">
+				<template #local="{ item }">
+					<div class="mt-5">
+						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
+						<PathAutocomplete @selected="(p) => (newRepository.path = p)" />
+						<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
+						<UButtonGroup class="flex mt-5">
+							<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
+							<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
+						</UButtonGroup>
+					</div>
+				</template>
+				<template #s3="{ item }">
+					<div class="mt-5">
+						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
+						<UInput variant="outline" v-model="newRepository.path" placeholder="s3:s3.example.com/bucket" class="mb-5" />
 
-			<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
-			<UButtonGroup class="flex mt-5">
-				<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
-				<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
-			</UButtonGroup>
+						<UInput v-model="newRepository.options.aws_key" placeholder="Access key" class="flex-grow" />
+						<UButtonGroup class="flex mt-5">
+							<UInput v-model="newRepository.options.aws_secret" :type="pwType" placeholder="Access secret" class="flex-grow" />
+							<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
+						</UButtonGroup>
+					</div>
+				</template>
+			</UTabs>
 		</div>
 	</UCard>
 </template>
@@ -65,15 +82,32 @@
 	const shouldInit = ref(false)
 	const initializing = ref(false)
 	const pwType = ref('password')
-	const newRepository = ref({
+	const items = [
+		{
+			slot: 'local',
+			label: 'Local',
+			icon: 'i-heroicons-server',
+		},
+		{
+			slot: 's3',
+			label: 'S3/B2',
+			icon: 'i-heroicons-server',
+		},
+	]
+
+	const emptyRepo = () => ({
 		id: generateUUID(),
+		type: 0,
 		name: '',
 		password: '',
 		path: '',
-		type: 0,
 		prune_params: [],
-		options: {},
+		options: {
+			aws_key: '',
+			aws_secret: '',
+		},
 	})
+	const newRepository = ref(emptyRepo())
 	const checkStatus = ref('')
 	const initStatus = ref('')
 	const togglePw = () => {
@@ -104,15 +138,7 @@
 
 	const finish = () => {
 		emit('finish')
-		newRepository.value = {
-			id: generateUUID(),
-			name: '',
-			password: '',
-			path: '',
-			type: 0,
-			prune_params: [],
-			options: {},
-		}
+		newRepository.value = emptyRepo()
 		checkStatus.value = ''
 		shouldInit.value = false
 		initializing.value = false

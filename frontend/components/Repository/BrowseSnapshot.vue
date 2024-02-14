@@ -58,7 +58,6 @@
 	})
 
 	const back = () => {
-		console.log('BACK')
 		path.value = history.value.pop() as string
 	}
 	const columns = [
@@ -103,21 +102,10 @@
 
 	watch(path, async () => {
 		loading.value = true
-		// if (!cache.value[path.value]) {
-		// 	cache.value[path.value] = []
-		// 	console.log(cache.value)
-		// }
-		console.log('HERE')
-		// if (typeof cache.value[path.value] !== 'undefined' && cache.value[path.value] !== null && cache.value[path.value].length > 0) {
-		// 	console.log('HERE')
-		// 	filesdirs.value = cache.value[path.value]
-		// } else {
 
 		const res = (await useApi().browseSnapshot(props.repositoryId, props.snapshotId, path.value)) as []
 
-		// cache.value[path.value] = res.data.value
 		filesdirs.value = res
-		// }
 
 		loading.value = false
 	})

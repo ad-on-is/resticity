@@ -1,5 +1,11 @@
 export namespace main {
 	
+	export enum RepositoryType {
+	    LOCAL = "Local",
+	    S3 = "S3",
+	    AZURE = "Azure",
+	    GOOGLE = "Google",
+	}
 	export interface Backup {
 	    id: string;
 	    path: string;
@@ -18,8 +24,8 @@ export namespace main {
 	    active: boolean;
 	}
 	export interface Options {
-	    b2_account_id: string;
-	    b2_account_key: string;
+	    s3_key: string;
+	    s3_secret: string;
 	    azure_account_name: string;
 	    azure_account_key: string;
 	    azure_account_sas: string;
@@ -28,7 +34,7 @@ export namespace main {
 	export interface Repository {
 	    id: string;
 	    name: string;
-	    type: number;
+	    type: RepositoryType;
 	    prune_params: string[][];
 	    path: string;
 	    password: string;
