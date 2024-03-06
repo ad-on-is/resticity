@@ -13,7 +13,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/google/uuid v1.5.0
 	github.com/thoas/go-funk v0.9.3
-	github.com/wailsapp/wails/v2 v2.7.1
+	github.com/wailsapp/wails/v2 v2.8.0
 )
 
 require (
@@ -48,11 +48,11 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/wailsapp/go-webview2 v1.0.10 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
 
-// replace github.com/wailsapp/wails/v2 v2.7.1 => /home/adonis/Development/Go/pkg/mod
+// replace github.com/wailsapp/wails/v2 v2.8.0 => /home/adonis/Development/Go/pkg/mod

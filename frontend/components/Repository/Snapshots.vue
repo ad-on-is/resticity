@@ -46,7 +46,7 @@
 				</UTable>
 			</template>
 		</UAccordion>
-		<UModal v-model="isOpen" fullscreen>
+		<UModal v-model="isOpen" :ui="{ base: 'overflow-y-scroll' }" fullscreen>
 			<UCard>
 				<template #header>
 					<div class="flex items-center justify-between">

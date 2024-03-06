@@ -1,5 +1,5 @@
 <template>
-	<div class="p-5 overflow-y-scroll">
+	<div class="p-5">
 		<h3 class="text-purple-500 mb-3">{{ props.snapshotId }}</h3>
 		<div class="flex justify-between">
 			<UButtonGroup class="mb-5" size="xs">
@@ -8,6 +8,7 @@
 			</UButtonGroup>
 			<div class="ml-5 pt-1"><UCheckbox v-model="showHidden" color="indigo" label="Show hidden" /></div>
 		</div>
+
 		<UTable :ui="{ td: { padding: 'py-1' } }" :rows="rows" :columns="columns" @select="" :loading="loading" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
 			<template #type-data="{ row }">
 				<span :class="row.type === 'dir' ? 'text-yellow-500' : 'text-white'"
