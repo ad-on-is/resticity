@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"os"
 	"sync"
 	"time"
@@ -20,6 +21,7 @@ type App struct {
 	scheduler *Scheduler
 	restic    *Restic
 	settings  *Settings
+	assets    *embed.FS
 }
 
 type Settings struct {
@@ -140,17 +142,18 @@ type Config struct {
 }
 
 // NewApp creates a new App application struct
-func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings) *App {
+func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings, assets *embed.FS) *App {
 	return &App{restic: restic, scheduler: scheduler, settings: settings}
 }
 
 func (a *App) toggleSysTrayIcon() {
-	default_icon, _ := os.ReadFile(
-		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon.png",
+	default_icon, _ := assets.ReadFile(
+		"frontend/.output/public/appicon.png",
 	)
-	active_icon, _ := os.ReadFile(
-		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon_active.png",
+	active_icon, _ := assets.ReadFile(
+		"frontend/.output/public/appicon_active.png",
 	)
+
 	def := true
 	_, err := a.scheduler.gocron.NewJob(
 		gocron.DurationJob(500*time.Millisecond),
@@ -178,7 +181,7 @@ func (a *App) toggleSysTrayIcon() {
 
 func (a *App) systemTray() {
 	ico, _ := os.ReadFile(
-		"/home/adonis/Development/Go/src/github.com/ad-on-is/resticity/build/appicon.png",
+		"/home/adonis/Development/Go/resticity/build/appicon.png",
 	)
 
 	systray.CreateMenu()

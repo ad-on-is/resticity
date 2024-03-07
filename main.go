@@ -55,7 +55,7 @@ func main() {
 
 func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden bool) {
 	// Create an instance of the app structure
-	app := NewApp(restic, scheduler, settings)
+	app := NewApp(restic, scheduler, settings, &assets)
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "resticity",
@@ -63,9 +63,10 @@ func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden 
 		Height:            768,
 		HideWindowOnClose: true,
 		StartHidden:       isHidden,
-		LogLevel:          logger.ERROR,
+
+		LogLevel: logger.ERROR,
 		AssetServer: &assetserver.Options{
-			Assets: assets,
+			Assets: app.assets,
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup,
