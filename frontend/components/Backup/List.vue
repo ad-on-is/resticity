@@ -2,6 +2,7 @@
 	<h1 class="text-sky-500 font-bold mb-3"><FaIcon icon="upload" class="mr-3" />Backups</h1>
 	<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
 		<div
+			v-if="props.showNew"
 			class="opacity-40 border cursor-pointer border-dashed border-sky-500 border-opacity-40 hover:opacity-100 shadow-lg bg-base-300 rounded-lg no-underline hover:bg-sky-500 transition-all hover:bg-opacity-10"
 			@click="isOpen = true"
 		>
@@ -54,17 +55,12 @@
 	})
 	const error = ref('')
 
-	const openDir = async () => {
-		const dir = await SelectDirectory('Select a folder to backup')
-		if (useSettings().settings?.backups.find((b: any) => b.path === dir)) {
-			error.value = `${dir} is already a backup`
-			return
-		}
-		if (dir !== '') {
-			error.value = ''
-			newBackup.value.path = dir
-		}
-	}
+	const props = defineProps({
+		showNew: {
+			type: Boolean,
+			default: true,
+		},
+	})
 
 	const save = async () => {
 		useSettings().settings!.backups.push(newBackup.value)
