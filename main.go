@@ -66,7 +66,7 @@ func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden 
 
 		LogLevel: logger.ERROR,
 		AssetServer: &assetserver.Options{
-			Assets: app.assets,
+			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup,

@@ -147,11 +147,11 @@ func NewApp(restic *Restic, scheduler *Scheduler, settings *Settings, assets *em
 }
 
 func (a *App) toggleSysTrayIcon() {
-	default_icon, _ := assets.ReadFile(
-		"frontend/.output/public/appicon.png",
+	default_icon, _ := os.ReadFile(
+		"/home/adonis/Development/Go/resticity/frontend/public/appicon.png",
 	)
-	active_icon, _ := assets.ReadFile(
-		"frontend/.output/public/appicon_active.png",
+	active_icon, _ := os.ReadFile(
+		"/home/adonis/Development/Go/resticity/frontend/public/appicon_active.png",
 	)
 
 	def := true
