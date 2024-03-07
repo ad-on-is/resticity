@@ -1,5 +1,5 @@
 export const useSettings = defineStore('useSettings', () => {
-	const settings = ref()
+	const settings = ref<Config>()
 	async function init() {
 		refresh()
 	}

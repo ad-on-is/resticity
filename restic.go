@@ -52,6 +52,7 @@ func (r *Restic) core(
 		c = exec.Command("/usr/bin/restic", cmds...)
 	}
 	stdout, err := c.StdoutPipe()
+	stderr, err := c.StderrPipe()
 
 	if err == nil {
 		go func() {
@@ -67,18 +68,43 @@ func (r *Restic) core(
 				sout.WriteString(scanner.Text())
 			}
 		}()
+		go func() {
+			scanner := bufio.NewScanner(stderr)
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+
+				if ch != nil {
+					go func(t string) {
+						*ch <- t
+					}(scanner.Text())
+				}
+				serr.WriteString(scanner.Text())
+			}
+		}()
 	}
+
+	envs = append(
+		envs,
+		[]string{"RESTIC_PASSWORD=" + repository.Password, "RESTIC_PROGRESS_FPS=5"}...)
+	if repository.Type == "s3" {
+		envs = append(
+			envs,
+			[]string{
+				"AWS_ACCESS_KEY_ID=" + repository.Options.S3Key,
+				"AWS_SECRET_ACCESS_KEY=" + repository.Options.S3Secret,
+			}...)
+	}
+
+	log.Info("core", "repo", repository.Path, "cmd", cmd, "envs", envs)
 
 	c.Env = append(
 		os.Environ(),
-		"RESTIC_PASSWORD="+repository.Password,
-		"RESTIC_PROGRESS_FPS=5",
+		envs...,
 	)
-	c.Env = append(c.Env, envs...)
 
 	err = c.Start()
 	if err != nil {
-		log.Error("restic core", "err", err)
+		log.Error("executing restic command", "err", err)
 	}
 	c.Wait()
 	go func() {

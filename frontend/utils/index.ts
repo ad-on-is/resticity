@@ -10,3 +10,12 @@ export function humanFileSize(size: number) {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024))
 	return Number((size / Math.pow(1024, i)).toFixed(2)) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i]
 }
+
+export function getRepoIcon(r: Repository) {
+	switch (r.type) {
+		case 's3':
+			return 'i-heroicons-cloud'
+		default:
+			return 'i-heroicons-server'
+	}
+}

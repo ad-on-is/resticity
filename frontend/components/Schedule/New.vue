@@ -97,6 +97,8 @@
 			from_repository_id: selectedFromRepository.value.id,
 			cron: cron.value,
 			active: false,
+			last_run: '',
+			last_error: '',
 		})
 		selectedAction.value = actionOptions[0]
 		useSettings().save()

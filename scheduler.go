@@ -48,11 +48,13 @@ func NewScheduler(settings *Settings, restic *Restic, ch *chan ChanMsg) (*Schedu
 }
 
 func (s *Scheduler) RunJobById(id string) {
-	log.Debug("Should run", "id", id)
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			log.Debug("Running job", "id", id)
+			log.Debug("Running job manually", "id", id)
 			s.Jobs[i].Force = true
+			go func() {
+				*s.outputCh <- ChanMsg{Id: j.Id, Out: "{\"started\": true}", Schedule: j.Schedule}
+			}()
 			if err := j.job.RunNow(); err != nil {
 				log.Error("Error running job manually", "id", id, "err", err)
 			}

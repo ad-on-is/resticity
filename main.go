@@ -73,9 +73,6 @@ func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden 
 		Bind: []interface{}{
 			app,
 		},
-		EnumBind: []interface{}{
-			RepositoryTypes,
-		},
 	})
 
 	if err != nil {

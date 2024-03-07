@@ -47,7 +47,7 @@
 			</div>
 		</div>
 		<div v-else>
-			<UTabs :items="items">
+			<UTabs :items="items" v-model="selectedTab">
 				<template #local="{ item }">
 					<div class="mt-5">
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
@@ -61,12 +61,14 @@
 				</template>
 				<template #s3="{ item }">
 					<div class="mt-5">
+						<UAlert icon="i-heroicons-exclamation-circle" title="Attention" description="Please make sure the bucket is empty." class="mb-5" color="yellow" />
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
-						<UInput variant="outline" v-model="newRepository.path" placeholder="s3:s3.example.com/bucket" class="mb-5" />
+						<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow mb-5" />
+						<UInput variant="outline" v-model="newRepository.path" placeholder="s3.example.com/bucket" class="mb-5" />
 
-						<UInput v-model="newRepository.options.aws_key" placeholder="Access key" class="flex-grow" />
+						<UInput v-model="newRepository.options.s3_key" placeholder="Access key" class="flex-grow" />
 						<UButtonGroup class="flex mt-5">
-							<UInput v-model="newRepository.options.aws_secret" :type="pwType" placeholder="Access secret" class="flex-grow" />
+							<UInput v-model="newRepository.options.s3_secret" :type="pwType" placeholder="Access secret" class="flex-grow" />
 							<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
 						</UButtonGroup>
 					</div>
@@ -103,8 +105,16 @@
 		path: '',
 		prune_params: [],
 		options: {
-			aws_key: '',
-			aws_secret: '',
+			s3_key: '',
+			s3_secret: '',
+		},
+	})
+	const selectedTab = computed({
+		get() {
+			return 0
+		},
+		set(value) {
+			newRepository.value.type = items[value].slot
 		},
 	})
 	const newRepository = ref(emptyRepo())
@@ -112,14 +122,6 @@
 	const initStatus = ref('')
 	const togglePw = () => {
 		pwType.value = pwType.value === 'password' ? 'text' : 'password'
-	}
-	const openDir = async () => {
-		const dir = await SelectDirectory('Select a repository')
-		if (useSettings().settings?.repositories.find((repo: any) => repo.path === dir)) {
-			checkStatus.value = `${dir} is already a repository`
-			return
-		}
-		newRepository.value.path = dir
 	}
 
 	watch(
@@ -133,6 +135,9 @@
 	)
 
 	const check = async () => {
+		if (newRepository.value.type === 's3' && !newRepository.value.path.startsWith('s3:')) {
+			newRepository.value.path = `s3:${newRepository.value.path}`
+		}
 		checkStatus.value = await useApi().checkRepository(newRepository.value)
 	}
 

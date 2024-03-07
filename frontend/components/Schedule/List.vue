@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h1 class="text-yellow-500 font-bold mb-3"><UIcon name="i-heroicons-clock" class="mr-2" dynamic />Schedules</h1>
+		<h1 class="text-yellow-500 font-bold mb-3"><UIcon name="i-heroicons-clock" class="mr-2" />Schedules</h1>
 
 		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg" @select="">
 			<template #id-data="{ row }">

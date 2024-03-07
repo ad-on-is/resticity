@@ -1,11 +1,5 @@
 export namespace main {
 	
-	export enum RepositoryType {
-	    LOCAL = "Local",
-	    S3 = "S3",
-	    AZURE = "Azure",
-	    GOOGLE = "Google",
-	}
 	export interface Backup {
 	    id: string;
 	    path: string;
@@ -36,7 +30,7 @@ export namespace main {
 	export interface Repository {
 	    id: string;
 	    name: string;
-	    type: RepositoryType;
+	    type: string;
 	    prune_params: string[][];
 	    path: string;
 	    password: string;

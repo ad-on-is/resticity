@@ -2,7 +2,7 @@
 	<div v-if="repo">
 		<div class="flex justify-between">
 			<div>
-				<h1 class="text-purple-500 font-bold"><UIcon name="i-heroicons-server" class="mr-3" />{{ repo.name }}</h1>
+				<h1 class="text-purple-500 font-bold"><UIcon :name="getRepoIcon(repo)" class="mr-3" />{{ repo.name }}</h1>
 				<h2 class="mb-5">{{ repo.path }}</h2>
 			</div>
 			<div class="mt-3">

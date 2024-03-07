@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"strings"
+	"sync"
 
 	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
@@ -66,12 +68,14 @@ func RunServer(
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
 		defer c.Close()
+		mux := sync.Mutex{}
 
 		outputs := []ChanMsg{}
 
 		for {
 			select {
 			case d := <-*outputChan:
+				mux.Lock()
 				if funk.Find(
 					outputs,
 					func(out ChanMsg) bool { return out.Id == d.Id },
@@ -87,11 +91,12 @@ func RunServer(
 				}
 				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
 					if err = c.WriteMessage(websocket.TextMessage, j); err != nil {
-						log.Error("socket: write", err)
+						log.Error("socket: write", "err", err)
 					}
 				} else {
-					log.Error("socket: marshal", err)
+					log.Error("socket: marshal", "err", err)
 				}
+				mux.Unlock()
 			}
 		}
 
@@ -132,13 +137,27 @@ func RunServer(
 			return c.SendString(err.Error())
 		}
 
-		files, err := os.ReadDir(r.Path)
-		if err != nil {
-			c.SendStatus(500)
-			return c.SendString(err.Error())
+		if r.Type == "local" {
+			files, err := os.ReadDir(r.Path)
+			if err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			if len(files) > 0 {
+				if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
+					c.SendStatus(500)
+					return c.SendString(err.Error())
+				} else {
+					return c.SendString("OK_REPO_EXISTING")
+				}
+			}
 		}
-		if len(files) > 0 {
+
+		if r.Type == "s3" {
 			if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
+				if strings.Contains(err.Error(), "key does not exist") {
+					return c.SendString("OK_REPO_EMPTY")
+				}
 				c.SendStatus(500)
 				return c.SendString(err.Error())
 			} else {
