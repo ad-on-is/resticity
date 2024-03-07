@@ -135,23 +135,19 @@ func (a *App) toggleSysTrayIcon() {
 		"/home/adonis/Development/Go/resticity/frontend/public/appicon_active.png",
 	)
 
-	def := true
 	_, err := a.scheduler.gocron.NewJob(
 		gocron.DurationJob(500*time.Millisecond),
 		gocron.NewTask(func() {
-			if def {
-				running := funk.Filter(
-					a.scheduler.Jobs,
-					func(j Job) bool { return j.Running == true },
-				).([]Job)
-				if len(running) > 0 {
-					systray.SetIcon(active_icon)
-				}
-				def = false
+			running := funk.Filter(
+				a.scheduler.Jobs,
+				func(j Job) bool { return j.Running == true },
+			).([]Job)
+			if len(running) > 0 {
+				systray.SetIcon(active_icon)
 			} else {
 				systray.SetIcon(default_icon)
-				def = true
 			}
+
 		}),
 	)
 	if err != nil {
