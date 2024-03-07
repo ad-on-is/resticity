@@ -38,11 +38,11 @@ $ resticity --no-gui
 $ resticity --server
 
 # Run with custom configuration path
-$ resticity --config /path/to/resticity.json
+$ resticity --config /path/to/config.json
 
 # Run with Docker
 # Assign the volumes/paths that you want resticity to grant access to
-$ docker run -d --name resticity -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity/resticity
+$ docker run -d --name resticity -p 11278:11278 -v /path/to/config.json:/config.json -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity/resticity
 ```
 
 ## Configuration
@@ -65,11 +65,9 @@ $ git clone https://github.com/ad-on-is/resticity
 $ cd resticity
 
 # Build using wails
-$ GOOS=linux wails build
+$ wails build
 
 ```
-
-## Support
 
 ## License
 

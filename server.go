@@ -311,5 +311,5 @@ func RunServer(
 		return c.SendString("Hello, World!")
 	})
 
-	server.Listen(":11278")
+	server.Listen("0.0.0.0:11278")
 }
