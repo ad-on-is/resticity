@@ -97,7 +97,7 @@
 
 	const emptyRepo = () => ({
 		id: generateUUID(),
-		type: 0,
+		type: 'local',
 		name: '',
 		password: '',
 		path: '',

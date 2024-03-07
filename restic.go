@@ -6,10 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 type Restic struct {
@@ -40,6 +41,7 @@ func (r *Restic) core(
 	var sout bytes.Buffer
 	var serr bytes.Buffer
 	var c *exec.Cmd
+
 	if ctx != nil {
 		c = exec.CommandContext(*ctx, "/usr/bin/restic", cmds...)
 		if cancel != nil {
@@ -49,7 +51,6 @@ func (r *Restic) core(
 	} else {
 		c = exec.Command("/usr/bin/restic", cmds...)
 	}
-
 	stdout, err := c.StdoutPipe()
 
 	if err == nil {
@@ -59,7 +60,6 @@ func (r *Restic) core(
 			for scanner.Scan() {
 
 				if ch != nil {
-					// fmt.Println(t)
 					go func(t string) {
 						*ch <- t
 					}(scanner.Text())
@@ -74,10 +74,11 @@ func (r *Restic) core(
 		"RESTIC_PASSWORD="+repository.Password,
 		"RESTIC_PROGRESS_FPS=5",
 	)
+	c.Env = append(c.Env, envs...)
 
 	err = c.Start()
 	if err != nil {
-		fmt.Println(err)
+		log.Error("restic core", "err", err)
 	}
 	c.Wait()
 	go func() {
@@ -85,7 +86,6 @@ func (r *Restic) core(
 			*ch <- ""
 		}
 	}()
-	// fmt.Println(sp.Data)
 	r.errb.Write(serr.Bytes())
 	r.outb.Write(sout.Bytes())
 
@@ -119,11 +119,11 @@ func (r *Restic) BrowseSnapshot(
 		if err := json.Unmarshal([]byte(res), &data); err == nil {
 			return data, nil
 		} else {
-			fmt.Println("Error parsing JSON", err)
+			log.Error("browse snapshot: unmarshal", "err", err)
 			return []FileDescriptor{}, err
 		}
 	} else {
-		fmt.Println("Error browsing snapshots", err)
+		log.Error("browse snapshot: core", "err", err)
 		return []FileDescriptor{}, err
 	}
 
@@ -143,7 +143,7 @@ func (r *Restic) RunSchedule(
 	switch job.Schedule.Action {
 	case "backup":
 		if backup == nil || toRepository == nil {
-			fmt.Println("Nope!")
+			log.Error("backup", "err", "missing backup and toRepository")
 			return
 		}
 		cmds := []string{"backup", backup.Path, "--tag", "resticity"}
@@ -151,27 +151,27 @@ func (r *Restic) RunSchedule(
 			cmds = append(cmds, p...)
 		}
 
-		fmt.Println(cmds)
-
 		_, err := r.core(*toRepository, cmds, []string{}, &job.Ctx, &job.Cancel, &job.Chan)
 		if err != nil {
-			fmt.Println(err)
+			log.Error("runschedule", "err", err)
 		}
 		break
 	case "copy-snapshots":
 		if fromRepository == nil || toRepository == nil {
-			fmt.Println("Nope!")
+			log.Error("copy snapshots", "err", "missing fromRepository and toRepository")
 			return
 		}
-		cmds := []string{"copy", "--from-repo", fromRepository.Path}
-		envs := []string{"RESTIC_FROM_PASSWORD", fromRepository.Password}
-		fmt.Println(cmds)
-		fmt.Println(envs)
-		// r.core(*toRepository, cmds, envs)
+		cmds := []string{"copy"}
+		envs := []string{
+			"RESTIC_FROM_PASSWORD=" + fromRepository.Password,
+			"RESTIC_FROM_REPOSITORY=" + fromRepository.Path,
+		}
+
+		r.core(*toRepository, cmds, envs, &job.Ctx, &job.Cancel, &job.Chan)
 		break
 	case "prune-repository":
 		if toRepository == nil {
-			fmt.Println("Nope!")
+			log.Error("prune-repository", "err", "missing toRepository")
 			return
 		}
 		cmds := []string{"forget", "--prune"}
@@ -189,7 +189,7 @@ func (r *Restic) RunSchedule(
 		if err == nil {
 			_, err := r.core(*toRepository, cmds, []string{}, &job.Ctx, &job.Cancel, &job.Chan)
 			if err != nil {
-				fmt.Println(err)
+				log.Error("prune-repository", "err", err)
 			}
 		}
 

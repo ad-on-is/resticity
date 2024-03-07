@@ -2,11 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
+	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
@@ -88,10 +87,10 @@ func RunServer(
 				}
 				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
 					if err = c.WriteMessage(websocket.TextMessage, j); err != nil {
-						log.Println("Error writing to socket:", err)
+						log.Error("socket: write", err)
 					}
 				} else {
-					log.Println("Error marshalling data:", err)
+					log.Error("socket: marshal", err)
 				}
 			}
 		}
@@ -101,7 +100,6 @@ func RunServer(
 	api.Get("/path/autocomplete", func(c *fiber.Ctx) error {
 		paths := []string{}
 		path := c.Query("path")
-		fmt.Println("DOING", path)
 		if files, err := os.ReadDir(path); err == nil {
 			for _, f := range files {
 				if f.IsDir() {
@@ -109,7 +107,7 @@ func RunServer(
 				}
 			}
 		} else {
-			fmt.Println(err.Error())
+			log.Error("reading path", "path", path, "err", err.Error())
 		}
 		return c.JSON(paths)
 	})
@@ -170,6 +168,7 @@ func RunServer(
 	config := api.Group("/config")
 	backups := api.Group("/backups")
 	config.Get("/", func(c *fiber.Ctx) error {
+		settings.Refresh()
 		return c.JSON(settings.Config)
 	})
 	config.Post("/", func(c *fiber.Ctx) error {

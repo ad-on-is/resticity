@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"sync"
+	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 	"github.com/thoas/go-funk"
@@ -47,13 +48,13 @@ func NewScheduler(settings *Settings, restic *Restic, ch *chan ChanMsg) (*Schedu
 }
 
 func (s *Scheduler) RunJobById(id string) {
-	fmt.Println("should run", id)
+	log.Debug("Should run", "id", id)
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			fmt.Println("Running job by name", id)
+			log.Debug("Running job", "id", id)
 			s.Jobs[i].Force = true
 			if err := j.job.RunNow(); err != nil {
-				fmt.Println("Error running job manually", err)
+				log.Error("Error running job manually", "id", id, "err", err)
 			}
 			break
 		}
@@ -74,7 +75,7 @@ func (s *Scheduler) DeleteRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			fmt.Println("Deleting forced inactive job", id)
+			log.Debug("Deleting forced inactive job", "id", id)
 			s.Jobs[i].Running = false
 			s.Jobs[i].Force = false
 			break
@@ -98,7 +99,7 @@ func (s *Scheduler) SetRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			fmt.Println("Deleting forced inactive job", id)
+			log.Debug("Setting forced running job", "id", id)
 			s.Jobs[i].Running = true
 			break
 		}
@@ -108,7 +109,7 @@ func (s *Scheduler) SetRunningJob(id string) {
 func (s *Scheduler) RecreateCtx(name string) {
 	for i, j := range s.Jobs {
 		if j.job.Name() == name {
-			fmt.Println("Recreating context for job", name)
+			log.Debug("Recreating context for job", "id", name)
 			ctx, cancel := context.WithCancel(context.Background())
 			s.Jobs[i].Ctx = ctx
 			s.Jobs[i].Cancel = cancel
@@ -126,14 +127,14 @@ func (s *Scheduler) GetRunningJobs() []Job {
 func (s *Scheduler) RescheduleBackups() {
 
 	s.Jobs = []Job{}
-	fmt.Println("Rescheduling backups")
+	log.Info("Rescheduling backups")
 
 	config := s.settings.Config
 
 	for i := range config.Schedules {
 		schedule := config.Schedules[i]
-
-		jobDef := gocron.OneTimeJob(gocron.OneTimeJobStartImmediately())
+		t := time.Now().AddDate(1000, 0, 0)
+		jobDef := gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(t))
 
 		if schedule.Cron != "" {
 			jobDef = gocron.CronJob(schedule.Cron, false)
@@ -143,12 +144,6 @@ func (s *Scheduler) RescheduleBackups() {
 			jobDef,
 			gocron.NewTask(func() {
 
-				existing := s.FindJobById(schedule.Id)
-				isForced := existing != nil && existing.Force == true
-				if !schedule.Active && !isForced {
-					fmt.Println("MISSING", schedule.Id)
-					return
-				}
 				s.restic.RunSchedule(s.FindJobById(schedule.Id))
 
 			}),
@@ -160,27 +155,29 @@ func (s *Scheduler) RescheduleBackups() {
 			),
 			gocron.WithEventListeners(
 				gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
-					fmt.Println("before job run")
+					log.Debug("before job run", "id", jobName)
 					s.SetRunningJob(jobName)
 				}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
-						fmt.Println("after job run")
+						log.Debug("after job run", "res", "success", "id", jobName)
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
+						s.settings.SetLastRun(jobName, "")
 					},
 				),
 				gocron.AfterJobRunsWithError(
 					func(jobID uuid.UUID, jobName string, err error) {
-						fmt.Println("after job run with error", err)
+						log.Debug("after job run", "res", "error", "id", jobName, "err", err)
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
+						s.settings.SetLastRun(jobName, err.Error())
 					},
 				),
 			))
 
 		if err != nil {
-			fmt.Println("Error creating Job", err)
+			log.Error("Error creating Job", "err", err)
 			continue
 		}
 

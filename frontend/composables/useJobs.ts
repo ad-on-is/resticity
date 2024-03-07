@@ -13,14 +13,14 @@ export const useJobs = defineStore('useJobs', () => {
 	}
 
 	function repoIsRunning(id: string) {
-		return running.value?.find((job: BackupJob) => job.schedule.to_repository_id === id) ? true : false
+		return running.value?.find((job: Schedule) => job.schedule.to_repository_id === id) ? true : false
 	}
 	function repoIsSynching(id: string) {
-		return running.value?.find((job: BackupJob) => job.schedule.from_repository_id === id) ? true : false
+		return running.value?.find((job: Schedule) => job.schedule.from_repository_id === id) ? true : false
 	}
 
 	function backupIsRunning(id: string) {
-		return running.value?.find((job: BackupJob) => job.schedule.backup_id === id) ? true : false
+		return running.value?.find((job: Schedule) => job.schedule.backup_id === id) ? true : false
 	}
 
 	return {

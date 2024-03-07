@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"github.com/adrg/xdg"
+	"github.com/charmbracelet/log"
 )
 
 func NewSettings(flagFile string) *Settings {
@@ -21,7 +23,7 @@ func NewSettings(flagFile string) *Settings {
 	}
 
 	if _, err := os.Stat(s.file); os.IsNotExist(err) {
-		fmt.Println("Creating new settings file at", s.file)
+		log.Info("Creating new settings file", "file", s.file)
 		s.Config = Config{}
 		s.Config.Repositories = []Repository{}
 		s.Config.Backups = []Backup{}
@@ -29,11 +31,26 @@ func NewSettings(flagFile string) *Settings {
 		s.Config.Schedules = []Schedule{}
 		s.Save(s.Config)
 	} else {
-		fmt.Println("Loading settings from existing file", s.file)
+		log.Info("Loading existing settings", "file", s.file)
 		s.Config = s.readFile()
 	}
 
+	s.mux = sync.Mutex{}
+
 	return s
+}
+
+func (s *Settings) SetLastRun(id string, error string) {
+	for i, j := range s.Config.Schedules {
+		if j.Id == id {
+			log.Debug("save last run", "i", i, "id", id)
+			s.Config.Schedules[i].LastRun = time.Now().Format(time.RFC3339)
+			s.Config.Schedules[i].LastError = error
+
+			s.Save(s.Config)
+			break
+		}
+	}
 }
 
 func (s *Settings) GetRepositoryById(id string) *Repository {
@@ -55,6 +72,8 @@ func (s *Settings) GetBackupById(id string) *Backup {
 }
 
 func (s *Settings) readFile() Config {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 	data := Config{}
 	if file, err := os.Open(s.file); err == nil {
 		if str, err := io.ReadAll(file); err == nil {
@@ -63,22 +82,28 @@ func (s *Settings) readFile() Config {
 			}
 		}
 	} else {
-		fmt.Println("error", err)
+		log.Error("settings: read file", "err", err)
 	}
 	return data
 }
 
+func (s *Settings) Refresh() {
+	s.Config = s.readFile()
+}
+
 func (s *Settings) Save(data Config) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
 	s.Config = data
-	fmt.Println("Saving settings")
+	log.Debug("Saving settings")
 	if str, err := json.MarshalIndent(s.Config, " ", " "); err == nil {
-		fmt.Println("Settings saved")
+		log.Info("Settings saved")
 		if err := os.WriteFile(s.file, str, 0644); err != nil {
-			fmt.Println("error", err)
+			log.Error("settings: write", "err", err)
 			return err
 		}
 	} else {
-		fmt.Println("error", err)
+		log.Error("settings: marshal indent", "err", err)
 		return err
 	}
 	return nil

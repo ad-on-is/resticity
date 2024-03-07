@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"embed"
 	"flag"
-	"fmt"
 
+	"github.com/charmbracelet/log"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -22,6 +22,7 @@ type ChanMsg struct {
 }
 
 func main() {
+	log.SetLevel(log.DebugLevel)
 	flagConfigFile := ""
 	flagServer := false
 	flagBackground := false
@@ -32,7 +33,7 @@ func main() {
 	flag.BoolVar(&flagBackground, "background", false, "Run in background mode")
 	flag.BoolVar(&flagBackground, "b", false, "Run in background mode")
 	flag.Parse()
-	fmt.Println("settings file", flagConfigFile)
+	log.Info("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
 	outputChan := make(chan ChanMsg)
@@ -47,7 +48,7 @@ func main() {
 			Desktop(scheduler, restic, settings, flagBackground)
 		}
 	} else {
-		fmt.Println("SCHEDULER ERROR", err)
+		log.Error("Init scheduler", "error", err)
 	}
 
 }

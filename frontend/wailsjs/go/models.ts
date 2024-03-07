@@ -22,6 +22,8 @@ export namespace main {
 	    from_repository_id: string;
 	    cron: string;
 	    active: boolean;
+	    last_run: string;
+	    last_error: string;
 	}
 	export interface Options {
 	    s3_key: string;

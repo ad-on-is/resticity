@@ -33,11 +33,17 @@
 					>
 				</div>
 				<div v-if="useJobs().scheduleProgress(row.id) !== null">
-					<UProgress :value="useJobs().scheduleProgress(row.id).percent_done * 100" class="mt-2" color="sky" />
-					<div class="text-xs opacity-50 flex justify-between mt-2">
-						<span>{{ useJobs().scheduleProgress(row.id).files_done }}/{{ useJobs().scheduleProgress(row.id).total_files }} files</span>
-						<span>{{ humanFileSize(useJobs().scheduleProgress(row.id).bytes_done) }}/{{ humanFileSize(useJobs().scheduleProgress(row.id).total_bytes) }}</span>
-						<span>{{ useJobs().scheduleProgress(row.id).seconds_remaining || 'unknown' }} seconds remaining</span>
+					<div v-if="useJobs().scheduleProgress(row.id).percent_done">
+						<UProgress :value="useJobs().scheduleProgress(row.id).percent_done * 100" class="mt-2" color="sky" />
+						<div class="text-xs opacity-50 flex justify-between mt-2">
+							<span>{{ useJobs().scheduleProgress(row.id).files_done }}/{{ useJobs().scheduleProgress(row.id).total_files }} files</span>
+							<span>{{ humanFileSize(useJobs().scheduleProgress(row.id).bytes_done) }}/{{ humanFileSize(useJobs().scheduleProgress(row.id).total_bytes) }}</span>
+							<span>{{ useJobs().scheduleProgress(row.id).seconds_remaining || 'unknown' }} seconds remaining</span>
+						</div>
+					</div>
+					<div v-else>
+						<UProgress animation="carousel" />
+						<div class="text-xs opacity-50 flex justify-between mt-2">In progress</div>
 					</div>
 				</div>
 			</template>
@@ -50,6 +56,17 @@
 					<UBadge v-if="useJobs().scheduleIsRunning(row.id)" color="green">Running</UBadge>
 					<UBadge v-else color="gray" class="opacity-40">Inactive</UBadge>
 				</div>
+			</template>
+			<template #lastrun-data="{ row }">
+				<UTooltip :text="row.last_error">
+					<span v-if="row.last_run !== null && row.last_run !== ''">
+						<UIcon v-if="row.last_error === ''" name="i-heroicons-check-circle" class="text-green-500 mr-1" />
+						<UIcon v-else name="i-heroicons-x-circle" class="text-red-500 mr-1" />
+
+						<span>{{ new Date(row.last_run).toUTCString() }}</span></span
+					>
+					<span v-else>Never</span>
+				</UTooltip>
 			</template>
 			<template #cron-data="{ row }">
 				<UBadge color="gray" v-if="row.cron !== ''">{{ cronToHuman(row.cron) }}</UBadge>
@@ -81,6 +98,7 @@
 		{ key: 'id', class: 'w-32', label: 'ID' },
 		{ key: 'status', label: 'Status', class: 'w-32' },
 		{ key: 'task', label: 'Task', class: 'w-128' },
+		{ key: 'lastrun', label: 'Last run', class: 'w-48' },
 		{ key: 'cron', label: 'Scheduled', class: 'w-32' },
 		{ key: 'actions', class: 'w-10' },
 	]
@@ -132,4 +150,8 @@
 			},
 		],
 	]
+
+	onUnmounted(() => {
+		useSettings().refresh()
+	})
 </script>

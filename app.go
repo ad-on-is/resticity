@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/energye/systray"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ type App struct {
 type Settings struct {
 	file   string
 	Config Config `json:"config"`
+	mux    sync.Mutex
 }
 
 type S3Options struct {
@@ -126,6 +128,8 @@ type Schedule struct {
 	FromRepositoryId string `json:"from_repository_id"`
 	Cron             string `json:"cron"`
 	Active           bool   `json:"active"`
+	LastRun          string `json:"last_run"`
+	LastError        string `json:"last_error"`
 }
 
 type Config struct {
@@ -167,7 +171,7 @@ func (a *App) toggleSysTrayIcon() {
 		}),
 	)
 	if err != nil {
-		fmt.Println("Error creating job", err)
+		log.Error("Error creating job", err)
 	}
 
 }
