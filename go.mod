@@ -1,4 +1,4 @@
-module resticity
+module github.com/ad-on-is/resticity
 
 go 1.21
 

@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type Job struct {
 }
 
 type Scheduler struct {
-	gocron   gocron.Scheduler
+	Gocron   gocron.Scheduler
 	restic   *Restic
 	Jobs     []Job
 	jmu      sync.Mutex
@@ -38,8 +38,8 @@ func NewScheduler(settings *Settings, restic *Restic, ch *chan ChanMsg) (*Schedu
 	s.restic = restic
 	s.outputCh = ch
 	if gc, err := gocron.NewScheduler(); err == nil {
-		s.gocron = gc
-		s.gocron.Start()
+		s.Gocron = gc
+		s.Gocron.Start()
 		return s, nil
 	} else {
 		return nil, err
@@ -142,7 +142,7 @@ func (s *Scheduler) RescheduleBackups() {
 			jobDef = gocron.CronJob(schedule.Cron, false)
 		}
 
-		j, err := s.gocron.NewJob(
+		j, err := s.Gocron.NewJob(
 			jobDef,
 			gocron.NewTask(func() {
 

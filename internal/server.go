@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"bytes"
@@ -14,32 +14,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/thoas/go-funk"
 )
-
-type BrowseData struct {
-	Path string `json:"path"`
-}
-
-type MountData struct {
-	Path string `json:"path"`
-}
-
-type RestoreData struct {
-	RootPath string `json:"root_path"`
-	FromPath string `json:"from_path"`
-	ToPath   string `json:"to_path"`
-}
-
-type Output struct {
-	Id  string `json:"id"`
-	Out any    `json:"out"`
-}
-
-type MsgJob struct {
-	Id       string   `json:"id"`
-	Schedule Schedule `json:"schedule"`
-	Running  bool     `json:"running"`
-	Force    bool     `json:"force"`
-}
 
 func RunServer(
 	scheduler *Scheduler,

@@ -1,4 +1,4 @@
-export namespace main {
+export namespace internal {
 	
 	export interface Backup {
 	    id: string;

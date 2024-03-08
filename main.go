@@ -5,6 +5,8 @@ import (
 	"embed"
 	"flag"
 
+	"github.com/ad-on-is/resticity/internal"
+
 	"github.com/charmbracelet/log"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -15,45 +17,38 @@ import (
 //go:embed all:frontend/.output/public
 var assets embed.FS
 
-type ChanMsg struct {
-	Id       string   `json:"id"`
-	Out      string   `json:"out"`
-	Schedule Schedule `json:"schedule"`
-}
-
 func main() {
 	log.SetLevel(log.DebugLevel)
 	flagConfigFile := ""
-	flagServer := false
 	flagBackground := false
 	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
 	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
-	flag.BoolVar(&flagServer, "server", false, "Run as server")
-	flag.BoolVar(&flagServer, "s", false, "Run as server")
 	flag.BoolVar(&flagBackground, "background", false, "Run in background mode")
 	flag.BoolVar(&flagBackground, "b", false, "Run in background mode")
 	flag.Parse()
 	log.Info("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
-	outputChan := make(chan ChanMsg)
-	settings := NewSettings(flagConfigFile)
-	restic := NewRestic(errb, outb, settings)
-	if scheduler, err := NewScheduler(settings, restic, &outputChan); err == nil {
+	outputChan := make(chan internal.ChanMsg)
+	settings := internal.NewSettings(flagConfigFile)
+	restic := internal.NewRestic(errb, outb, settings)
+	if scheduler, err := internal.NewScheduler(settings, restic, &outputChan); err == nil {
 		(scheduler).RescheduleBackups()
-		if flagServer {
-			RunServer(scheduler, restic, settings, errb, outb, &outputChan)
-		} else {
-			go RunServer(scheduler, restic, settings, errb, outb, &outputChan)
-			Desktop(scheduler, restic, settings, flagBackground)
-		}
+
+		go internal.RunServer(scheduler, restic, settings, errb, outb, &outputChan)
+		Desktop(scheduler, restic, settings, flagBackground)
 	} else {
 		log.Error("Init scheduler", "error", err)
 	}
 
 }
 
-func Desktop(scheduler *Scheduler, restic *Restic, settings *Settings, isHidden bool) {
+func Desktop(
+	scheduler *internal.Scheduler,
+	restic *internal.Restic,
+	settings *internal.Settings,
+	isHidden bool,
+) {
 	// Create an instance of the app structure
 	app := NewApp(restic, scheduler, settings, &assets)
 	// Create application with options
