@@ -27,6 +27,79 @@ func NewRestic(errb *bytes.Buffer, outb *bytes.Buffer, settings *Settings) *Rest
 	return r
 }
 
+func (r *Restic) PipeOutErr(c *exec.Cmd, sout *bytes.Buffer, serr *bytes.Buffer, ch *chan string) {
+	stdout, err := c.StdoutPipe()
+	if err == nil {
+		go func() {
+			scanner := bufio.NewScanner(stdout)
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+
+				if ch != nil {
+					go func(t string) {
+						*ch <- t
+					}(scanner.Text())
+				}
+				sout.WriteString(scanner.Text())
+			}
+		}()
+
+	}
+
+	stderr, err := c.StderrPipe()
+
+	if err == nil {
+
+		go func() {
+			scanner := bufio.NewScanner(stderr)
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+
+				if ch != nil {
+					go func(t string) {
+						*ch <- t
+					}(scanner.Text())
+				}
+				serr.WriteString(scanner.Text())
+			}
+		}()
+	}
+}
+
+func (r *Restic) getEnvs(repository Repository, envs []string) []string {
+	envs = append(
+		envs,
+		[]string{"RESTIC_PASSWORD=" + repository.Password, "RESTIC_PROGRESS_FPS=5"}...)
+	if repository.Type == "s3" {
+		envs = append(
+			envs,
+			[]string{
+				"AWS_ACCESS_KEY_ID=" + repository.Options.S3Key,
+				"AWS_SECRET_ACCESS_KEY=" + repository.Options.S3Secret,
+			}...)
+	}
+	if repository.Type == "azure" {
+		envs = append(
+			envs,
+			[]string{
+				"AZURE_ACCOUNT_NAME=" + repository.Options.AzureAccountName,
+				"AZURE_ACCOUNT_KEY=" + repository.Options.AzureAccountKey,
+				"AZURE_ACCOUNT_SAS=" + repository.Options.AzureAccountSas,
+			}...)
+	}
+
+	if repository.Type == "gcs" {
+		envs = append(
+			envs,
+			[]string{
+				"GOOGLE_PROJECT_ID=" + repository.Options.GoogleProjectId,
+				"GOOGLE_APPLICATION_CREDENTIALS=" + repository.Options.GoogleApplicationCredentials,
+			}...)
+	}
+	return envs
+
+}
+
 func (r *Restic) core(
 	repository Repository,
 	cmd []string,
@@ -51,69 +124,10 @@ func (r *Restic) core(
 	} else {
 		c = exec.Command("/usr/bin/restic", cmds...)
 	}
-	stdout, err := c.StdoutPipe()
-	stderr, err := c.StderrPipe()
 
-	if err == nil {
-		go func() {
-			scanner := bufio.NewScanner(stdout)
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
+	r.PipeOutErr(c, &sout, &serr, ch)
 
-				if ch != nil {
-					go func(t string) {
-						*ch <- t
-					}(scanner.Text())
-				}
-				sout.WriteString(scanner.Text())
-			}
-		}()
-		go func() {
-			scanner := bufio.NewScanner(stderr)
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
-
-				if ch != nil {
-					go func(t string) {
-						*ch <- t
-					}(scanner.Text())
-				}
-				serr.WriteString(scanner.Text())
-			}
-		}()
-	}
-
-	envs = append(
-		envs,
-		[]string{"RESTIC_PASSWORD=" + repository.Password, "RESTIC_PROGRESS_FPS=5"}...)
-	if repository.Type == "s3" {
-		envs = append(
-			envs,
-			[]string{
-				"AWS_ACCESS_KEY_ID=" + repository.Options.S3Key,
-				"AWS_SECRET_ACCESS_KEY=" + repository.Options.S3Secret,
-			}...)
-	}
-
-	if repository.Type == "azure" {
-		envs = append(
-			envs,
-			[]string{
-				"AZURE_ACCOUNT_NAME=" + repository.Options.AzureAccountName,
-				"AZURE_ACCOUNT_KEY=" + repository.Options.AzureAccountKey,
-				"AZURE_ACCOUNT_SAS=" + repository.Options.AzureAccountSas,
-			}...)
-	}
-
-	if repository.Type == "gcs" {
-		envs = append(
-			envs,
-			[]string{
-				"GOOGLE_PROJECT_ID=" + repository.Options.GoogleProjectId,
-				"GOOGLE_APPLICATION_CREDENTIALS=" + repository.Options.GoogleApplicationCredentials,
-			}...)
-	}
-
+	envs = r.getEnvs(repository, envs)
 	log.Info("core", "repo", repository.Path, "cmd", cmd, "envs", envs)
 
 	c.Env = append(
@@ -121,7 +135,7 @@ func (r *Restic) core(
 		envs...,
 	)
 
-	err = c.Start()
+	err := c.Start()
 	if err != nil {
 		log.Error("executing restic command", "err", err)
 	}
