@@ -10,6 +10,10 @@ export function SelectDirectory(arg1) {
   return window['go']['main']['App']['SelectDirectory'](arg1);
 }
 
+export function SelectFile(arg1) {
+  return window['go']['main']['App']['SelectFile'](arg1);
+}
+
 export function StopBackup(arg1) {
   return window['go']['main']['App']['StopBackup'](arg1);
 }

@@ -95,6 +95,25 @@ func (r *Restic) core(
 			}...)
 	}
 
+	if repository.Type == "azure" {
+		envs = append(
+			envs,
+			[]string{
+				"AZURE_ACCOUNT_NAME=" + repository.Options.AzureAccountName,
+				"AZURE_ACCOUNT_KEY=" + repository.Options.AzureAccountKey,
+				"AZURE_ACCOUNT_SAS=" + repository.Options.AzureAccountSas,
+			}...)
+	}
+
+	if repository.Type == "gcs" {
+		envs = append(
+			envs,
+			[]string{
+				"GOOGLE_PROJECT_ID=" + repository.Options.GoogleProjectId,
+				"GOOGLE_APPLICATION_CREDENTIALS=" + repository.Options.GoogleApplicationCredentials,
+			}...)
+	}
+
 	log.Info("core", "repo", repository.Path, "cmd", cmd, "envs", envs)
 
 	c.Env = append(

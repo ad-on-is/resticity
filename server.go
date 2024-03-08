@@ -153,7 +153,7 @@ func RunServer(
 			}
 		}
 
-		if r.Type == "s3" {
+		if r.Type == "s3" || r.Type == "gcs" || r.Type == "azure" {
 			if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
 				if strings.Contains(err.Error(), "key does not exist") {
 					return c.SendString("OK_REPO_EMPTY")

@@ -25,7 +25,8 @@ export namespace main {
 	    azure_account_name: string;
 	    azure_account_key: string;
 	    azure_account_sas: string;
-	    azure_endpoint_suffix: string;
+	    google_project_id: string;
+	    google_application_credentials: string;
 	}
 	export interface Repository {
 	    id: string;

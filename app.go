@@ -36,15 +36,20 @@ type S3Options struct {
 }
 
 type AzureOptions struct {
-	AzureAccountName    string `json:"azure_account_name"`
-	AzureAccountKey     string `json:"azure_account_key"`
-	AzureAccountSas     string `json:"azure_account_sas"`
-	AzureEndpointSuffix string `json:"azure_endpoint_suffix"`
+	AzureAccountName string `json:"azure_account_name"`
+	AzureAccountKey  string `json:"azure_account_key"`
+	AzureAccountSas  string `json:"azure_account_sas"`
+}
+
+type GcsOptions struct {
+	GoogleProjectId              string `json:"google_project_id"`
+	GoogleApplicationCredentials string `json:"google_application_credentials"`
 }
 
 type Options struct {
 	S3Options
 	AzureOptions
+	GcsOptions
 }
 
 type GroupKey struct {
@@ -200,6 +205,16 @@ func (a *App) StopBackup(id uuid.UUID) {
 
 func (a *App) SelectDirectory(title string) string {
 	if dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: title,
+	}); err == nil {
+		return dir
+	}
+
+	return ""
+}
+
+func (a *App) SelectFile(title string) string {
+	if dir, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: title,
 	}); err == nil {
 		return dir

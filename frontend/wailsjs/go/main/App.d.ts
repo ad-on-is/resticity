@@ -7,4 +7,6 @@ export function FakeCreateForModels():Promise<main.SnapshotGroup>;
 
 export function SelectDirectory(arg1:string):Promise<string>;
 
+export function SelectFile(arg1:string):Promise<string>;
+
 export function StopBackup(arg1:uuid.UUID):Promise<void>;
