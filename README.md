@@ -76,6 +76,8 @@ Resticity looks for a configuration file in the following order:
 
 ## Installation
 
+TBD after packaging is decided.
+
 ## Build yourself
 
 ```bash
@@ -87,8 +89,11 @@ $ cd resticity
 
 # Build using wails
 $ wails build
-
 ```
+
+## TODOs
+
+- [ ] Packaging for different platforms
 
 ## License
 
