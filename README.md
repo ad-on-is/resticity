@@ -98,7 +98,7 @@ $ wails build
 
 ## License
 
-MIT
+GPLv3
 
 ---
 
