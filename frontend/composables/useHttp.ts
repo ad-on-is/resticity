@@ -12,7 +12,8 @@ export default class HttpClient {
 
 	public static doFetch = async (url: string, opts: { method: FetchMethod; body?: any; query?: any }, notify: false | { title: string; text: string; type?: string } = false) => {
 		const getUrl = (): string => {
-			return window.location.host.includes('wails.localhost') ? 'http://localhost:11278' : `${window.location.protocol}//${window.location.host}`
+			const url = useRequestURL()
+			return url.host.includes('wails.localhost') ? 'http://localhost:11278' : `${url.protocol}//${url.host}`
 		}
 		const baseUrl = `${getUrl()}/api`
 		try {

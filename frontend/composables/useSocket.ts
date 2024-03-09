@@ -1,9 +1,8 @@
 export const useSocket = defineStore('useSocket', () => {
 	function init() {
 		const getUrl = (): string => {
-			return window.location.host.includes('wails.localhost')
-				? 'ws://localhost:11278'
-				: `${window.location.protocol === 'http:' || window.location.protocol === 'wails:' ? 'ws' : 'wss'}//${window.location.host}`
+			const url = useRequestURL()
+			return url.host.includes('wails.localhost') ? 'ws://localhost:11278' : `${url.protocol === 'http:' || url.protocol === 'wails:' ? 'ws:' : 'wss:'}//${url.host}`
 		}
 		const socket = new WebSocket(`${getUrl()}/api/ws`)
 		socket.onmessage = (event) => {

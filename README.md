@@ -21,28 +21,49 @@
 - Scheduled backups
 - Supports local and remote repositories
   - Local folder or mounted network drive
-  - AWS/Backblaze
+  - AWS
+  - Backblazez
+  - Azure
   - Google
 - System tray support
 
 ## How To Use
+
+### Desktop
 
 ```bash
 # Run in GUI mode
 $ resticity
 
 # Run in background mode (useful for autostart)
-$ resticity --no-gui
-
-# Run in server-only mode (this is the default mode for Docker images)
-$ resticity --server
+$ resticity --background
 
 # Run with custom configuration path
 $ resticity --config /path/to/config.json
+```
 
-# Run with Docker
-# Assign the volumes/paths that you want resticity to grant access to
+### Docker
+
+```bash
+# Run within Docker
+# Add the paths that you want resticity to grant access to
 $ docker run -d --name resticity -p 11278:11278 -v /path/to/config.json:/config.json -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity/resticity
+```
+
+#### Docker compose
+
+```yaml
+version: "3"
+services:
+  reseticity:
+  image: ghcr.io/ad-on-is/resticity/resticity
+  container_name: resticity
+  ports:
+    - 11278:11278
+  volumes:
+    - /mnt:/mnt # Add the paths that you want resticity to grant access to
+    - /home:/home
+    - /path/to/config.json:/config.json
 ```
 
 ## Configuration

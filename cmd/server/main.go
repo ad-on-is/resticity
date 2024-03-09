@@ -15,7 +15,6 @@ func main() {
 	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
 	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
 	flag.Parse()
-	log.Info("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
 	outputChan := make(chan internal.ChanMsg)

@@ -21,14 +21,35 @@ export const useJobs = defineStore('useJobs', () => {
 	}
 
 	function repoIsRunning(id: string) {
-		return running.value?.find((job: Schedule) => job.schedule.to_repository_id === id) ? true : false
+		const j = running.value?.find((job: Schedule) => job.schedule.to_repository_id === id)
+		if (j) {
+			if (j['out']['running'] !== undefined) {
+				return j['out']['running']
+			}
+			return true
+		}
+		return false
 	}
 	function repoIsSynching(id: string) {
-		return running.value?.find((job: Schedule) => job.schedule.from_repository_id === id) ? true : false
+		const j = running.value?.find((job: Schedule) => job.schedule.from_repository_id === id)
+		if (j) {
+			if (j['out']['running'] !== undefined) {
+				return j['out']['running']
+			}
+			return true
+		}
+		return false
 	}
 
 	function backupIsRunning(id: string) {
-		return running.value?.find((job: Schedule) => job.schedule.backup_id === id) ? true : false
+		const j = running.value?.find((job: Schedule) => job.schedule.backup_id === id)
+		if (j) {
+			if (j['out']['running'] !== undefined) {
+				return j['out']['running']
+			}
+			return true
+		}
+		return false
 	}
 
 	return {

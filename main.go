@@ -26,7 +26,6 @@ func main() {
 	flag.BoolVar(&flagBackground, "background", false, "Run in background mode")
 	flag.BoolVar(&flagBackground, "b", false, "Run in background mode")
 	flag.Parse()
-	log.Info("settings file", flagConfigFile)
 	errb := bytes.NewBuffer([]byte{})
 	outb := bytes.NewBuffer([]byte{})
 	outputChan := make(chan internal.ChanMsg)
