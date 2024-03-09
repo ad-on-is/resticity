@@ -36,14 +36,21 @@ func NewApp(
 }
 
 func (a *App) toggleSysTrayIcon() {
-	default_icon, _ := os.ReadFile(
-		"/home/adonis/Development/Go/resticity/frontend/public/appicon.png",
+	default_icon, err := assets.ReadFile(
+		"frontend/.output/public/appicon.png",
 	)
-	active_icon, _ := os.ReadFile(
-		"/home/adonis/Development/Go/resticity/frontend/public/appicon_active.png",
+	if err != nil {
+		log.Error(err)
+	}
+	active_icon, err := assets.ReadFile(
+		"frontend/.output/public/appicon_active.png",
 	)
 
-	_, err := a.scheduler.Gocron.NewJob(
+	if err != nil {
+		log.Error(err)
+	}
+
+	_, err = a.scheduler.Gocron.NewJob(
 		gocron.DurationJob(500*time.Millisecond),
 		gocron.NewTask(func() {
 			running := funk.Filter(
