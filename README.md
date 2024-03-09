@@ -96,10 +96,6 @@ $ wails build
 - [ ] Packaging for different platforms
 - [ ] CI/CD and versioning
 
-## License
-
-GPLv3
-
 ---
 
 > [adisdurakovic.com](https://adisdurakovic.com) &nbsp;&middot;&nbsp;
