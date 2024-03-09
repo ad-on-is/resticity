@@ -1,7 +1,7 @@
 <template>
 	<UButtonGroup class="flex">
 		<!-- <UInput v-model="path" placeholder="/" class="flex-grow" /> -->
-		<USelectMenu v-model="selected" :searchable="search" class="flex-grow" searchable-placeholder="Type to autocomplete">
+		<USelectMenu v-model="selected" v-model:query="query" :searchable="search" class="flex-grow" searchable-placeholder="Type to autocomplete">
 			<template #label>
 				<span v-if="path !== ''">{{ `${path}` }}</span
 				><span v-else>
@@ -24,6 +24,8 @@
 			default: '',
 		},
 	})
+
+	const query = ref('')
 
 	const loading = ref(false)
 	const emit = defineEmits(['selected'])
@@ -55,6 +57,7 @@
 
 	watch(path, (p) => {
 		if (p !== '') {
+			query.value = p
 			emit('selected', p)
 		}
 	})
