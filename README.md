@@ -94,6 +94,7 @@ $ wails build
 ## TODOs
 
 - [ ] Packaging for different platforms
+- [ ] CI/CD and versioning
 
 ## License
 
