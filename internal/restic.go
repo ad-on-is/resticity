@@ -130,7 +130,7 @@ func (r *Restic) core(
 	r.PipeOutErr(c, &sout, &serr, ch)
 
 	envs = r.getEnvs(repository, envs)
-	log.Info("core", "repo", repository.Path, "cmd", cmd, "envs", envs)
+	log.Info("core", "repo", repository.Path, "cmd", cmd)
 
 	c.Env = append(
 		os.Environ(),

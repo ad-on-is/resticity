@@ -27,12 +27,27 @@
 				<UDropdown :items="items(row)"> <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" /> </UDropdown
 			></template>
 		</UTable>
+
+		<UModal v-model="isOpen">
+			<UCard>
+				<template #header>
+					<h1 class="text-purple-500 font-bold mb-3">Select a folder to restore</h1>
+				</template>
+				<PathAutocomplete @selected="(p) => (toRestore = p)" />
+				<template #footer>
+					<div class="flex justify-end">
+						<UButton @click="restore" color="indigo" :disabled="toRestore === ''">Restore</UButton>
+					</div>
+				</template>
+			</UCard>
+		</UModal>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { formatISO9075 } from 'date-fns'
 	import _ from 'lodash'
+	const isOpen = ref(false)
 	const history = ref<Array<string>>([])
 	const path = ref('')
 	const filesdirs = ref([])
@@ -42,6 +57,9 @@
 		history.value.push(path.value)
 		path.value = newPath
 	}
+
+	const fromRestore = ref('')
+	const toRestore = ref('')
 
 	const props = defineProps({
 		path: {
@@ -80,9 +98,8 @@
 				label: 'Select folder',
 				icon: 'i-heroicons-folder',
 				click: async () => {
-					const dir = await SelectDirectory('Select a repository')
-					if (!dir) return
-					restore(row.path, dir)
+					fromRestore.value = row.path
+					isOpen.value = true
 				},
 			},
 			{
@@ -91,14 +108,18 @@
 				click: async () => {
 					// todo: windows paths
 					const dir = row.path.split('/').slice(0, -1).join('/')
-					restore(row.path, dir)
+					fromRestore.value = row.path
+					toRestore.value = dir
+					restore()
 				},
 			},
 		],
 	]
 
-	function restore(from: string, to: string) {
-		useApi().restoreFromSnapshot(props.repositoryId, props.snapshotId, props.path, from, to)
+	function restore() {
+		if (fromRestore.value === '' || toRestore.value === '') return
+		useApi().restoreFromSnapshot(props.repositoryId, props.snapshotId, props.path, fromRestore.value, toRestore.value)
+		isOpen.value = false
 	}
 
 	watch(path, async () => {
