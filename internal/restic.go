@@ -109,6 +109,8 @@ func (r *Restic) core(
 	ch *chan string,
 ) (string, error) {
 
+	// trigger start
+
 	cmds := []string{"-r", repository.Path, "--json"}
 	cmds = append(cmds, cmd...)
 	var sout bytes.Buffer
@@ -140,11 +142,7 @@ func (r *Restic) core(
 		log.Error("executing restic command", "err", err)
 	}
 	c.Wait()
-	go func() {
-		if ch != nil {
-			*ch <- ""
-		}
-	}()
+
 	r.errb.Write(serr.Bytes())
 	r.outb.Write(sout.Bytes())
 

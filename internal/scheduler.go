@@ -52,9 +52,7 @@ func (s *Scheduler) RunJobById(id string) {
 		if j.Id == id {
 			log.Debug("Running job manually", "id", id)
 			s.Jobs[i].Force = true
-			go func() {
-				*s.outputCh <- ChanMsg{Id: j.Id, Out: "{\"started\": true}", Schedule: j.Schedule}
-			}()
+
 			if err := j.job.RunNow(); err != nil {
 				log.Error("Error running job manually", "id", id, "err", err)
 			}
@@ -77,7 +75,12 @@ func (s *Scheduler) DeleteRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			log.Debug("Deleting forced inactive job", "id", id)
+			go func() {
+				if j.Chan != nil {
+					j.Chan <- "{\"running\": false}"
+				}
+			}()
+			log.Debug("Stopping running job", "id", id)
 			s.Jobs[i].Running = false
 			s.Jobs[i].Force = false
 			break
@@ -103,6 +106,11 @@ func (s *Scheduler) SetRunningJob(id string) {
 		if j.Id == id {
 			log.Debug("Setting forced running job", "id", id)
 			s.Jobs[i].Running = true
+			go func() {
+				if j.Chan != nil {
+					j.Chan <- "{\"running\": true}"
+				}
+			}()
 			break
 		}
 	}
@@ -157,6 +165,7 @@ func (s *Scheduler) RescheduleBackups() {
 			),
 			gocron.WithEventListeners(
 				gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
+
 					log.Debug("before job run", "id", jobName)
 					s.SetRunningJob(jobName)
 				}),

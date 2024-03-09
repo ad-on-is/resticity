@@ -1,17 +1,17 @@
 From golang:alpine as builder
 WORKDIR /build/
 COPY . .
-RUN go install github.com/wailsapp/wails/v2/cmd/wails@latest
-RUN apk add nodejs npm gcc musl-dev pkgconf gtk+3.0-dev webkit2gtk-dev
+RUN apk add nodejs npm
 RUN npm i -g pnpm
-RUN wails build
-
+RUN CGO_ENABLED=0 go build ./cmd/server
+RUN cd frontend && pnpm install && pnpm build
 
 FROM alpine
-RUN apk --update add ca-certificates curl mailcap
+RUN apk --update add ca-certificates curl mailcap restic
 WORKDIR /
-COPY --from=builder /build/build/bin/resticity /resticity
+COPY --from=builder /build/server /resticity-server
+COPY --from=builder /build/frontend/.output/public /public
 
 EXPOSE 11278
 
-CMD ["/resticity", "--config", "/config.json", "--server"]
+CMD ["/resticity-server", "--config", "/config.json"]

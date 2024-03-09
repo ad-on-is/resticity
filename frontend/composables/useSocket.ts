@@ -1,6 +1,11 @@
 export const useSocket = defineStore('useSocket', () => {
 	function init() {
-		const socket = new WebSocket('ws://127.0.0.1:11278/api/ws')
+		const getUrl = (): string => {
+			return window.location.host.includes('wails.localhost')
+				? 'ws://localhost:11278'
+				: `${window.location.protocol === 'http:' || window.location.protocol === 'wails:' ? 'ws' : 'wss'}//${window.location.host}`
+		}
+		const socket = new WebSocket(`${getUrl()}/api/ws`)
 		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
@@ -20,6 +25,12 @@ export const useSocket = defineStore('useSocket', () => {
 				console.error(e)
 			}
 		}
+
+		const interval = setInterval(() => {
+			if (socket.readyState === 1) {
+				socket.send('ping')
+			}
+		}, 1000)
 	}
 
 	return {

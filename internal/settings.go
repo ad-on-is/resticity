@@ -23,21 +23,29 @@ func NewSettings(flagFile string) *Settings {
 	}
 
 	if _, err := os.Stat(s.file); os.IsNotExist(err) {
-		log.Info("Creating new settings file", "file", s.file)
-		s.Config = Config{}
-		s.Config.Repositories = []Repository{}
-		s.Config.Backups = []Backup{}
-		s.Config.Mounts = []Mount{}
-		s.Config.Schedules = []Schedule{}
-		s.Save(s.Config)
+		s.Init()
 	} else {
 		log.Info("Loading existing settings", "file", s.file)
-		s.Config = s.readFile()
+		if s.FileEmpty() {
+			s.Init()
+		} else {
+			s.Config = s.readFile()
+		}
 	}
 
 	s.mux = sync.Mutex{}
 
 	return s
+}
+
+func (s *Settings) Init() {
+	log.Info("Initializing new settings", "file", s.file)
+	s.Config = Config{}
+	s.Config.Repositories = []Repository{}
+	s.Config.Backups = []Backup{}
+	s.Config.Mounts = []Mount{}
+	s.Config.Schedules = []Schedule{}
+	s.Save(s.Config)
 }
 
 func (s *Settings) SetLastRun(id string, error string) {
@@ -71,6 +79,15 @@ func (s *Settings) GetBackupById(id string) *Backup {
 	return nil
 }
 
+func (s *Settings) FileEmpty() bool {
+	data, err := os.ReadFile(s.file)
+	if err != nil {
+		log.Error("file empty", "err", err)
+		return true
+	}
+	return len(data) == 0
+}
+
 func (s *Settings) readFile() Config {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -79,6 +96,8 @@ func (s *Settings) readFile() Config {
 		if str, err := io.ReadAll(file); err == nil {
 			if err := json.Unmarshal([]byte(str), &data); err == nil {
 				return data
+			} else {
+				log.Error("settings: unmarshal", "err", err)
 			}
 		}
 	} else {

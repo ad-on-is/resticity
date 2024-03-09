@@ -32,7 +32,7 @@
 						<span>{{ useSettings().settings?.repositories.find((r: Repository) => r?.id === row.to_repository_id)?.name || '' }}</span></span
 					>
 				</div>
-				<div v-if="useJobs().scheduleProgress(row.id) !== null">
+				<div v-if="useJobs().scheduleIsRunning(row.id) && useJobs().scheduleProgress(row.id) !== null">
 					<div v-if="useJobs().scheduleProgress(row.id).percent_done">
 						<UProgress :value="useJobs().scheduleProgress(row.id).percent_done * 100" class="mt-2" color="sky" />
 						<div class="text-xs opacity-50 flex justify-between mt-2">

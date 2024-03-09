@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/goccy/go-json"
@@ -14,6 +14,70 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/thoas/go-funk"
 )
+
+type client struct {
+	LastSeen time.Time
+}
+
+var clients = make(map[*websocket.Conn]client)
+var register = make(chan *websocket.Conn)
+var broadcast = make(chan string)
+var unregister = make(chan *websocket.Conn)
+
+func runHub() {
+	for {
+		select {
+		case connection := <-register:
+			clients[connection] = client{LastSeen: time.Now()}
+			log.Debug(
+				"connection registered",
+				"addr",
+				connection.RemoteAddr().String(),
+				"clients",
+				len(clients),
+			)
+
+		case message := <-broadcast:
+
+			for connection := range clients {
+				if err := connection.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+					log.Error("write error:", err)
+
+					unregister <- connection
+					connection.WriteMessage(websocket.CloseMessage, []byte{})
+					connection.Close()
+				} else {
+					log.Debug("message sent", "addr", connection.RemoteAddr().String(), "msg", message)
+				}
+			}
+
+		case connection := <-unregister:
+
+			delete(clients, connection)
+			log.Debug(
+				"connection unregistered",
+				"addr",
+				connection.RemoteAddr().String(),
+				"clients",
+				len(clients),
+			)
+
+		}
+	}
+}
+
+func cleanClients() {
+	for {
+		time.Sleep(1 * time.Second)
+		for connection, client := range clients {
+			if time.Since(client.LastSeen) > 2*time.Second {
+
+				unregister <- connection
+
+			}
+		}
+	}
+}
 
 func RunServer(
 	scheduler *Scheduler,
@@ -30,8 +94,6 @@ func RunServer(
 	api := server.Group("/api")
 
 	api.Use("/ws", func(c *fiber.Ctx) error {
-		// IsWebSocketUpgrade returns true if the client
-		// requested upgrade to the WebSocket protocol.
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 			return c.Next()
@@ -39,17 +101,46 @@ func RunServer(
 		return fiber.ErrUpgradeRequired
 	})
 
+	go runHub()
+	go cleanClients()
+
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
-		defer c.Close()
-		mux := sync.Mutex{}
+		defer func() {
+			unregister <- c
+			c.Close()
+		}()
 
 		outputs := []ChanMsg{}
 
+		register <- c
+
+		go func() {
+			for {
+				time.Sleep(1 * time.Second)
+				_, _, err := c.ReadMessage()
+				if err == nil {
+					go func() {
+						for connection, client := range clients {
+
+							if connection.RemoteAddr().String() == c.RemoteAddr().String() {
+
+								client.LastSeen = time.Now()
+								clients[connection] = client
+
+								break
+							}
+						}
+					}()
+
+				}
+			}
+		}()
+
 		for {
+
 			select {
 			case d := <-*outputChan:
-				mux.Lock()
 				if funk.Find(
 					outputs,
 					func(out ChanMsg) bool { return out.Id == d.Id },
@@ -64,13 +155,11 @@ func RunServer(
 					}
 				}
 				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
-					if err = c.WriteMessage(websocket.TextMessage, j); err != nil {
-						log.Error("socket: write", "err", err)
-					}
+					broadcast <- string(j)
+
 				} else {
 					log.Error("socket: marshal", "err", err)
 				}
-				mux.Unlock()
 			}
 		}
 

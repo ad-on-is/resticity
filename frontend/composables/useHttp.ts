@@ -11,7 +11,10 @@ export default class HttpClient {
 		await this.doFetch(url, { method: 'put', query, body: data }, notify)
 
 	public static doFetch = async (url: string, opts: { method: FetchMethod; body?: any; query?: any }, notify: false | { title: string; text: string; type?: string } = false) => {
-		const baseUrl = 'http://127.0.0.1:11278/api'
+		const getUrl = (): string => {
+			return window.location.host.includes('wails.localhost') ? 'http://localhost:11278' : `${window.location.protocol}//${window.location.host}`
+		}
+		const baseUrl = `${getUrl()}/api`
 		try {
 			const res = await $fetch.raw(`${baseUrl}${url}`, {
 				method: opts.method,
