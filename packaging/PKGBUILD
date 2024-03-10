@@ -1,4 +1,4 @@
-# Maintainer: Adis Durakovic
+# Maintainer: Adis Durakovic <aur@
 pkgname=resticity
 pkgver=1.0.1
 pkgrel=1
@@ -26,12 +26,16 @@ validpgpkeys=()
 
 prepare() {
         cd "$pkgname-$pkgver"
+        export GOPATH=/tmp/go
+        export GOBIN=/tmp/go/bin
         go install github.com/wailsapp/wails/v2/cmd/wails@latest
 }
 
 build() {
         cd "$pkgname-$pkgver"
-        wails build
+        export GOPATH=/tmp/go
+        export GOBIN=/tmp/go/bin
+        /tmp/go/bin/wails build
 }
 
 check() {
