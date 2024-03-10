@@ -84,6 +84,9 @@ TBD after packaging is decided.
 # Clone this repo
 $ git clone https://github.com/ad-on-is/resticity
 
+# Install wails
+$ go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
 # cd into resticity
 $ cd resticity
 

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+
+Name=Resticity
+Comment=A frontend for restic backups. 
+Categories=Development;Documentation;
+Keywords=restic,resticity;
+
+Icon=com.github.ad-on-is.Resticity
+Exec=resticity
+Terminal=false
