@@ -6,8 +6,8 @@
   <developer_name>Adis Durakovic</developer_name>
   <summary>A frontend for restic backups.</summary>
   
-  <metadata_license>BSD-3-Clause</metadata_license>
-  <project_license>GPL-3-Clause</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0</project_license>
   
   <recommends>
     <control>pointing</control>
