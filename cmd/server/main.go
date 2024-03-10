@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"flag"
+	"os"
 
 	"github.com/ad-on-is/resticity/internal"
 
@@ -10,22 +9,15 @@ import (
 )
 
 func main() {
-	log.SetLevel(log.DebugLevel)
-	flagConfigFile := ""
-	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
-	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
-	flag.Parse()
-	errb := bytes.NewBuffer([]byte{})
-	outb := bytes.NewBuffer([]byte{})
-	outputChan := make(chan internal.ChanMsg)
-	settings := internal.NewSettings(flagConfigFile)
-	restic := internal.NewRestic(errb, outb, settings)
-	if scheduler, err := internal.NewScheduler(settings, restic, &outputChan); err == nil {
-		(scheduler).RescheduleBackups()
-		internal.RunServer(scheduler, restic, settings, errb, outb, &outputChan)
+	internal.SetLogLevel()
+	r, err := internal.NewResticity()
+	if err == nil {
+		(r.Scheduler).RescheduleBackups()
+		internal.RunServer(r.Scheduler, r.Restic, r.Settings, r.ErrB, r.OutB, &r.OutputChan)
 
 	} else {
-		log.Error("Init scheduler", "error", err)
+		log.Error("Resticity failed to start", "error", err)
+		os.Exit(1)
 	}
 
 }

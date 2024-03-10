@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"embed"
-	"flag"
+	"os"
 
 	"github.com/ad-on-is/resticity/internal"
 
@@ -18,26 +17,15 @@ import (
 var assets embed.FS
 
 func main() {
-	log.SetLevel(log.DebugLevel)
-	flagConfigFile := ""
-	flagBackground := false
-	flag.StringVar(&flagConfigFile, "config", "", "Specify a config file")
-	flag.StringVar(&flagConfigFile, "c", "", "Specify a config file")
-	flag.BoolVar(&flagBackground, "background", false, "Run in background mode")
-	flag.BoolVar(&flagBackground, "b", false, "Run in background mode")
-	flag.Parse()
-	errb := bytes.NewBuffer([]byte{})
-	outb := bytes.NewBuffer([]byte{})
-	outputChan := make(chan internal.ChanMsg)
-	settings := internal.NewSettings(flagConfigFile)
-	restic := internal.NewRestic(errb, outb, settings)
-	if scheduler, err := internal.NewScheduler(settings, restic, &outputChan); err == nil {
-		(scheduler).RescheduleBackups()
-
-		go internal.RunServer(scheduler, restic, settings, errb, outb, &outputChan)
-		Desktop(scheduler, restic, settings, flagBackground)
+	internal.SetLogLevel()
+	r, err := internal.NewResticity()
+	if err == nil {
+		(r.Scheduler).RescheduleBackups()
+		go internal.RunServer(r.Scheduler, r.Restic, r.Settings, r.ErrB, r.OutB, &r.OutputChan)
+		Desktop(r.Scheduler, r.Restic, r.Settings, r.FlagArgs.Background)
 	} else {
-		log.Error("Init scheduler", "error", err)
+		log.Error("Resticity failed to start", "error", err)
+		os.Exit(1)
 	}
 
 }
