@@ -1,4 +1,4 @@
-id: com.github.ad-on-is.Resticity
+id: com.github.Resticity
 runtime: org.freedesktop.Platform
 runtime-version: '23.08'
 sdk: org.freedesktop.Sdk

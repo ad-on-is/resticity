@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.github.ad-on-is.Resticity</id>
+  <id>com.github.Resticity</id>
   
   <name>flatpak_demo</name>
   <developer_name>Adis Durakovic</developer_name>
@@ -19,7 +19,7 @@
     <p>A frontend for restic backups.</p>
   </description>
   
-  <launchable type="desktop-id">com.github.ad-on-is.Resticity.desktop</launchable>
+  <launchable type="desktop-id">com.github.Resticity.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/ad-on-is/resticity/blob/main/images/resticity_screenshot.png</image>
