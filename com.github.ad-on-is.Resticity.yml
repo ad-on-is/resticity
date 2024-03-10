@@ -28,5 +28,5 @@ modules:
         - install -Dm00644 $FLATPAK_ID.appdata.xml $FLATPAK_DEST/share/appdata/$FLATPAK_ID.appdata.xml
       sources:
         - type: archive
-          url: "https://github.com/ad-on-is/resticity/archive/refs/tags/v1.0.0.tar.gz"
-          sha256: a9d3b920404b3b699da757a9641ebc75cf43e35515dd9879622de33c6d104b63
+          url: "https://github.com/ad-on-is/resticity/archive/refs/tags/1.0.0.tar.gz"
+          sha256: 3ee648e54e324bfea8b55cdbe5a8f625ac00839a68e1bd96628285bf896e9754
