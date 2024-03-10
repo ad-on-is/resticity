@@ -42,6 +42,6 @@ check() {
 package() {
         cd "$pkgname-$pkgver"
         install -Dm755 --no-target-directory "build/bin/resticity" "${pkgdir}/usr/bin/${pkgname}"
-        install -Dm755 --no-target-directory "frontend/public/appicon.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/${pkgname}.png"
-        install -Dm755 --no-target-directory "com.github.ad-on-is.Resticity.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+        install -Dm755 --no-target-directory "packaging/resticity.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/${pkgname}.png"
+        install -Dm755 --no-target-directory "packaging/resticity.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
 }

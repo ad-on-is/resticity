@@ -6,6 +6,6 @@ Comment=A frontend for restic backups.
 Categories=Development;Documentation;
 Keywords=restic,resticity;
 
-Icon=com.github.Resticity
+Icon=resticity
 Exec=resticity
 Terminal=false
