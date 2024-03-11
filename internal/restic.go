@@ -144,8 +144,6 @@ func (r *Restic) core(
 	}
 	c.Wait()
 
-	log.Info("core", "sout", sout.String(), "serr", serr.String())
-
 	if serr.Len() > 0 {
 		return "", errors.New(serr.String())
 	}
