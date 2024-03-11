@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -21,10 +20,10 @@ type FlagArgs struct {
 }
 
 type Resticity struct {
-	FlagArgs   FlagArgs
-	ErrB       *bytes.Buffer
-	OutB       *bytes.Buffer
+	FlagArgs FlagArgs
+
 	OutputChan chan ChanMsg
+	ErrorChan  chan ChanMsg
 	Settings   *Settings
 	Restic     *Restic
 	Scheduler  *Scheduler
@@ -33,13 +32,13 @@ type Resticity struct {
 func NewResticity() (Resticity, error) {
 	flagArgs := ParseFlags()
 	flagArgs.PrintVersionOrHelp()
-	errb := bytes.NewBuffer([]byte{})
-	outb := bytes.NewBuffer([]byte{})
+
 	outputChan := make(chan ChanMsg)
+	errorChan := make(chan ChanMsg)
 	settings := NewSettings(flagArgs.ConfigFile)
-	restic := NewRestic(errb, outb, settings)
+	restic := NewRestic(settings)
 	scheduler, err := NewScheduler(settings, restic, &outputChan)
-	return Resticity{flagArgs, errb, outb, outputChan, settings, restic, scheduler}, err
+	return Resticity{flagArgs, outputChan, errorChan, settings, restic, scheduler}, err
 }
 
 func ParseFlags() FlagArgs {

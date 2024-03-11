@@ -21,7 +21,13 @@ func main() {
 	r, err := internal.NewResticity()
 	if err == nil {
 		(r.Scheduler).RescheduleBackups()
-		go internal.RunServer(r.Scheduler, r.Restic, r.Settings, r.ErrB, r.OutB, &r.OutputChan)
+		go internal.RunServer(
+			r.Scheduler,
+			r.Restic,
+			r.Settings,
+			&r.OutputChan,
+			&r.ErrorChan,
+		)
 		Desktop(r.Scheduler, r.Restic, r.Settings, r.FlagArgs.Background)
 	} else {
 		log.Error("Resticity failed to start", "error", err)

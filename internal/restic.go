@@ -3,7 +3,6 @@ package internal
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -14,32 +13,35 @@ import (
 )
 
 type Restic struct {
-	errb     *bytes.Buffer
-	outb     *bytes.Buffer
 	settings *Settings
 }
 
-func NewRestic(errb *bytes.Buffer, outb *bytes.Buffer, settings *Settings) *Restic {
+func NewRestic(settings *Settings) *Restic {
 	r := &Restic{}
-	r.errb = errb
-	r.outb = outb
+
 	r.settings = settings
 	return r
 }
 
-func (r *Restic) PipeOutErr(c *exec.Cmd, sout *bytes.Buffer, serr *bytes.Buffer, ch *chan string) {
+func (r *Restic) PipeOutErr(
+	c *exec.Cmd,
+	sout *bytes.Buffer,
+	serr *bytes.Buffer,
+	job *Job,
+) {
 	stdout, err := c.StdoutPipe()
 	if err == nil {
 		go func() {
 			scanner := bufio.NewScanner(stdout)
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
-
-				if ch != nil {
+				if job != nil {
 					go func(t string) {
-						*ch <- t
+						*&job.OutChan <- t
+						log.Debug("pipeout", "out", t)
 					}(scanner.Text())
 				}
+
 				sout.WriteString(scanner.Text())
 			}
 		}()
@@ -55,9 +57,10 @@ func (r *Restic) PipeOutErr(c *exec.Cmd, sout *bytes.Buffer, serr *bytes.Buffer,
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
 
-				if ch != nil {
+				if job != nil {
 					go func(t string) {
-						*ch <- t
+						*&job.ErrChan <- t
+						log.Debug("pipeout", "out", t)
 					}(scanner.Text())
 				}
 				serr.WriteString(scanner.Text())
@@ -104,9 +107,7 @@ func (r *Restic) core(
 	repository Repository,
 	cmd []string,
 	envs []string,
-	ctx *context.Context,
-	cancel *context.CancelFunc,
-	ch *chan string,
+	job *Job,
 ) (string, error) {
 
 	// trigger start
@@ -117,17 +118,17 @@ func (r *Restic) core(
 	var serr bytes.Buffer
 	var c *exec.Cmd
 
-	if ctx != nil {
-		c = exec.CommandContext(*ctx, "/usr/bin/restic", cmds...)
-		if cancel != nil {
+	if job != nil && job.Ctx != nil {
+		c = exec.CommandContext(job.Ctx, "/usr/bin/restic", cmds...)
+		if job.Cancel != nil {
 
-			defer (*cancel)()
+			defer (job.Cancel)()
 		}
 	} else {
 		c = exec.Command("/usr/bin/restic", cmds...)
 	}
 
-	r.PipeOutErr(c, &sout, &serr, ch)
+	r.PipeOutErr(c, &sout, &serr, job)
 
 	envs = r.getEnvs(repository, envs)
 	log.Info("core", "repo", repository.Path, "cmd", cmd)
@@ -143,8 +144,7 @@ func (r *Restic) core(
 	}
 	c.Wait()
 
-	r.errb.Write(serr.Bytes())
-	r.outb.Write(sout.Bytes())
+	log.Info("core", "sout", sout.String(), "serr", serr.String())
 
 	if serr.Len() > 0 {
 		return "", errors.New(serr.String())
@@ -155,7 +155,7 @@ func (r *Restic) core(
 }
 
 func (r *Restic) Exec(repository Repository, cmds []string, envs []string) (string, error) {
-	if data, err := r.core(repository, cmds, envs, nil, nil, nil); err != nil {
+	if data, err := r.core(repository, cmds, envs, nil); err != nil {
 		return "", err
 	} else {
 		return data, nil
@@ -167,7 +167,7 @@ func (r *Restic) BrowseSnapshot(
 	snapshotId string,
 	path string,
 ) ([]FileDescriptor, error) {
-	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil, nil, nil); err == nil {
+	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil); err == nil {
 		res = strings.ReplaceAll(res, "}", "},")
 		res = strings.ReplaceAll(res, "\n", "")
 		res = "[" + res + "]"
@@ -208,7 +208,7 @@ func (r *Restic) RunSchedule(
 			cmds = append(cmds, p...)
 		}
 
-		_, err := r.core(*toRepository, cmds, []string{}, &job.Ctx, &job.Cancel, &job.Chan)
+		_, err := r.core(*toRepository, cmds, []string{}, job)
 		if err != nil {
 			log.Error("runschedule", "err", err)
 		}
@@ -224,7 +224,7 @@ func (r *Restic) RunSchedule(
 			"RESTIC_FROM_REPOSITORY=" + fromRepository.Path,
 		}
 
-		r.core(*toRepository, cmds, envs, &job.Ctx, &job.Cancel, &job.Chan)
+		r.core(*toRepository, cmds, envs, job)
 		break
 	case "prune-repository":
 		if toRepository == nil {
@@ -239,12 +239,10 @@ func (r *Restic) RunSchedule(
 			*toRepository,
 			[]string{"unlock"},
 			[]string{},
-			&job.Ctx,
-			&job.Cancel,
-			&job.Chan,
+			job,
 		)
 		if err == nil {
-			_, err := r.core(*toRepository, cmds, []string{}, &job.Ctx, &job.Cancel, &job.Chan)
+			_, err := r.core(*toRepository, cmds, []string{}, job)
 			if err != nil {
 				log.Error("prune-repository", "err", err)
 			}

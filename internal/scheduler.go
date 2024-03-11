@@ -19,7 +19,8 @@ type Job struct {
 	Force    bool     `json:"force"`
 	Ctx      context.Context
 	Cancel   context.CancelFunc
-	Chan     chan string
+	OutChan  chan string
+	ErrChan  chan string
 }
 
 type Scheduler struct {
@@ -76,8 +77,8 @@ func (s *Scheduler) DeleteRunningJob(id string) {
 	for i, j := range s.Jobs {
 		if j.Id == id {
 			go func() {
-				if j.Chan != nil {
-					j.Chan <- "{\"running\": false}"
+				if j.OutChan != nil {
+					j.OutChan <- "{\"running\": false}"
 				}
 			}()
 			log.Debug("Stopping running job", "id", id)
@@ -107,8 +108,8 @@ func (s *Scheduler) SetRunningJob(id string) {
 			log.Debug("Setting forced running job", "id", id)
 			s.Jobs[i].Running = true
 			go func() {
-				if j.Chan != nil {
-					j.Chan <- "{\"running\": true}"
+				if j.OutChan != nil {
+					j.OutChan <- "{\"running\": true}"
 				}
 			}()
 			break
@@ -193,12 +194,9 @@ func (s *Scheduler) RescheduleBackups() {
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
-		ch := make(chan string)
-		go func(c chan string) {
-			for msg := range c {
-				*s.outputCh <- ChanMsg{Id: schedule.Id, Out: msg, Schedule: schedule}
-			}
-		}(ch)
+		outch := make(chan string)
+		errch := make(chan string)
+
 		s.Jobs = append(
 			s.Jobs,
 			Job{
@@ -209,9 +207,25 @@ func (s *Scheduler) RescheduleBackups() {
 				Force:    false,
 				Ctx:      ctx,
 				Cancel:   cancel,
-				Chan:     ch,
+				OutChan:  outch,
+				ErrChan:  errch,
 			},
 		)
+
+		go func() {
+			outStr := ""
+			errStr := ""
+			for {
+				select {
+				case o := <-outch:
+					outStr = o
+					*s.outputCh <- ChanMsg{Id: schedule.Id, Out: outStr, Err: errStr, Schedule: schedule}
+				case e := <-errch:
+					errStr = e
+					*s.outputCh <- ChanMsg{Id: schedule.Id, Out: outStr, Err: errStr, Schedule: schedule}
+				}
+			}
+		}()
 
 	}
 

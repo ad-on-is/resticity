@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"os"
 	"os/exec"
 	"strings"
@@ -79,13 +78,35 @@ func cleanClients() {
 	}
 }
 
+func doBroadcast(d ChanMsg, outputs []ChanMsg) {
+	if funk.Find(
+		outputs,
+		func(out ChanMsg) bool { return out.Id == d.Id },
+	) == nil {
+		outputs = append(outputs, d)
+	} else {
+		for i, out := range outputs {
+			if out.Id == d.Id {
+				outputs[i] = d
+				break
+			}
+		}
+	}
+	if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
+		broadcast <- string(j)
+
+	} else {
+		log.Error("socket: marshal", "err", err)
+	}
+}
+
 func RunServer(
 	scheduler *Scheduler,
 	restic *Restic,
 	settings *Settings,
-	errb *bytes.Buffer,
-	outb *bytes.Buffer,
+
 	outputChan *chan ChanMsg,
+	errorChan *chan ChanMsg,
 ) {
 	server := fiber.New()
 	server.Use(cors.New())
@@ -112,6 +133,7 @@ func RunServer(
 		}()
 
 		outputs := []ChanMsg{}
+		errors := []ChanMsg{}
 
 		register <- c
 
@@ -140,27 +162,12 @@ func RunServer(
 		for {
 
 			select {
-			case d := <-*outputChan:
-				if funk.Find(
-					outputs,
-					func(out ChanMsg) bool { return out.Id == d.Id },
-				) == nil {
-					outputs = append(outputs, d)
-				} else {
-					for i, out := range outputs {
-						if out.Id == d.Id {
-							outputs[i] = d
-							break
-						}
-					}
-				}
-				if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
-					broadcast <- string(j)
-
-				} else {
-					log.Error("socket: marshal", "err", err)
-				}
+			case o := <-*outputChan:
+				doBroadcast(o, outputs)
+			case e := <-*errorChan:
+				doBroadcast(e, errors)
 			}
+
 		}
 
 	}))
@@ -241,10 +248,6 @@ func RunServer(
 			return c.SendString(err.Error())
 		}
 		return c.SendString("OK")
-	})
-
-	api.Get("/test", func(c *fiber.Ctx) error {
-		return c.SendStream(bytes.NewReader(outb.Bytes()))
 	})
 
 	config := api.Group("/config")

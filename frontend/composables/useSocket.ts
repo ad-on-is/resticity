@@ -8,6 +8,14 @@ export const useSocket = defineStore('useSocket', () => {
 		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
+				data.forEach((j: any) => {
+					if (j.out !== undefined) {
+						useLogs().setOut(j.out)
+					}
+					if (j.err !== undefined) {
+						useLogs().setErr(j.err)
+					}
+				})
 				useJobs().running =
 					data.map((j: any) => {
 						try {
@@ -17,8 +25,6 @@ export const useSocket = defineStore('useSocket', () => {
 						}
 						return j
 					}) || []
-				// useLogs().out = data.out
-				// useLogs().err = data.err
 			} catch (e) {
 				useJobs().running = []
 				console.error(e)
