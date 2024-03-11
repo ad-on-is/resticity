@@ -146,9 +146,9 @@ func RunServer(
 						for connection, client := range clients {
 
 							if connection.RemoteAddr().String() == c.RemoteAddr().String() {
-
-								client.LastSeen = time.Now()
-								clients[connection] = client
+								c := client
+								c.LastSeen = time.Now()
+								clients[connection] = c
 
 								break
 							}

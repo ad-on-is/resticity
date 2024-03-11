@@ -10,10 +10,10 @@ export const useSocket = defineStore('useSocket', () => {
 				const data = JSON.parse(event.data)
 				data.forEach((j: any) => {
 					if (j.out !== undefined) {
-						useLogs().setOut(j.out)
+						useLogs().setOut(j.id, j.out)
 					}
 					if (j.err !== undefined) {
-						useLogs().setErr(j.err)
+						useLogs().setErr(j.id, j.err)
 					}
 				})
 				useJobs().running =
