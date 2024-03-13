@@ -19,8 +19,6 @@ type Job struct {
 	Force    bool     `json:"force"`
 	Ctx      context.Context
 	Cancel   context.CancelFunc
-	// OutChan  chan string
-	// ErrChan  chan string
 }
 
 type Scheduler struct {
@@ -29,8 +27,8 @@ type Scheduler struct {
 	Jobs     []Job
 	jmu      sync.Mutex
 	settings *Settings
-	outputCh *chan ChanMsg
-	errorCh  *chan ChanMsg
+	OutputCh *chan ChanMsg
+	ErrorCh  *chan ChanMsg
 }
 
 func NewScheduler(
@@ -43,8 +41,8 @@ func NewScheduler(
 	s := &Scheduler{}
 	s.settings = settings
 	s.restic = restic
-	s.outputCh = outch
-	s.errorCh = errch
+	s.OutputCh = outch
+	s.ErrorCh = errch
 	if gc, err := gocron.NewScheduler(); err == nil {
 		s.Gocron = gc
 		s.Gocron.Start()
@@ -58,7 +56,7 @@ func NewScheduler(
 func (s *Scheduler) RunJobById(id string) {
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			log.Debug("Running job manually", "id", id)
+			log.Info("Running job manually", "id", id)
 			s.Jobs[i].Force = true
 
 			if err := j.job.RunNow(); err != nil {
@@ -72,6 +70,7 @@ func (s *Scheduler) RunJobById(id string) {
 func (s *Scheduler) StopJobById(id string) {
 	for _, j := range s.Jobs {
 		if j.Id == id {
+			(*s.OutputCh) <- ChanMsg{Id: j.Schedule.Id, Msg: "{\"running\": false}", Time: time.Now()}
 			j.Cancel()
 			break
 		}
@@ -83,8 +82,6 @@ func (s *Scheduler) DeleteRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			msg := ChanMsg{Id: id, Msg: "{\"running\": false}"}
-			(*s.outputCh) <- msg
 
 			log.Debug("Stopping running job", "id", id)
 			s.Jobs[i].Running = false
@@ -110,9 +107,8 @@ func (s *Scheduler) SetRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
+
 			s.Jobs[i].Running = true
-			msg := ChanMsg{Id: id, Msg: "{\"running\": true}"}
-			(*s.outputCh) <- msg
 			log.Debug("Setting forced running job", "id", id)
 
 			break
@@ -170,11 +166,20 @@ func (s *Scheduler) RescheduleBackups() {
 			gocron.WithEventListeners(
 				gocron.BeforeJobRuns(func(jobID uuid.UUID, jobName string) {
 
-					log.Debug("before job run", "id", jobName)
+					(*s.OutputCh) <- ChanMsg{Id: jobName, Msg: "{\"running\": true}", Time: time.Now()}
+
+					log.Debug(
+						"before job run",
+						"id",
+						jobName,
+					)
 					s.SetRunningJob(jobName)
 				}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
+
+						(*s.OutputCh) <- ChanMsg{Id: jobName, Msg: "{\"running\": false}", Time: time.Now()}
+
 						log.Debug("after job run", "res", "success", "id", jobName)
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
@@ -183,6 +188,9 @@ func (s *Scheduler) RescheduleBackups() {
 				),
 				gocron.AfterJobRunsWithError(
 					func(jobID uuid.UUID, jobName string, err error) {
+
+						(*s.OutputCh) <- ChanMsg{Id: jobName, Msg: "{\"running\": false}", Time: time.Now()}
+
 						log.Debug("after job run", "res", "error", "id", jobName, "err", err)
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)

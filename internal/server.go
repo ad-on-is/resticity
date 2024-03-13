@@ -22,6 +22,8 @@ var clients = make(map[*websocket.Conn]client)
 var register = make(chan *websocket.Conn)
 var broadcast = make(chan string)
 var unregister = make(chan *websocket.Conn)
+var outs = []WsMsg{}
+var errs = []WsMsg{}
 
 func runHub() {
 	for {
@@ -79,8 +81,9 @@ func cleanClients() {
 }
 
 func handlePing(c *websocket.Conn) {
+
 	for {
-		time.Sleep(1 * time.Second)
+
 		_, _, err := c.ReadMessage()
 		if err == nil {
 			go func() {
@@ -101,6 +104,64 @@ func handlePing(c *websocket.Conn) {
 
 }
 
+func handleArray(arr []WsMsg, m WsMsg) []WsMsg {
+	if m.Id != "" {
+		if funk.Find(
+			arr,
+			func(arrm WsMsg) bool { return arrm.Id == m.Id },
+		) == nil {
+			arr = append(arr, m)
+		} else {
+			for i, arrm := range arr {
+				if arrm.Id == m.Id {
+					arr[i] = m
+					break
+				}
+			}
+		}
+	}
+
+	return arr
+}
+
+func doBroadcast(outs []WsMsg, errs []WsMsg) {
+	o := funk.Filter(outs, func(o WsMsg) bool { return o.Out != "" && o.Out != "{}" })
+	e := funk.Filter(errs, func(o WsMsg) bool { return o.Err != "" && o.Err != "{}" })
+	arr := append(o.([]WsMsg), e.([]WsMsg)...)
+	if j, err := json.Marshal(arr); err == nil {
+		broadcast <- string(j)
+
+	} else {
+		log.Error("socket: marshal", "err", err)
+	}
+
+}
+
+func handleChannels(
+	outputChan *chan ChanMsg,
+	errorChan *chan ChanMsg,
+
+) {
+	for {
+		select {
+		case o := <-*outputChan:
+			m := WsMsg{Id: o.Id, Out: o.Msg, Err: "", Time: o.Time}
+			log.Info("output", "o", o)
+			outs = handleArray(outs, m)
+			doBroadcast(outs, errs)
+			break
+		case e := <-*errorChan:
+			m := WsMsg{Id: e.Id, Out: "", Err: e.Msg, Time: e.Time}
+			log.Info("error", "m", m)
+			errs = handleArray(errs, m)
+			doBroadcast(outs, errs)
+
+			break
+		}
+
+	}
+}
+
 func RunServer(
 	scheduler *Scheduler,
 	restic *Restic,
@@ -109,6 +170,9 @@ func RunServer(
 	outputChan *chan ChanMsg,
 	errorChan *chan ChanMsg,
 ) {
+
+	go handleChannels(outputChan, errorChan)
+
 	server := fiber.New()
 	server.Use(cors.New())
 	server.Static("/", "./public")
@@ -116,6 +180,7 @@ func RunServer(
 	api := server.Group("/api")
 
 	api.Use("/ws", func(c *fiber.Ctx) error {
+
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 			return c.Next()
@@ -128,9 +193,6 @@ func RunServer(
 
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
-		outs := []WsMsg{}
-		errs := []WsMsg{}
-
 		defer func() {
 			unregister <- c
 			c.Close()
@@ -138,63 +200,7 @@ func RunServer(
 
 		register <- c
 
-		go handlePing(c)
-
-		for {
-			select {
-			case o := <-*outputChan:
-				m := WsMsg{Id: o.Id, Out: o.Msg, Err: ""}
-				log.Debug(m)
-				if m.Id != "" {
-					if funk.Find(
-						outs,
-						func(arrm WsMsg) bool { return arrm.Id == m.Id },
-					) == nil {
-						outs = append(outs, m)
-					} else {
-						for i, arrm := range outs {
-							if arrm.Id == m.Id {
-								(outs)[i] = m
-								break
-							}
-						}
-					}
-				}
-				if j, err := json.Marshal(funk.Filter(outs, func(o WsMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
-					broadcast <- string(j)
-
-				} else {
-					log.Error("socket: marshal", "err", err)
-				}
-				break
-			case e := <-*errorChan:
-				m := WsMsg{Id: e.Id, Out: "", Err: e.Msg}
-				log.Debug(m)
-				if m.Id != "" {
-					if funk.Find(
-						errs,
-						func(arrm WsMsg) bool { return arrm.Id == m.Id },
-					) == nil {
-						errs = append(errs, m)
-					} else {
-						for i, arrm := range errs {
-							if arrm.Id == m.Id {
-								(errs)[i] = m
-								break
-							}
-						}
-					}
-				}
-				if j, err := json.Marshal(funk.Filter(errs, func(o WsMsg) bool { return o.Err != "" && o.Err != "{}" })); err == nil {
-					broadcast <- string(j)
-
-				} else {
-					log.Error("socket: marshal", "err", err)
-				}
-				break
-			}
-
-		}
+		handlePing(c)
 
 	}))
 

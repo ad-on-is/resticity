@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/log"
 )
@@ -40,12 +41,11 @@ func (r *Restic) PipeOutErr(
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
 				go func(t string) {
-					msg := ChanMsg{Id: "", Msg: t}
+					msg := ChanMsg{Id: "", Msg: t, Time: time.Now()}
 					if job != nil {
 						msg.Id = job.Id
 					}
 					(*r.OutputCh) <- msg
-					log.Debug("pipeout", "out", t)
 				}(scanner.Text())
 
 				sout.WriteString(scanner.Text())
@@ -64,12 +64,11 @@ func (r *Restic) PipeOutErr(
 			for scanner.Scan() {
 
 				go func(t string) {
-					msg := ChanMsg{Id: "", Msg: t}
+					msg := ChanMsg{Id: "", Msg: t, Time: time.Now()}
 					if job != nil {
 						msg.Id = job.Id
 					}
 					(*r.OutputCh) <- msg
-					log.Debug("pipeout", "out", t)
 				}(scanner.Text())
 				serr.WriteString(scanner.Text())
 			}
@@ -199,6 +198,7 @@ func (r *Restic) RunSchedule(
 	if job == nil {
 		return
 	}
+	(*r.OutputCh) <- ChanMsg{Id: job.Schedule.Id, Msg: "{\"running\": true}", Time: time.Now()}
 	toRepository := r.settings.GetRepositoryById(job.Schedule.ToRepositoryId)
 	fromRepository := r.settings.GetRepositoryById(job.Schedule.FromRepositoryId)
 	backup := r.settings.GetBackupById(job.Schedule.BackupId)

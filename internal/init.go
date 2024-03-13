@@ -35,9 +35,11 @@ func NewResticity() (Resticity, error) {
 
 	outputChan := make(chan ChanMsg)
 	errorChan := make(chan ChanMsg)
+	go NewFileLogger(&outputChan, &errorChan)
 	settings := NewSettings(flagArgs.ConfigFile)
 	restic := NewRestic(settings, &outputChan, &errorChan)
 	scheduler, err := NewScheduler(settings, restic, &outputChan, &errorChan)
+
 	return Resticity{flagArgs, outputChan, errorChan, settings, restic, scheduler}, err
 }
 
