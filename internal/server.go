@@ -80,30 +80,6 @@ func cleanClients() {
 	}
 }
 
-func handlePing(c *websocket.Conn) {
-
-	for {
-
-		_, _, err := c.ReadMessage()
-		if err == nil {
-			go func() {
-				for connection, client := range clients {
-
-					if connection.RemoteAddr().String() == c.RemoteAddr().String() {
-						c := client
-						c.LastSeen = time.Now()
-						clients[connection] = c
-
-						break
-					}
-				}
-			}()
-
-		}
-	}
-
-}
-
 func handleArray(arr []WsMsg, m WsMsg) []WsMsg {
 	if m.Id != "" {
 		if funk.Find(
@@ -146,13 +122,11 @@ func handleChannels(
 		select {
 		case o := <-*outputChan:
 			m := WsMsg{Id: o.Id, Out: o.Msg, Err: "", Time: o.Time}
-			log.Info("output", "o", o)
 			outs = handleArray(outs, m)
 			doBroadcast(outs, errs)
 			break
 		case e := <-*errorChan:
 			m := WsMsg{Id: e.Id, Out: "", Err: e.Msg, Time: e.Time}
-			log.Info("error", "m", m)
 			errs = handleArray(errs, m)
 			doBroadcast(outs, errs)
 
@@ -200,7 +174,24 @@ func RunServer(
 
 		register <- c
 
-		handlePing(c)
+		for {
+			_, _, err := c.ReadMessage()
+			if err == nil {
+				go func() {
+					for connection, client := range clients {
+
+						if connection.RemoteAddr().String() == c.RemoteAddr().String() {
+							c := client
+							c.LastSeen = time.Now()
+							clients[connection] = c
+
+							break
+						}
+					}
+				}()
+
+			}
+		}
 
 	}))
 
