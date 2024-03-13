@@ -14,12 +14,16 @@ import (
 
 type Restic struct {
 	settings *Settings
+	OutputCh *chan ChanMsg
+	ErrorCh  *chan ChanMsg
 }
 
-func NewRestic(settings *Settings) *Restic {
+func NewRestic(settings *Settings, outch *chan ChanMsg, errch *chan ChanMsg) *Restic {
 	r := &Restic{}
 
 	r.settings = settings
+	r.OutputCh = outch
+	r.ErrorCh = errch
 	return r
 }
 
@@ -35,12 +39,14 @@ func (r *Restic) PipeOutErr(
 			scanner := bufio.NewScanner(stdout)
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
-				if job != nil {
-					go func(t string) {
-						*&job.OutChan <- t
-						log.Debug("pipeout", "out", t)
-					}(scanner.Text())
-				}
+				go func(t string) {
+					msg := ChanMsg{Id: "", Msg: t}
+					if job != nil {
+						msg.Id = job.Id
+					}
+					(*r.OutputCh) <- msg
+					log.Debug("pipeout", "out", t)
+				}(scanner.Text())
 
 				sout.WriteString(scanner.Text())
 			}
@@ -57,12 +63,14 @@ func (r *Restic) PipeOutErr(
 			scanner.Split(bufio.ScanLines)
 			for scanner.Scan() {
 
-				if job != nil {
-					go func(t string) {
-						*&job.ErrChan <- t
-						log.Debug("pipeout", "out", t)
-					}(scanner.Text())
-				}
+				go func(t string) {
+					msg := ChanMsg{Id: "", Msg: t}
+					if job != nil {
+						msg.Id = job.Id
+					}
+					(*r.OutputCh) <- msg
+					log.Debug("pipeout", "out", t)
+				}(scanner.Text())
 				serr.WriteString(scanner.Text())
 			}
 		}()

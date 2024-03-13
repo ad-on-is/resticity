@@ -135,8 +135,12 @@ type MsgJob struct {
 }
 
 type ChanMsg struct {
-	Id       string   `json:"id"`
-	Out      string   `json:"out"`
-	Err      string   `json:"err"`
-	Schedule Schedule `json:"schedule"`
+	Id  string
+	Msg string
+}
+
+type WsMsg struct {
+	Id  string `json:"id"`
+	Out string `json:"out"`
+	Err string `json:"err"`
 }

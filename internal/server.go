@@ -78,26 +78,27 @@ func cleanClients() {
 	}
 }
 
-func doBroadcast(d ChanMsg, outputs []ChanMsg) {
-	if funk.Find(
-		outputs,
-		func(out ChanMsg) bool { return out.Id == d.Id },
-	) == nil {
-		outputs = append(outputs, d)
-	} else {
-		for i, out := range outputs {
-			if out.Id == d.Id {
-				outputs[i] = d
-				break
-			}
+func handlePing(c *websocket.Conn) {
+	for {
+		time.Sleep(1 * time.Second)
+		_, _, err := c.ReadMessage()
+		if err == nil {
+			go func() {
+				for connection, client := range clients {
+
+					if connection.RemoteAddr().String() == c.RemoteAddr().String() {
+						c := client
+						c.LastSeen = time.Now()
+						clients[connection] = c
+
+						break
+					}
+				}
+			}()
+
 		}
 	}
-	if j, err := json.Marshal(funk.Filter(outputs, func(o ChanMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
-		broadcast <- string(j)
 
-	} else {
-		log.Error("socket: marshal", "err", err)
-	}
 }
 
 func RunServer(
@@ -127,45 +128,70 @@ func RunServer(
 
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
+		outs := []WsMsg{}
+		errs := []WsMsg{}
+
 		defer func() {
 			unregister <- c
 			c.Close()
 		}()
 
-		outputs := []ChanMsg{}
-		errors := []ChanMsg{}
-
 		register <- c
 
-		go func() {
-			for {
-				time.Sleep(1 * time.Second)
-				_, _, err := c.ReadMessage()
-				if err == nil {
-					go func() {
-						for connection, client := range clients {
+		go handlePing(c)
 
-							if connection.RemoteAddr().String() == c.RemoteAddr().String() {
-								c := client
-								c.LastSeen = time.Now()
-								clients[connection] = c
-
+		for {
+			select {
+			case o := <-*outputChan:
+				m := WsMsg{Id: o.Id, Out: o.Msg, Err: ""}
+				log.Debug(m)
+				if m.Id != "" {
+					if funk.Find(
+						outs,
+						func(arrm WsMsg) bool { return arrm.Id == m.Id },
+					) == nil {
+						outs = append(outs, m)
+					} else {
+						for i, arrm := range outs {
+							if arrm.Id == m.Id {
+								(outs)[i] = m
 								break
 							}
 						}
-					}()
-
+					}
 				}
-			}
-		}()
+				if j, err := json.Marshal(funk.Filter(outs, func(o WsMsg) bool { return o.Out != "" && o.Out != "{}" })); err == nil {
+					broadcast <- string(j)
 
-		for {
-
-			select {
-			case o := <-*outputChan:
-				doBroadcast(o, outputs)
+				} else {
+					log.Error("socket: marshal", "err", err)
+				}
+				break
 			case e := <-*errorChan:
-				doBroadcast(e, errors)
+				m := WsMsg{Id: e.Id, Out: "", Err: e.Msg}
+				log.Debug(m)
+				if m.Id != "" {
+					if funk.Find(
+						errs,
+						func(arrm WsMsg) bool { return arrm.Id == m.Id },
+					) == nil {
+						errs = append(errs, m)
+					} else {
+						for i, arrm := range errs {
+							if arrm.Id == m.Id {
+								(errs)[i] = m
+								break
+							}
+						}
+					}
+				}
+				if j, err := json.Marshal(funk.Filter(errs, func(o WsMsg) bool { return o.Err != "" && o.Err != "{}" })); err == nil {
+					broadcast <- string(j)
+
+				} else {
+					log.Error("socket: marshal", "err", err)
+				}
+				break
 			}
 
 		}

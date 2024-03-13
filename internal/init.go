@@ -36,8 +36,8 @@ func NewResticity() (Resticity, error) {
 	outputChan := make(chan ChanMsg)
 	errorChan := make(chan ChanMsg)
 	settings := NewSettings(flagArgs.ConfigFile)
-	restic := NewRestic(settings)
-	scheduler, err := NewScheduler(settings, restic, &outputChan)
+	restic := NewRestic(settings, &outputChan, &errorChan)
+	scheduler, err := NewScheduler(settings, restic, &outputChan, &errorChan)
 	return Resticity{flagArgs, outputChan, errorChan, settings, restic, scheduler}, err
 }
 
@@ -75,6 +75,6 @@ func SetLogLevel() {
 	if err == nil {
 		log.SetLevel(l)
 	} else {
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(log.DebugLevel)
 	}
 }

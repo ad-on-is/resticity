@@ -3,8 +3,10 @@ package main
 import (
 	"embed"
 	"os"
+	"strings"
 
 	"github.com/ad-on-is/resticity/internal"
+	"github.com/thoas/go-funk"
 
 	"github.com/charmbracelet/log"
 	"github.com/wailsapp/wails/v2"
@@ -15,6 +17,12 @@ import (
 
 //go:embed all:frontend/.output/public
 var assets embed.FS
+
+func test(arr *[]string, n string) bool {
+	return funk.Find(*arr, func(s string) bool {
+		return strings.Contains(s, n)
+	}) != nil
+}
 
 func main() {
 	internal.SetLogLevel()

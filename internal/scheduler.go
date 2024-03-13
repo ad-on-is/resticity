@@ -19,8 +19,8 @@ type Job struct {
 	Force    bool     `json:"force"`
 	Ctx      context.Context
 	Cancel   context.CancelFunc
-	OutChan  chan string
-	ErrChan  chan string
+	// OutChan  chan string
+	// ErrChan  chan string
 }
 
 type Scheduler struct {
@@ -30,14 +30,21 @@ type Scheduler struct {
 	jmu      sync.Mutex
 	settings *Settings
 	outputCh *chan ChanMsg
+	errorCh  *chan ChanMsg
 }
 
-func NewScheduler(settings *Settings, restic *Restic, ch *chan ChanMsg) (*Scheduler, error) {
+func NewScheduler(
+	settings *Settings,
+	restic *Restic,
+	outch *chan ChanMsg,
+	errch *chan ChanMsg,
+) (*Scheduler, error) {
 
 	s := &Scheduler{}
 	s.settings = settings
 	s.restic = restic
-	s.outputCh = ch
+	s.outputCh = outch
+	s.errorCh = errch
 	if gc, err := gocron.NewScheduler(); err == nil {
 		s.Gocron = gc
 		s.Gocron.Start()
@@ -76,11 +83,9 @@ func (s *Scheduler) DeleteRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			go func() {
-				if j.OutChan != nil {
-					j.OutChan <- "{\"running\": false}"
-				}
-			}()
+			msg := ChanMsg{Id: id, Msg: "{\"running\": false}"}
+			(*s.outputCh) <- msg
+
 			log.Debug("Stopping running job", "id", id)
 			s.Jobs[i].Running = false
 			s.Jobs[i].Force = false
@@ -105,13 +110,11 @@ func (s *Scheduler) SetRunningJob(id string) {
 	defer s.jmu.Unlock()
 	for i, j := range s.Jobs {
 		if j.Id == id {
-			log.Debug("Setting forced running job", "id", id)
 			s.Jobs[i].Running = true
-			go func() {
-				if j.OutChan != nil {
-					j.OutChan <- "{\"running\": true}"
-				}
-			}()
+			msg := ChanMsg{Id: id, Msg: "{\"running\": true}"}
+			(*s.outputCh) <- msg
+			log.Debug("Setting forced running job", "id", id)
+
 			break
 		}
 	}
@@ -194,8 +197,6 @@ func (s *Scheduler) RescheduleBackups() {
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
-		outch := make(chan string)
-		errch := make(chan string)
 
 		s.Jobs = append(
 			s.Jobs,
@@ -207,25 +208,8 @@ func (s *Scheduler) RescheduleBackups() {
 				Force:    false,
 				Ctx:      ctx,
 				Cancel:   cancel,
-				OutChan:  outch,
-				ErrChan:  errch,
 			},
 		)
-
-		go func() {
-			outStr := ""
-			errStr := ""
-			for {
-				select {
-				case o := <-outch:
-					outStr = o
-					*s.outputCh <- ChanMsg{Id: schedule.Id, Out: outStr, Err: errStr, Schedule: schedule}
-				case e := <-errch:
-					errStr = e
-					*s.outputCh <- ChanMsg{Id: schedule.Id, Out: outStr, Err: errStr, Schedule: schedule}
-				}
-			}
-		}()
 
 	}
 
