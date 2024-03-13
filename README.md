@@ -76,7 +76,10 @@ Resticity looks for a configuration file in the following order:
 
 ## Installation
 
-TBD after packaging is decided.
+```bash
+# Arch Linux
+paru -S resticity
+```
 
 ## Build yourself
 

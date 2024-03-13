@@ -29,15 +29,10 @@ modules:
   - name: resticity
     buildsystem: simple
     build-commands:
-      - node --version
-      - $GOROOT/bin/go install github.com/wailsapp/wails/v2/cmd/wails@latest
-      - $GOBIN/wails build
       - install -Dm00755 build/bin/resticity $FLATPAK_DEST/bin/resticity
-      - install -Dm00644 build/bin/public $FLATPAK_DEST/bin/public
-      - install -Dm00644 build/bin/public/appicon.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/$FLATPAK_ID.png
-      - install -Dm00644 $FLATPAK_ID.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop
-      - install -Dm00644 $FLATPAK_ID.appdata.xml $FLATPAK_DEST/share/appdata/$FLATPAK_ID.appdata.xml
+      - install -Dm00644 packaging/appicon.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/resticity.png
+      - install -Dm00644 packaging/resticity.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop
+      - install -Dm00644 packaging/$FLATPAK_ID.appdata.xml $FLATPAK_DEST/share/appdata/$FLATPAK_ID.appdata.xml
     sources:
-      - type: archive
-        url: "https://github.com/ad-on-is/resticity/archive/refs/tags/1.0.0.tar.gz"
-        sha256: 3ee648e54e324bfea8b55cdbe5a8f625ac00839a68e1bd96628285bf896e9754
+      - type: folder
+        path: .
