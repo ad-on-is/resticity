@@ -13,11 +13,11 @@
 				<h4 class="text-green-500 mb-2 mt-5">Hooks</h4>
 				<p class="mb-3">Hooks can be used to run custom scripts on specific events.</p>
 				<div class="text-sm" :class="textColorClass">Execute on schedule start</div>
-				<UInput v-model="hookOnScheduleStart" placeholder="/path/to/start.sh" />
+				<UInput v-model="hookOnScheduleStart" placeholder="/absolute/path/to/start.sh" />
 				<div class="text-sm mt-3" :class="textColorClass">Execute when schedule finishes successfully</div>
-				<UInput v-model="hookOnScheduleSuccess" placeholder="/path/to/success.sh" />
+				<UInput v-model="hookOnScheduleSuccess" placeholder="/absolute/path/to/success.sh" />
 				<div class="text-sm mt-3" :class="textColorClass">Execute when schedule finishes with errors</div>
-				<UInput v-model="hookOnScheduleError" placeholder="/path/to/error.sh" />
+				<UInput v-model="hookOnScheduleError" placeholder="/absolute/path/to/error.sh" />
 			</div>
 			<div>
 				<h4 class="text-green-500 mb-2">Notifications</h4>

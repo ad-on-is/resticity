@@ -249,6 +249,25 @@ func RunServer(
 			return c.SendString(err.Error())
 		}
 
+		if r.PasswordFile != "" {
+			_, err := os.Stat(r.PasswordFile)
+			if os.IsNotExist(err) {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+
+			data, err := os.ReadFile(r.PasswordFile)
+			if err != nil {
+				c.SendStatus(500)
+				return c.SendString(err.Error())
+			}
+			if len(data) == 0 {
+				c.SendStatus(500)
+				return c.SendString("Password file is empty")
+			}
+
+		}
+
 		if r.Type == "local" {
 			files, err := os.ReadDir(r.Path)
 			if err != nil {

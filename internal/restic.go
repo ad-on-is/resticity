@@ -77,9 +77,21 @@ func (r *Restic) PipeOutErr(
 }
 
 func (r *Restic) getEnvs(repository Repository, envs []string) []string {
+	if repository.Password != "" {
+		envs = append(
+			envs,
+			"RESTIC_PASSWORD="+repository.Password)
+	}
+
+	if repository.PasswordFile != "" {
+		envs = append(
+			envs,
+			"RESTIC_PASSWORD_FILE="+repository.PasswordFile)
+	}
 	envs = append(
 		envs,
-		[]string{"RESTIC_PASSWORD=" + repository.Password, "RESTIC_PROGRESS_FPS=5"}...)
+		"RESTIC_PROGRESS_FPS=5")
+
 	if repository.Type == "s3" {
 		envs = append(
 			envs,
@@ -235,8 +247,19 @@ func (r *Restic) RunSchedule(
 		}
 		cmds := []string{"copy"}
 		envs := []string{
-			"RESTIC_FROM_PASSWORD=" + fromRepository.Password,
 			"RESTIC_FROM_REPOSITORY=" + fromRepository.Path,
+		}
+
+		if fromRepository.Password != "" {
+			envs = append(
+				envs,
+				"RESTIC_FROM_PASSWORD="+fromRepository.Password)
+		}
+
+		if fromRepository.PasswordFile != "" {
+			envs = append(
+				envs,
+				"RESTIC_FROM_PASSWORD_FILE="+fromRepository.PasswordFile)
 		}
 
 		r.core(*toRepository, cmds, envs, job)

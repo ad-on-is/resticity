@@ -21,10 +21,16 @@
 					@click="save"
 					color="purple"
 					icon="i-heroicons-plus-circle"
-					:disabled="newRepository.path === '' || newRepository.name === '' || newRepository.password === '' || initializing"
+					:disabled="newRepository.path === '' || newRepository.name === '' || (newRepository.password === '' && newRepository.password_file === '') || initializing"
 					>{{ checkStatus === 'OK_REPO_EMPTY' ? 'Initialize' : 'Add' }} Repository</UButton
 				>
-				<UButton v-else @click="check" color="yellow" variant="outline" icon="i-heroicons-plus-circle" :disabled="newRepository.path === '' || newRepository.password === ''"
+				<UButton
+					v-else
+					@click="check"
+					color="yellow"
+					variant="outline"
+					icon="i-heroicons-plus-circle"
+					:disabled="newRepository.path === '' || (newRepository.password === '' && newRepository.password_file === '')"
 					>Check Repository</UButton
 				>
 			</div>
@@ -66,6 +72,7 @@
 							<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
 							<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
 						</UButtonGroup>
+						<PathAutocomplete :file="true" :title="'Use password file'" @selected="(p) => (newRepository.password_file = p)" class="mt-5" />
 					</div>
 				</template>
 				<template #s3="{ item }">
@@ -74,6 +81,7 @@
 						<UAlert icon="i-heroicons-exclamation-circle" title="Attention" description="Please make sure the bucket is empty." class="mb-5" color="yellow" />
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
 						<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow mb-5" />
+						<PathAutocomplete :file="true" :title="'Use password file'" @selected="(p) => (newRepository.password_file = p)" class="mt-5 mb-5" />
 						<UInput variant="outline" v-model="newRepository.path" placeholder="s3:s3.example.com/bucket" class="mb-5" />
 
 						<UInput v-model="newRepository.options.s3_key" placeholder="Access key" class="flex-grow" />
@@ -90,6 +98,7 @@
 						<UAlert icon="i-heroicons-exclamation-circle" title="Attention" description="Please make sure the bucket is empty." class="mb-5" color="yellow" />
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
 						<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow mb-5" />
+						<PathAutocomplete :file="true" :title="'Use password file'" @selected="(p) => (newRepository.password_file = p)" class="mt-5 mb-5" />
 						<UInput variant="outline" v-model="newRepository.path" placeholder="azure:foo:/" class="mb-5" />
 
 						<UInput v-model="newRepository.options.azure_account_name" placeholder="Account name" class="flex-grow" />
@@ -110,6 +119,7 @@
 						<UAlert icon="i-heroicons-exclamation-circle" title="Attention" description="Please make sure the bucket is empty." class="mb-5" color="yellow" />
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
 						<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow mb-5" />
+						<PathAutocomplete :file="true" :title="'Use password file'" @selected="(p) => (newRepository.password_file = p)" class="mt-5 mb-5" />
 						<UInput variant="outline" v-model="newRepository.path" placeholder="gs:foo:/" class="mb-5" />
 
 						<UInput v-model="newRepository.options.google_project_id" placeholder="Projec ID" class="flex-grow" />
@@ -161,6 +171,7 @@
 		type: 'local',
 		name: '',
 		password: '',
+		password_file: '',
 		path: '',
 		prune_params: [],
 		options: {

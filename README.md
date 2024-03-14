@@ -13,6 +13,7 @@
 ## Key Features
 
 - Easy to use
+- Light/Dark mode
 - Cross platform
   - Linux
   - Windows
@@ -26,6 +27,12 @@
   - Azure
   - Google
 - System tray support
+- Desktop Notifications
+  - when a schedule starts
+  - when a schedule finishes sucessfully or with errors
+- Hooks
+  - when a schedule starts
+  - when a schedule finishes sucessfully or with errors
 
 ## How To Use
 
@@ -73,6 +80,13 @@ Resticity looks for a configuration file in the following order:
 1. Custom file location with the `--config path/to/config.json` flag
 2. `RESTICITY_SETTINGS_FILE` environment variable
 3. `$XDG_CONFIG_HOME/resticity/config.json`
+
+## Troubleshooting
+
+Set `RESTICITY_LOG_LEVEL=debug` as environment variable for detailed debug messages (and log files).
+
+> [!WARNING]  
+> This produces larger log files, so it is advised not to run it in production.
 
 ## Installation
 

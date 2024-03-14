@@ -71,13 +71,14 @@ type Mount struct {
 }
 
 type Repository struct {
-	Id          string     `json:"id"`
-	Name        string     `json:"name"`
-	Type        string     `json:"type"`
-	PruneParams [][]string `json:"prune_params"`
-	Path        string     `json:"path"`
-	Password    string     `json:"password"`
-	Options     Options    `json:"options"`
+	Id           string     `json:"id"`
+	Name         string     `json:"name"`
+	Type         string     `json:"type"`
+	PruneParams  [][]string `json:"prune_params"`
+	Path         string     `json:"path"`
+	Password     string     `json:"password"`
+	PasswordFile string     `json:"password_file"`
+	Options      Options    `json:"options"`
 }
 
 type Backup struct {

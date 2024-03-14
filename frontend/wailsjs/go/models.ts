@@ -53,6 +53,7 @@ export namespace internal {
 	    prune_params: string[][];
 	    path: string;
 	    password: string;
+	    password_file: string;
 	    // Go type: Options
 	    options: any;
 	}
