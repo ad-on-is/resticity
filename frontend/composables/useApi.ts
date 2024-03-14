@@ -28,7 +28,7 @@ export const useApi = defineStore('useApi', () => {
 	const initRepository = async (repo: any) => (await useHttp.post(`/init`, repo, {}, { title: 'Init Repository', text: 'Repository initialized' })) ?? {}
 	const autoCompletePath = async (path: string) => (await useHttp.get(`/path/autocomplete`, { path })) ?? []
 	const getLogs = async () => (await useHttp.get(`/logs`)) ?? ({ logs: [], errors: [] } as { logs: string[]; errors: string[] })
-
+	const getLogFile = async (file: string) => (await useHttp.get(`/logs/${file}`)) ?? ''
 	return {
 		browseSnapshot,
 		restoreFromSnapshot,
@@ -44,5 +44,6 @@ export const useApi = defineStore('useApi', () => {
 		statRepository,
 		autoCompletePath,
 		getLogs,
+		getLogFile,
 	}
 })

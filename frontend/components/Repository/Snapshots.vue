@@ -26,7 +26,7 @@
 				</UButton>
 			</template>
 			<template #item="{ item }">
-				<UTable :rows="_.orderBy(item.snapshots, 'time', 'desc')" v-model="selected" :columns="columns" @select="" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg">
+				<UTable :rows="_.orderBy(item.snapshots, 'time', 'desc')" v-model="selected" :columns="columns" @select="" class="rounded-xl bg-opacity-50 shadow-lg" :class="colorClass">
 					<template #time-data="{ row }">
 						<span class="text-teal-600">{{ formatISO9075(new Date(row.time)) }}</span>
 					</template>
@@ -154,5 +154,9 @@
 
 	onMounted(async () => {
 		load()
+	})
+
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-white'
 	})
 </script>

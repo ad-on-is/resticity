@@ -1,23 +1,68 @@
 <template>
 	<div>
-		<UTabs :items="items">
-			<template #schedulelogs>
-				<UAccordion :items="scheduleLogs"> </UAccordion>
-			</template>
-			<template #scheduleerrors>
-				<UAccordion :items="scheduleErrors"> </UAccordion>
-			</template>
-			<template #archivelogs>
-				<UAccordion :items="fileLogs"> </UAccordion>
-			</template>
-			<template #archiveerrors>
-				<UAccordion :items="fileErrors"> </UAccordion>
-			</template>
-		</UTabs>
+		<div class="flex justify-between">
+			<div>
+				<h1 class="text-teal-500 font-bold"><UIcon name="i-heroicons-cog-6-tooth" class="mr-2" />Logs</h1>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-2 gap-10 p-10 bg-opacity-70 rounded-lg shadow-lg mt-5" :class="colorClass">
+			<div>
+				<h4 class="text-teal-500">Schedule logs</h4>
+				<UAccordion v-if="scheduleLogs.length > 0" :items="scheduleLogs">
+					<template #content="{ item }">
+						<pre class="text-xs overflow-scroll h-72 bordered">{{ item.content }}</pre>
+					</template>
+				</UAccordion>
+				<p v-else>No logs</p>
+				<h4 class="text-teal-500 mt-5">Schedule errors</h4>
+				<UAccordion v-if="scheduleErrors.length > 0" :items="scheduleErrors">
+					<template #content="{ item }">
+						<pre class="text-xs overflow-scroll h-72">{{ item.content }}</pre>
+					</template>
+				</UAccordion>
+				<p v-else>No errors</p>
+			</div>
+			<div>
+				<h4 class="text-teal-500">Archive logs</h4>
+				<div v-for="file in fileLogs" :key="file" class="cursor-pointer" @click="loadLogFile(file)">
+					<UIcon name="i-heroicons-document" class="mr-2" />
+					{{ file }}
+				</div>
+				<h4 class="text-teal-500 mt-5">Archive errors</h4>
+				<div v-for="file in fileErrors" :key="file" class="cursor-pointer" @click="loadLogFile(file)">
+					<UIcon name="i-heroicons-document" class="mr-2" />
+					{{ file }}
+				</div>
+			</div>
+		</div>
+		<UModal v-model="isOpen" fullscreen>
+			<UCard>
+				<template #header>
+					<div class="flex items-center justify-between">
+						<h1 class="text-teal-500 font-bold mb-3"><UIcon name="i-heroicons-document" class="mr-2" />{{ logFile }}</h1>
+						<UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+					</div>
+				</template>
+				<pre class="text-xs">
+					{{ logFileContent }}
+				</pre
+				>
+			</UCard>
+		</UModal>
 	</div>
 </template>
 
 <script lang="ts" setup>
+	const isOpen = ref(false)
+	const logFile = ref('')
+	const logFileContent = ref('')
+
+	const loadLogFile = async (file: string) => {
+		logFile.value = file
+		logFileContent.value = await useApi().getLogFile(file)
+		isOpen.value = true
+	}
 	const fileLogs = ref([])
 	const fileErrors = ref([])
 	const getLabelByScheduleId = (id: string) => {
@@ -39,27 +84,20 @@
 		return label
 	}
 
-	const items = [
-		{ slot: 'schedulelogs', label: 'Schedule: Logs' },
-		{ slot: 'scheduleerrors', label: 'Schedule: Errors' },
-		{ slot: 'archivelogs', label: 'Archive: Logs' },
-		{ slot: 'archiveerrors', label: 'Archive: Errors' },
-	]
-
 	const scheduleLogs = Object.keys(useLogs().out).map((l) => {
-		return { label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().out[l], color: 'blue' }
+		return { slot: 'content', label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().out[l] }
 	})
 	const scheduleErrors = Object.keys(useLogs().out).map((l) => {
-		return { label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().err[l], color: 'red' }
+		return { slot: 'content', label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().err[l] }
 	})
 
 	onMounted(async () => {
 		const { logs, errors } = await useApi().getLogs()
-		fileLogs.value = logs.map((l: string) => {
-			return { slot: 'content', file: l, label: `File: ${l}`, color: 'blue' }
-		})
-		fileErrors.value = errors.map((l: string) => {
-			return { slot: 'content', file: l, label: `File: ${l}`, color: 'red' }
-		})
+		fileLogs.value = logs
+		fileErrors.value = errors
+	})
+
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-white'
 	})
 </script>

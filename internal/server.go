@@ -242,6 +242,15 @@ func RunServer(
 		return c.JSON(fiber.Map{"logs": logs, "errors": erros})
 	})
 
+	api.Get("/logs/:file", func(c *fiber.Ctx) error {
+		log, err := GetLogFileContent(c.Params("file"))
+		if err != nil {
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		}
+		return c.SendString(string(log))
+	})
+
 	api.Post("/check", func(c *fiber.Ctx) error {
 		var r Repository
 		if err := c.BodyParser(&r); err != nil {

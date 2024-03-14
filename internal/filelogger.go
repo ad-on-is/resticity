@@ -16,6 +16,11 @@ func getPath() string {
 	return filepath.Join(xdg.CacheHome, "resticity")
 }
 
+func GetLogFileContent(f string) ([]byte, error) {
+	path := getPath()
+	return os.ReadFile(filepath.Join(path, f))
+}
+
 func GetLogFiles() ([]string, []string) {
 	logs, err := filepath.Glob(filepath.Join(getPath(), "logs_*.log"))
 	if err != nil {

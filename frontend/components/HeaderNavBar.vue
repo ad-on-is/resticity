@@ -17,7 +17,7 @@
 						<UButton to="/schedules" variant="ghost" :color="useRoute().path.includes('schedules') ? 'yellow' : 'gray'" icon="i-heroicons-clock"> Schedules </UButton>
 					</li>
 					<li>
-						<UButton to="/logs" variant="ghost" :color="useRoute().path.includes('logs') ? 'blue' : 'gray'" icon="i-heroicons-document-text">Logs</UButton>
+						<UButton to="/logs" variant="ghost" :color="useRoute().path.includes('logs') ? 'teal' : 'gray'" icon="i-heroicons-document-text">Logs</UButton>
 					</li>
 					<li>
 						<UButton to="/settings" variant="ghost" :color="useRoute().path.includes('settings') ? 'green' : 'gray'" icon="i-heroicons-cog-6-tooth">Settings</UButton>

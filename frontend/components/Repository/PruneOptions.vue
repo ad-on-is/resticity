@@ -1,6 +1,6 @@
 <template>
 	<h3 class="text-purple-500 mb-3"><UIcon name="i-heroicons-trash" class="mr-2" />Prune options</h3>
-	<div class="grid grid-cols-2 gap-5 bg-gray-950 p-10 bg-opacity-70 rounded-lg shadow-lg">
+	<div class="grid grid-cols-2 gap-5 p-10 bg-opacity-70 rounded-lg shadow-lg" :class="colorClass">
 		<div>
 			<h4 class="text-indigo-500 font-medium">Keep tags</h4>
 			<p class="text-xs mb-3">Specify the tags to keep. One per line</p>
@@ -137,4 +137,7 @@
 			)
 		}
 	)
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-white'
+	})
 </script>
