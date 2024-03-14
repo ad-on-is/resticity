@@ -27,6 +27,7 @@ func test(arr *[]string, n string) bool {
 func main() {
 	internal.SetLogLevel()
 	r, err := internal.NewResticity()
+	r.Scheduler.Assets = &assets
 	if err == nil {
 		(r.Scheduler).RescheduleBackups()
 		go internal.RunServer(

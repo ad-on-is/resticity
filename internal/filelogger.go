@@ -4,14 +4,41 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/adrg/xdg"
 	"github.com/charmbracelet/log"
+	"github.com/thoas/go-funk"
 )
 
 func getPath() string {
 	return filepath.Join(xdg.CacheHome, "resticity")
+}
+
+func GetLogFiles() ([]string, []string) {
+	logs, err := filepath.Glob(filepath.Join(getPath(), "logs_*.log"))
+	if err != nil {
+		log.Error("filelogger: get log files", "error", err)
+	}
+
+	errors, err := filepath.Glob(filepath.Join(getPath(), "errors_*.log"))
+
+	if err != nil {
+		log.Error("filelogger: get error files", "error", err)
+	}
+
+	logs = funk.Map(logs, func(s string) string {
+		return strings.Split(s, "/")[len(strings.Split(s, "/"))-1]
+
+	}).([]string)
+	errors = funk.Map(errors, func(s string) string {
+		return strings.Split(s, "/")[len(strings.Split(s, "/"))-1]
+
+	}).([]string)
+
+	return logs, errors
+
 }
 
 func getFile(t string) string {
@@ -70,7 +97,7 @@ func NewFileLogger(outputChan *chan ChanMsg, errorChan *chan ChanMsg) {
 			}
 			break
 		case e := <-*errorChan:
-			f := getFile("error")
+			f := getFile("errors")
 			appendToFile(f, e)
 			break
 		}

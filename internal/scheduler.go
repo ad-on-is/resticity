@@ -2,10 +2,13 @@ package internal
 
 import (
 	"context"
+	"embed"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/gen2brain/beeep"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 	"github.com/thoas/go-funk"
@@ -29,6 +32,7 @@ type Scheduler struct {
 	settings *Settings
 	OutputCh *chan ChanMsg
 	ErrorCh  *chan ChanMsg
+	Assets   *embed.FS
 }
 
 func NewScheduler(
@@ -43,6 +47,7 @@ func NewScheduler(
 	s.restic = restic
 	s.OutputCh = outch
 	s.ErrorCh = errch
+
 	if gc, err := gocron.NewScheduler(); err == nil {
 		s.Gocron = gc
 		s.Gocron.Start()
@@ -72,6 +77,7 @@ func (s *Scheduler) StopJobById(id string) {
 		if j.Id == id {
 			(*s.OutputCh) <- ChanMsg{Id: j.Schedule.Id, Msg: "{\"running\": false}", Time: time.Now()}
 			j.Cancel()
+			log.Warn("Canceling context", "id", id)
 			break
 		}
 	}
@@ -134,11 +140,60 @@ func (s *Scheduler) GetRunningJobs() []Job {
 	return funk.Filter(s.Jobs, func(j Job) bool { return j.Running == true }).([]Job)
 }
 
+func (s *Scheduler) Notifiy(schedule Schedule, finished bool, hasError bool) {
+	what := ""
+	from := ""
+	to := ""
+	switch schedule.Action {
+	case "backup":
+		what = "Backup"
+		break
+	case "copy-snapshots":
+		what = "Copy snapshots"
+		break
+	case "prune-repository":
+		what = "Prune repository"
+	}
+	if schedule.FromRepositoryId != "" {
+		r := s.settings.Config.GetRepositoryById(schedule.FromRepositoryId)
+		from = r.Name
+	}
+
+	if schedule.BackupId != "" {
+		b := s.settings.Config.GetBackupById(schedule.BackupId)
+		from = b.Name
+	}
+	if schedule.ToRepositoryId != "" {
+		r := s.settings.Config.GetRepositoryById(schedule.ToRepositoryId)
+		to = r.Name
+	}
+	action := "started"
+	if finished {
+		action = "finished"
+	}
+	title := fmt.Sprintf("%s %s", what, action)
+	description := fmt.Sprintf("From %s to %s", from, to)
+	if schedule.Action == "prune-repository" {
+		description = fmt.Sprintf("On %s", to)
+	}
+	if hasError {
+		title += " with error"
+	}
+	beeep.Notify(title, description, "")
+}
+
 func (s *Scheduler) RescheduleBackups() {
+
+	running := s.GetRunningJobs()
+	log.Debug("Terminating running jobs", "jobs", len(running))
+	for _, j := range running {
+		s.StopJobById(j.Id)
+	}
 
 	s.Jobs = []Job{}
 	log.Info("Rescheduling backups")
 
+	s.settings.Refresh()
 	config := s.settings.Config
 
 	for i := range config.Schedules {
@@ -174,6 +229,9 @@ func (s *Scheduler) RescheduleBackups() {
 						jobName,
 					)
 					s.SetRunningJob(jobName)
+					if config.AppSettings.Notifications.OnScheduleStart {
+						s.Notifiy(schedule, false, false)
+					}
 				}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
@@ -181,9 +239,14 @@ func (s *Scheduler) RescheduleBackups() {
 						(*s.OutputCh) <- ChanMsg{Id: jobName, Msg: "{\"running\": false}", Time: time.Now()}
 
 						log.Debug("after job run", "res", "success", "id", jobName)
+
+						if config.AppSettings.Notifications.OnScheduleSuccess {
+							s.Notifiy(schedule, true, false)
+						}
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
 						s.settings.SetLastRun(jobName, "")
+
 					},
 				),
 				gocron.AfterJobRunsWithError(
@@ -191,9 +254,12 @@ func (s *Scheduler) RescheduleBackups() {
 
 						(*s.OutputCh) <- ChanMsg{Id: jobName, Msg: "{\"running\": false}", Time: time.Now()}
 
-						log.Debug("after job run", "res", "error", "id", jobName, "err", err)
+						if config.AppSettings.Notifications.OnScheduleError {
+							s.Notifiy(schedule, true, true)
+						}
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
+						log.Warn("after job run", "res", "error", "id", jobName, "err", err)
 						s.settings.SetLastRun(jobName, err.Error())
 					},
 				),
@@ -219,6 +285,18 @@ func (s *Scheduler) RescheduleBackups() {
 			},
 		)
 
+	}
+
+	log.Debug("Rerunning terminated jobs", "jobs", len(running))
+
+	for _, r := range running {
+
+		for _, j := range s.Jobs {
+			if j.Id == r.Id {
+				time.Sleep(1 * time.Second)
+				s.RunJobById(j.Id)
+			}
+		}
 	}
 
 }

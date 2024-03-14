@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	ssr: false,
-	modules: ['@pinia/nuxt', '@nuxt/ui'],
+	modules: ['@pinia/nuxt', '@nuxt/ui', '@nuxtjs/color-mode'],
 	devtools: { enabled: true },
 	nitro: { static: true },
 

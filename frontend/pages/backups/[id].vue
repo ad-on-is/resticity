@@ -28,7 +28,6 @@
 	const openDelete = ref(false)
 	const backup = ref<Backup>()
 	const excludes = ref<[]>([])
-	const init = ref(true)
 	const idx = ref(-1)
 
 	const deleteBackup = async () => {
@@ -40,25 +39,20 @@
 	}
 
 	const update = _.debounce(() => {
-		if (init.value) {
-			init.value = false
-			return
-		}
 		backup.value.backup_params = excludes.value
 		useSettings().settings!.backups[idx.value] = backup.value
 		useSettings().save()
 	}, 300)
 
-	watch(
-		() => [JSON.stringify(excludes.value)],
-		() => {
-			update()
-		}
-	)
-
 	onMounted(async () => {
 		backup.value = useSettings().settings!.backups.find((b: Backup) => b.id === useRoute().params.id)
 		idx.value = useSettings().settings!.backups.findIndex((b: Backup) => b.id === backup.value.id)
 		excludes.value = backup.value.backup_params
+		watch(
+			() => [JSON.stringify(excludes.value)],
+			() => {
+				update()
+			}
+		)
 	})
 </script>

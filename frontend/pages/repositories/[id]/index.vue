@@ -47,7 +47,6 @@
 	const mountPath = ref('')
 	const shouldMountPath = ref('')
 	const prunes = ref<[]>([])
-	const init = ref(true)
 	const idx = ref(-1)
 	const deleteRepo = async () => {
 		useSettings().settings!.repositories = useSettings().settings!.repositories.filter((item: Repository) => item.id !== repo.value.id)
@@ -77,21 +76,10 @@
 	}
 
 	const update = _.debounce(() => {
-		if (init.value) {
-			init.value = false
-			return
-		}
 		repo.value.prune_params = prunes.value
 		useSettings().settings!.repositories[idx.value] = repo.value
 		useSettings().save()
 	}, 300)
-
-	watch(
-		() => [JSON.stringify(prunes.value)],
-		() => {
-			update()
-		}
-	)
 
 	const repo = ref()
 
@@ -100,5 +88,11 @@
 		prunes.value = repo.value.prune_params
 		idx.value = useSettings().settings!.repositories.findIndex((r: Repository) => r.id === repo.value.id)
 		mountPath.value = useSettings().settings.mounts.find((m: Mount) => m.id === useRoute().params.id)?.path ?? ''
+		watch(
+			() => [JSON.stringify(prunes.value)],
+			() => {
+				update()
+			}
+		)
 	})
 </script>

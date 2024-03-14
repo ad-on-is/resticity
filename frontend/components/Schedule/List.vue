@@ -2,7 +2,7 @@
 	<div>
 		<h1 class="text-yellow-500 font-bold mb-3"><UIcon name="i-heroicons-clock" class="mr-2" />Schedules</h1>
 
-		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="bg-gray-950 rounded-xl bg-opacity-50 shadow-lg" @select="">
+		<UTable :rows="useSettings().settings?.schedules" :columns="columns" class="rounded-xl bg-opacity-50 shadow-lg" :class="colorClass" @select="">
 			<template #id-data="{ row }">
 				<div class="inline-flex items-center gap-1">
 					<UTooltip :text="row.id"
@@ -153,5 +153,9 @@
 
 	onUnmounted(() => {
 		useSettings().refresh()
+	})
+
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-white'
 	})
 </script>

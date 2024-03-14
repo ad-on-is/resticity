@@ -1,5 +1,5 @@
 <template>
-	<div class="min-h-screen overflow-hidden bg-cool pb-40" data-theme="resticity">
+	<div class="min-h-screen overflow-hidden pb-40" :class="colorClass" data-theme="resticity">
 		<div v-if="loading"><Logo class="h-8 w-auto fill-orange-500 stroke-orange-500" /></div>
 		<NuxtLayout v-else>
 			<NuxtPage />
@@ -10,6 +10,10 @@
 
 <script setup lang="ts">
 	const loading = ref(true)
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-cool' : 'bg-white'
+	})
+
 	onMounted(async () => {
 		await useSettings().init()
 		await useSocket().init()

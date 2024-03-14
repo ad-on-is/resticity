@@ -125,8 +125,16 @@ func (r *Restic) core(
 	var serr bytes.Buffer
 	var c *exec.Cmd
 
+	resticCmd, err := exec.LookPath("restic")
+	if err != nil {
+		(*r.ErrorCh) <- ChanMsg{Id: "", Msg: "restic not found", Time: time.Now()}
+		log.Error("restic not found", "err", err)
+		return "", err
+
+	}
+
 	if job != nil && job.Ctx != nil {
-		c = exec.CommandContext(job.Ctx, "/usr/bin/restic", cmds...)
+		c = exec.CommandContext(job.Ctx, resticCmd, cmds...)
 		if job.Cancel != nil {
 
 			defer (job.Cancel)()
@@ -145,7 +153,7 @@ func (r *Restic) core(
 		envs...,
 	)
 
-	err := c.Start()
+	err = c.Start()
 	if err != nil {
 		log.Error("executing restic command", "err", err)
 	}
@@ -193,21 +201,21 @@ func (r *Restic) BrowseSnapshot(
 
 func (r *Restic) RunSchedule(
 	job *Job,
-) {
+) error {
 
 	if job == nil {
-		return
+		return errors.New("No job to do")
 	}
 	(*r.OutputCh) <- ChanMsg{Id: job.Schedule.Id, Msg: "{\"running\": true}", Time: time.Now()}
-	toRepository := r.settings.GetRepositoryById(job.Schedule.ToRepositoryId)
-	fromRepository := r.settings.GetRepositoryById(job.Schedule.FromRepositoryId)
-	backup := r.settings.GetBackupById(job.Schedule.BackupId)
+	toRepository := r.settings.Config.GetRepositoryById(job.Schedule.ToRepositoryId)
+	fromRepository := r.settings.Config.GetRepositoryById(job.Schedule.FromRepositoryId)
+	backup := r.settings.Config.GetBackupById(job.Schedule.BackupId)
 
 	switch job.Schedule.Action {
 	case "backup":
 		if backup == nil || toRepository == nil {
 			log.Error("backup", "err", "missing backup and toRepository")
-			return
+			return errors.New("missing backup and toRepository")
 		}
 		cmds := []string{"backup", backup.Path, "--tag", "resticity"}
 		for _, p := range backup.BackupParams {
@@ -217,12 +225,13 @@ func (r *Restic) RunSchedule(
 		_, err := r.core(*toRepository, cmds, []string{}, job)
 		if err != nil {
 			log.Error("runschedule", "err", err)
+			return err
 		}
 		break
 	case "copy-snapshots":
 		if fromRepository == nil || toRepository == nil {
 			log.Error("copy snapshots", "err", "missing fromRepository and toRepository")
-			return
+			return errors.New("missing fromRepository and toRepository")
 		}
 		cmds := []string{"copy"}
 		envs := []string{
@@ -235,7 +244,7 @@ func (r *Restic) RunSchedule(
 	case "prune-repository":
 		if toRepository == nil {
 			log.Error("prune-repository", "err", "missing toRepository")
-			return
+			return errors.New("missing toRepository")
 		}
 		cmds := []string{"forget", "--prune"}
 		for _, p := range toRepository.PruneParams {
@@ -251,10 +260,13 @@ func (r *Restic) RunSchedule(
 			_, err := r.core(*toRepository, cmds, []string{}, job)
 			if err != nil {
 				log.Error("prune-repository", "err", err)
+				return err
 			}
 		}
 
 		break
 	}
+
+	return nil
 
 }

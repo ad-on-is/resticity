@@ -29,6 +29,9 @@ dependencies:
   '@nuxt/ui':
     specifier: ^2.11.1
     version: 2.13.0(nuxt@3.10.1)(vite@5.1.1)(vue@3.4.19)
+  '@nuxtjs/color-mode':
+    specifier: ^3.3.2
+    version: 3.3.2
   '@pinia/nuxt':
     specifier: ^0.5.1
     version: 0.5.1(vue@3.4.19)

@@ -27,6 +27,7 @@ export const useApi = defineStore('useApi', () => {
 	const checkRepository = async (repo: any) => (await useHttp.post(`/check`, repo, {}, { title: 'Check Repository', text: 'Repository can be used' })) ?? {}
 	const initRepository = async (repo: any) => (await useHttp.post(`/init`, repo, {}, { title: 'Init Repository', text: 'Repository initialized' })) ?? {}
 	const autoCompletePath = async (path: string) => (await useHttp.get(`/path/autocomplete`, { path })) ?? []
+	const getLogs = async () => (await useHttp.get(`/logs`)) ?? ({ logs: [], errors: [] } as { logs: string[]; errors: string[] })
 
 	return {
 		browseSnapshot,
@@ -42,5 +43,6 @@ export const useApi = defineStore('useApi', () => {
 		initRepository,
 		statRepository,
 		autoCompletePath,
+		getLogs,
 	}
 })

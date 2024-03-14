@@ -1,7 +1,7 @@
 <template>
-	<div class="bg-gray-950 p-5 rounded-lg mt-10 bg-opacity-50 shadow-lg">
+	<div class="p-5 rounded-lg mt-10 bg-opacity-50 shadow-lg" :class="colorClass">
 		<h1 class="text-yellow-700 font-bold">Add a new task to schedule</h1>
-		<p class="opacity-40 mb-3">Create a new schedule to either run manually or in the background at a specific time.</p>
+		<p class="mb-3">Create a new schedule to either run manually or in the background at a specific time.</p>
 		<UButtonGroup class="">
 			<USelectMenu v-model="selectedAction" :options="actionOptions" class="w-44">
 				<template #label>
@@ -103,4 +103,8 @@
 		selectedAction.value = actionOptions[0]
 		useSettings().save()
 	}
+
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-white'
+	})
 </script>

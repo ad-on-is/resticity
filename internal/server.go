@@ -47,6 +47,7 @@ func runHub() {
 					unregister <- connection
 					connection.WriteMessage(websocket.CloseMessage, []byte{})
 					connection.Close()
+
 				} else {
 					log.Debug("message sent", "addr", connection.RemoteAddr().String(), "msg", message)
 				}
@@ -72,12 +73,34 @@ func cleanClients() {
 		time.Sleep(1 * time.Second)
 		for connection, client := range clients {
 			if time.Since(client.LastSeen) > 2*time.Second {
-
 				unregister <- connection
 
 			}
 		}
 	}
+}
+
+func handlePing(c *websocket.Conn) {
+	for {
+		time.Sleep(1 * time.Second)
+		_, _, err := c.ReadMessage()
+		if err == nil {
+			go func() {
+				for connection, client := range clients {
+
+					if connection.RemoteAddr().String() == c.RemoteAddr().String() {
+						c := client
+						c.LastSeen = time.Now()
+						clients[connection] = c
+
+						break
+					}
+				}
+			}()
+
+		}
+	}
+
 }
 
 func handleArray(arr []WsMsg, m WsMsg) []WsMsg {
@@ -127,6 +150,7 @@ func handleChannels(
 			break
 		case e := <-*errorChan:
 			m := WsMsg{Id: e.Id, Out: "", Err: e.Msg, Time: e.Time}
+			log.Warn(m)
 			errs = handleArray(errs, m)
 			doBroadcast(outs, errs)
 
@@ -145,11 +169,17 @@ func RunServer(
 	errorChan *chan ChanMsg,
 ) {
 
-	go handleChannels(outputChan, errorChan)
-
 	server := fiber.New()
 	server.Use(cors.New())
 	server.Static("/", "./public")
+
+	cfg := websocket.Config{
+		RecoverHandler: func(conn *websocket.Conn) {
+			if err := recover(); err != nil {
+				conn.WriteJSON(fiber.Map{"customError": "error occurred"})
+			}
+		},
+	}
 
 	api := server.Group("/api")
 
@@ -164,6 +194,7 @@ func RunServer(
 
 	go runHub()
 	go cleanClients()
+	go handleChannels(outputChan, errorChan)
 
 	api.Get("/ws", websocket.New(func(c *websocket.Conn) {
 
@@ -174,26 +205,9 @@ func RunServer(
 
 		register <- c
 
-		for {
-			_, _, err := c.ReadMessage()
-			if err == nil {
-				go func() {
-					for connection, client := range clients {
+		handlePing(c)
 
-						if connection.RemoteAddr().String() == c.RemoteAddr().String() {
-							c := client
-							c.LastSeen = time.Now()
-							clients[connection] = c
-
-							break
-						}
-					}
-				}()
-
-			}
-		}
-
-	}))
+	}, cfg))
 
 	api.Get("/path/autocomplete", func(c *fiber.Ctx) error {
 		paths := []string{}
@@ -221,6 +235,11 @@ func RunServer(
 		}
 
 		return c.SendString(c.Params("action") + " schedule in the background")
+	})
+
+	api.Get("/logs", func(c *fiber.Ctx) error {
+		logs, erros := GetLogFiles()
+		return c.JSON(fiber.Map{"logs": logs, "errors": erros})
 	})
 
 	api.Post("/check", func(c *fiber.Ctx) error {
@@ -306,7 +325,7 @@ func RunServer(
 
 			go func(id string) {
 				restic.Exec(
-					*settings.GetRepositoryById(id),
+					*settings.Config.GetRepositoryById(id),
 					[]string{act, data.Path},
 					[]string{},
 				)
@@ -330,7 +349,7 @@ func RunServer(
 				groupBy = "host"
 			}
 			res, err := restic.Exec(
-				*settings.GetRepositoryById(c.Params("id")),
+				*settings.Config.GetRepositoryById(c.Params("id")),
 				[]string{act, "--group-by", groupBy},
 				[]string{},
 			)
@@ -360,7 +379,7 @@ func RunServer(
 				return c.SendString(err.Error())
 			}
 			res, err := restic.BrowseSnapshot(
-				*settings.GetRepositoryById(c.Params("id")),
+				*settings.Config.GetRepositoryById(c.Params("id")),
 				c.Params("snapshot_id"),
 				data.Path,
 			)
@@ -378,7 +397,7 @@ func RunServer(
 				return c.SendString(err.Error())
 			} else {
 				if _, err := restic.Exec(
-					*settings.GetRepositoryById(c.Params("id")),
+					*settings.Config.GetRepositoryById(c.Params("id")),
 					[]string{"restore",
 						c.Params("snapshot_id") + ":" + data.RootPath,
 						"--target",

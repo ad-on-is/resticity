@@ -40,12 +40,31 @@ func NewSettings(flagFile string) *Settings {
 
 func (s *Settings) Init() {
 	log.Info("Initializing new settings", "file", s.file)
-	s.Config = Config{}
-	s.Config.Repositories = []Repository{}
-	s.Config.Backups = []Backup{}
-	s.Config.Mounts = []Mount{}
-	s.Config.Schedules = []Schedule{}
+	s.Config = s.freshConfig()
 	s.Save(s.Config)
+}
+
+func (s *Settings) freshConfig() Config {
+	c := Config{}
+	c.Repositories = []Repository{}
+	c.Backups = []Backup{}
+	c.Mounts = []Mount{}
+	c.Schedules = []Schedule{}
+	c.AppSettings = AppSettings{
+		Theme: "auto",
+		Notifications: AppSettingsNotifications{
+			OnScheduleError:   true,
+			OnScheduleSuccess: true,
+			OnScheduleStart:   true,
+		},
+		Hooks: AppSettingsHooks{
+			OnScheduleError:   "",
+			OnScheduleSuccess: "",
+			OnScheduleStart:   "",
+		},
+		PreserveErrorLogsDays: 7,
+	}
+	return c
 }
 
 func (s *Settings) SetLastRun(id string, error string) {
@@ -61,8 +80,8 @@ func (s *Settings) SetLastRun(id string, error string) {
 	}
 }
 
-func (s *Settings) GetRepositoryById(id string) *Repository {
-	for _, r := range s.Config.Repositories {
+func (c *Config) GetRepositoryById(id string) *Repository {
+	for _, r := range c.Repositories {
 		if r.Id == id {
 			return &r
 		}
@@ -70,8 +89,17 @@ func (s *Settings) GetRepositoryById(id string) *Repository {
 	return nil
 }
 
-func (s *Settings) GetBackupById(id string) *Backup {
-	for _, b := range s.Config.Backups {
+func (c *Config) GetScheduleObject(s *Schedule) ScheduleObject {
+	so := ScheduleObject{}
+	so.Schedule = *s
+	so.Backup = c.GetBackupById(s.BackupId)
+	so.FromRepository = c.GetRepositoryById(s.FromRepositoryId)
+	so.ToRepository = c.GetRepositoryById(s.ToRepositoryId)
+	return so
+}
+
+func (c *Config) GetBackupById(id string) *Backup {
+	for _, b := range c.Backups {
 		if b.Id == id {
 			return &b
 		}
@@ -91,12 +119,10 @@ func (s *Settings) FileEmpty() bool {
 func (s *Settings) readFile() Config {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	data := Config{}
+	data := s.freshConfig()
 	if file, err := os.Open(s.file); err == nil {
 		if str, err := io.ReadAll(file); err == nil {
-			if err := json.Unmarshal([]byte(str), &data); err == nil {
-				return data
-			} else {
+			if err := json.Unmarshal([]byte(str), &data); err != nil {
 				log.Error("settings: unmarshal", "err", err)
 			}
 		}

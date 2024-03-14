@@ -1,5 +1,23 @@
 export namespace internal {
 	
+	export interface AppSettingsNotifications {
+	    on_schedule_error: boolean;
+	    on_schedule_success: boolean;
+	    on_schedule_start: boolean;
+	}
+	export interface AppSettingsHooks {
+	    on_schedule_error: string;
+	    on_schedule_success: string;
+	    on_schedule_start: string;
+	}
+	export interface AppSettings {
+	    theme: string;
+	    preserve_error_logs_days: number;
+	    hooks: AppSettingsHooks;
+	    notifications: AppSettingsNotifications;
+	}
+	
+	
 	export interface Backup {
 	    id: string;
 	    path: string;
@@ -47,6 +65,7 @@ export namespace internal {
 	    repositories: Repository[];
 	    backups: Backup[];
 	    schedules: Schedule[];
+	    app_settings: AppSettings;
 	}
 	export interface FileDescriptor {
 	    name: string;

@@ -3,7 +3,6 @@ export const useJobs = defineStore('useJobs', () => {
 	const progress = ref([])
 
 	function scheduleIsRunning(id: string) {
-		console.log('running.value', running.value)
 		const j = running.value?.find((job: any) => job.id === id)
 
 		if (j) {

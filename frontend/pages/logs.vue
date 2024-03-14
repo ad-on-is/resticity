@@ -1,17 +1,25 @@
 <template>
 	<div>
 		<UTabs :items="items">
-			<template #logs>
-				<UAccordion :items="logItems"> </UAccordion>
+			<template #schedulelogs>
+				<UAccordion :items="scheduleLogs"> </UAccordion>
 			</template>
-			<template #errors>
-				<UAccordion :items="errorItems"> </UAccordion>
+			<template #scheduleerrors>
+				<UAccordion :items="scheduleErrors"> </UAccordion>
+			</template>
+			<template #archivelogs>
+				<UAccordion :items="fileLogs"> </UAccordion>
+			</template>
+			<template #archiveerrors>
+				<UAccordion :items="fileErrors"> </UAccordion>
 			</template>
 		</UTabs>
 	</div>
 </template>
 
 <script lang="ts" setup>
+	const fileLogs = ref([])
+	const fileErrors = ref([])
 	const getLabelByScheduleId = (id: string) => {
 		let label = ''
 		const schedule = useSettings().settings.schedules.find((s: Schedule) => s.id === id)
@@ -32,14 +40,26 @@
 	}
 
 	const items = [
-		{ slot: 'logs', label: 'Logs' },
-		{ slot: 'errors', label: 'Errors' },
+		{ slot: 'schedulelogs', label: 'Schedule: Logs' },
+		{ slot: 'scheduleerrors', label: 'Schedule: Errors' },
+		{ slot: 'archivelogs', label: 'Archive: Logs' },
+		{ slot: 'archiveerrors', label: 'Archive: Errors' },
 	]
 
-	const logItems = Object.keys(useLogs().out).map((l) => {
-		return { label: getLabelByScheduleId(l), content: useLogs().out[l], color: 'green' }
+	const scheduleLogs = Object.keys(useLogs().out).map((l) => {
+		return { label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().out[l], color: 'blue' }
 	})
-	const errorItems = Object.keys(useLogs().out).map((l) => {
-		return { label: getLabelByScheduleId(l), content: useLogs().err[l], color: 'red' }
+	const scheduleErrors = Object.keys(useLogs().out).map((l) => {
+		return { label: `Schedule: ${getLabelByScheduleId(l)}`, content: useLogs().err[l], color: 'red' }
+	})
+
+	onMounted(async () => {
+		const { logs, errors } = await useApi().getLogs()
+		fileLogs.value = logs.map((l: string) => {
+			return { slot: 'content', file: l, label: `File: ${l}`, color: 'blue' }
+		})
+		fileErrors.value = errors.map((l: string) => {
+			return { slot: 'content', file: l, label: `File: ${l}`, color: 'red' }
+		})
 	})
 </script>

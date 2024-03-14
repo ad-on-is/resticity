@@ -101,11 +101,31 @@ type Schedule struct {
 	LastError        string `json:"last_error"`
 }
 
+type AppSettingsNotifications struct {
+	OnScheduleError   bool `json:"on_schedule_error"`
+	OnScheduleSuccess bool `json:"on_schedule_success"`
+	OnScheduleStart   bool `json:"on_schedule_start"`
+}
+
+type AppSettingsHooks struct {
+	OnScheduleError   string `json:"on_schedule_error"`
+	OnScheduleSuccess string `json:"on_schedule_success"`
+	OnScheduleStart   string `json:"on_schedule_start"`
+}
+
+type AppSettings struct {
+	Theme                 string                   `json:"theme"`
+	PreserveErrorLogsDays uint32                   `json:"preserve_error_logs_days"`
+	Hooks                 AppSettingsHooks         `json:"hooks"`
+	Notifications         AppSettingsNotifications `json:"notifications"`
+}
+
 type Config struct {
 	Mounts       []Mount      `json:"mounts"`
 	Repositories []Repository `json:"repositories"`
 	Backups      []Backup     `json:"backups"`
 	Schedules    []Schedule   `json:"schedules"`
+	AppSettings  AppSettings  `json:"app_settings"`
 }
 
 type BrowseData struct {
@@ -145,4 +165,11 @@ type WsMsg struct {
 	Out  string    `json:"out"`
 	Err  string    `json:"err"`
 	Time time.Time `json:"time"`
+}
+
+type ScheduleObject struct {
+	Schedule       Schedule    `json:"schedule"`
+	ToRepository   *Repository `json:"to_repository"`
+	FromRepository *Repository `json:"from_repository"`
+	Backup         *Backup     `json:"backup"`
 }

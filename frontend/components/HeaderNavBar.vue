@@ -1,5 +1,5 @@
 <template>
-	<div class="bg-gray-950 py-3">
+	<div class="py-3" :class="colorClass">
 		<div class="md:container md:mx-auto flex justify-between">
 			<div class=""><Logo class="h-10 w-10" /></div>
 			<div class="">
@@ -17,7 +17,10 @@
 						<UButton to="/schedules" variant="ghost" :color="useRoute().path.includes('schedules') ? 'yellow' : 'gray'" icon="i-heroicons-clock"> Schedules </UButton>
 					</li>
 					<li>
-						<UButton to="/logs" variant="ghost" :color="useRoute().path.includes('logs') ? 'blue' : 'gray'" icon="i-heroicons-clock">Logs</UButton>
+						<UButton to="/logs" variant="ghost" :color="useRoute().path.includes('logs') ? 'blue' : 'gray'" icon="i-heroicons-document-text">Logs</UButton>
+					</li>
+					<li>
+						<UButton to="/settings" variant="ghost" :color="useRoute().path.includes('settings') ? 'green' : 'gray'" icon="i-heroicons-cog-6-tooth">Settings</UButton>
 					</li>
 				</ul>
 			</div>
@@ -26,4 +29,8 @@
 	</div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+	const colorClass = computed(() => {
+		return useColorMode().value === 'dark' ? 'bg-gray-950' : 'bg-gray-950 bg-opacity-10'
+	})
+</script>
