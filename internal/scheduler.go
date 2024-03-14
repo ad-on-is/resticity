@@ -232,6 +232,12 @@ func (s *Scheduler) RescheduleBackups() {
 					if config.AppSettings.Notifications.OnScheduleStart {
 						s.Notifiy(schedule, false, false)
 					}
+					if config.AppSettings.Hooks.OnScheduleStart != "" {
+						RunHook(
+							config.AppSettings.Hooks.OnScheduleStart,
+							config.GetScheduleObject(&schedule),
+						)
+					}
 				}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
@@ -242,6 +248,12 @@ func (s *Scheduler) RescheduleBackups() {
 
 						if config.AppSettings.Notifications.OnScheduleSuccess {
 							s.Notifiy(schedule, true, false)
+						}
+						if config.AppSettings.Hooks.OnScheduleSuccess != "" {
+							RunHook(
+								config.AppSettings.Hooks.OnScheduleSuccess,
+								config.GetScheduleObject(&schedule),
+							)
 						}
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
@@ -256,6 +268,12 @@ func (s *Scheduler) RescheduleBackups() {
 
 						if config.AppSettings.Notifications.OnScheduleError {
 							s.Notifiy(schedule, true, true)
+						}
+						if config.AppSettings.Hooks.OnScheduleError != "" {
+							RunHook(
+								config.AppSettings.Hooks.OnScheduleError,
+								config.GetScheduleObject(&schedule),
+							)
 						}
 						s.DeleteRunningJob(jobName)
 						s.RecreateCtx(jobName)
