@@ -10,58 +10,58 @@
 			<h4 class="text-indigo-500 font-medium">Keep</h4>
 			<p class="text-xs mb-3">Keep range</p>
 			<div class="grid grid-cols-3 gap-3">
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Last</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.last" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Hourly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.hourly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Daily</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.daily" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Weekly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.weekly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Monthly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.monthly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Yearly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keep.yearly" />
-				</div>
+				<UButtonGroup>
+					<UInput v-model="keep.last" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Last</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keep.hourly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Hourly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keep.daily" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Daily</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keep.weekly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Weekly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keep.monthly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Monthly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keep.yearly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Yearly</UButton>
+				</UButtonGroup>
 			</div>
 			<h4 class="text-indigo-500 mt-5">Keep within</h4>
 			<p class="text-xs mb-3">Keep within a range</p>
 			<div class="grid grid-cols-3 gap-5">
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Within</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.last" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Hourly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.hourly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Daily</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.daily" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Weekly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.weekly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Monthly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.monthly" />
-				</div>
-				<div class="join">
-					<label class="bg-base-300 input input-bordered input-sm disabled join-item w-32">Yearly</label>
-					<input class="input input-bordered join-item input-sm w-16" placeholder="0" v-model="keepWithin.yearly" />
-				</div>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.last" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Last</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.hourly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Hourly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.daily" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Daily</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.weekly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Weekly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.monthly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Monthly</UButton>
+				</UButtonGroup>
+				<UButtonGroup>
+					<UInput v-model="keepWithin.yearly" placeholder="0" class="w-32" />
+					<UButton disabled color="gray" class="!cursor-default w-20">Yearly</UButton>
+				</UButtonGroup>
 			</div>
 		</div>
 	</div>
