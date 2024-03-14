@@ -27,13 +27,13 @@
 				<UCheckbox v-model="notifiyOnScheduleError" name="notifiyOnScheduleError" color="green" label="Notify when schedule finishes with errors" />
 				<h4 class="text-green-500 mb-2 mt-5">Preserve error log files for X days.</h4>
 				<UInput placeholder="7" v-model="preserveErrorLogsDays" />
-				<UAlert title="Notes" class="mt-5" color="yellow">
+				<UAlert title="Notes" class="mt-5" icon="i-heroicons-information-circle">
 					<template #description>
 						<ul>
 							<li>- Notifications only work on Desktop.</li>
-							<li>- Every hook gets a stringified JSON object passed to it.</li>
+							<li>- Every hook gets a JSON object passed to it.</li>
 						</ul>
-						<pre class="mt-2">{id: "xxx", backup: {}, to_repository: {}, from_repository: {} }</pre>
+						<pre class="mt-2">{schedule: {}, "backup": {}, "to_repository": {}, "from_repository": {} }</pre>
 					</template>
 				</UAlert>
 			</div>
