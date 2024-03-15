@@ -1,0 +1,19 @@
+name: aur
+run-name: Publishing to AUR
+on:
+  release:
+    types: [published]
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish AUR package
+        uses: anas-elgarhy/aur-release-action@v4.1
+        with:
+          package_name: resticity # Optional (default: repository name)
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }} # The private SSH key to use to push the changes to the AUR
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pkgbuild_path: packaging/PKGBUILD
+          update_pkgbuild: true
+          try_build_and_install: true
