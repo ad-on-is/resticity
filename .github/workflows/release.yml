@@ -10,3 +10,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
