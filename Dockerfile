@@ -1,10 +1,9 @@
 From golang:alpine as builder
 WORKDIR /build/
 COPY . .
-RUN apk add nodejs npm
-RUN npm i -g pnpm
-RUN CGO_ENABLED=0 go build ./cmd/server
-RUN cd frontend && pnpm install && pnpm build
+RUN apk add nodejs npm git
+RUN ./build.sh server
+RUN ./build.sh frontend
 
 FROM alpine
 RUN apk --update add ca-certificates curl mailcap restic

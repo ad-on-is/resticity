@@ -29,6 +29,7 @@ export const useApi = defineStore('useApi', () => {
 	const autoCompletePath = async (path: string) => (await useHttp.get(`/path/autocomplete`, { path })) ?? []
 	const getLogs = async () => (await useHttp.get(`/logs`)) ?? ({ logs: [], errors: [] } as { logs: string[]; errors: string[] })
 	const getLogFile = async (file: string) => (await useHttp.get(`/logs/${file}`)) ?? ''
+	const getVersion = async () => (await useHttp.get(`/version`)) ?? { version: 'unknown', build: 'unknown' }
 	return {
 		browseSnapshot,
 		restoreFromSnapshot,
@@ -45,5 +46,6 @@ export const useApi = defineStore('useApi', () => {
 		autoCompletePath,
 		getLogs,
 		getLogFile,
+		getVersion,
 	}
 })

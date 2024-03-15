@@ -107,8 +107,13 @@ $ go install github.com/wailsapp/wails/v2/cmd/wails@latest
 # cd into resticity
 $ cd resticity
 
-# Build using wails
-$ wails build
+# Run as dev
+$ ./build.sh dev
+
+# Build desktop
+$ ./build.sh desktop
+# run
+$ ./build/bin/resticity
 ```
 
 ## TODOs

@@ -167,6 +167,8 @@ func RunServer(
 
 	outputChan *chan ChanMsg,
 	errorChan *chan ChanMsg,
+	version string,
+	build string,
 ) {
 
 	server := fiber.New()
@@ -235,6 +237,11 @@ func RunServer(
 		}
 
 		return c.SendString(c.Params("action") + " schedule in the background")
+	})
+
+	api.Get("/version", func(c *fiber.Ctx) error {
+		log.Debug(version, build)
+		return c.JSON(fiber.Map{"version": version, "build": build})
 	})
 
 	api.Get("/logs", func(c *fiber.Ctx) error {

@@ -2,11 +2,11 @@ package main
 
 import (
 	"embed"
+	"flag"
+	"fmt"
 	"os"
-	"strings"
 
 	"github.com/ad-on-is/resticity/internal"
-	"github.com/thoas/go-funk"
 
 	"github.com/charmbracelet/log"
 	"github.com/wailsapp/wails/v2"
@@ -18,15 +18,26 @@ import (
 //go:embed all:frontend/.output/public
 var assets embed.FS
 
-func test(arr *[]string, n string) bool {
-	return funk.Find(*arr, func(s string) bool {
-		return strings.Contains(s, n)
-	}) != nil
-}
+var (
+	Version string
+	Build   string
+)
 
 func main() {
 	internal.SetLogLevel()
 	r, err := internal.NewResticity()
+
+	if r.FlagArgs.Version {
+		fmt.Println("resticity - version=" + Version + ", build=" + Build + "")
+		os.Exit(0)
+	}
+
+	if r.FlagArgs.Help {
+		fmt.Println("resticity " + Version + " (build " + Build + ")")
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
 	r.Scheduler.Assets = &assets
 	if err == nil {
 		(r.Scheduler).RescheduleBackups()
@@ -36,6 +47,8 @@ func main() {
 			r.Settings,
 			&r.OutputChan,
 			&r.ErrorChan,
+			Version,
+			Build,
 		)
 		Desktop(r.Scheduler, r.Restic, r.Settings, r.FlagArgs.Background)
 	} else {

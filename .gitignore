@@ -3,4 +3,3 @@ node_modules
 frontend/dist
 .flatpak-builder
 deploy.sh
-build.sh

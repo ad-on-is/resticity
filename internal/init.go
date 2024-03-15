@@ -2,15 +2,10 @@ package internal
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/charmbracelet/log"
 )
-
-func GetVersion() string {
-	return "0.0.1"
-}
 
 type FlagArgs struct {
 	ConfigFile string
@@ -31,7 +26,6 @@ type Resticity struct {
 
 func NewResticity() (Resticity, error) {
 	flagArgs := ParseFlags()
-	flagArgs.PrintVersionOrHelp()
 
 	outputChan := make(chan ChanMsg)
 	errorChan := make(chan ChanMsg)
@@ -59,24 +53,11 @@ func ParseFlags() FlagArgs {
 	return flagArgs
 }
 
-func (flagArgs *FlagArgs) PrintVersionOrHelp() {
-	if flagArgs.Version {
-		fmt.Println("resticity " + GetVersion())
-		os.Exit(0)
-	}
-
-	if flagArgs.Help {
-		fmt.Println("resticity " + GetVersion())
-		flag.PrintDefaults()
-		os.Exit(0)
-	}
-}
-
 func SetLogLevel() {
 	l, err := log.ParseLevel(os.Getenv("RESTICITY_LOG_LEVEL"))
 	if err == nil {
 		log.SetLevel(l)
 	} else {
-		log.SetLevel(log.DebugLevel)
+		log.SetLevel(log.WarnLevel)
 	}
 }

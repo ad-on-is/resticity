@@ -38,6 +38,7 @@
 				</UAlert>
 			</div>
 		</div>
+		<div class="text-xs text-center mt-10">Resticity<br />Version: {{ version }}<br />Build: {{ build }}</div>
 	</div>
 </template>
 
@@ -54,11 +55,14 @@
 
 	const preserveErrorLogsDays = ref(7)
 
+	const version = ref('')
+	const build = ref('')
+
 	const update = _.debounce(() => {
 		saveSettings()
 	}, 300)
 
-	onMounted(() => {
+	onMounted(async () => {
 		theme.value = useSettings().settings.app_settings.theme
 		notifiyOnScheduleError.value = useSettings().settings.app_settings.notifications.on_schedule_error
 		notifiyOnScheduleStart.value = useSettings().settings.app_settings.notifications.on_schedule_start
@@ -74,6 +78,9 @@
 				useColorMode().preference = theme.value
 			}
 		)
+		const vb = await useApi().getVersion()
+		version.value = vb.version
+		build.value = vb.build
 	})
 
 	function saveSettings() {
