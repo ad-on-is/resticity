@@ -8,7 +8,7 @@ arch=("any")
 url="https://github.com/ad-on-is/resticity"
 license=('GPL3')
 groups=()
-depends=(go nodejs npm restic webkit2gtk)
+depends=(go nodejs npm pnpm restic webkit2gtk)
 makedepends=()
 checkdepends=()
 optdepends=()
@@ -29,7 +29,6 @@ prepare() {
         export GOPATH=/tmp/go
         export GOBIN=/tmp/go/bin
         go install github.com/wailsapp/wails/v2/cmd/wails@latest
-        npm i -g pnpm@latest
 }
 
 build() {
