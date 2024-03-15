@@ -1,7 +1,7 @@
 name: release
 run-name: Release
 on:
-  release:
+  push:
     tags:
       - "*"
 jobs:
