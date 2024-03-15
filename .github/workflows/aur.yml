@@ -1,5 +1,5 @@
 name: aur
-run-name: Publishing to AUR
+run-name: ${{ github.ref_name }} - Publishing to AUR 
 on:
   release:
     types: [published]
