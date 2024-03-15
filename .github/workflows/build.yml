@@ -1,5 +1,5 @@
-name: release
-run-name: ${{ github.ref_name }} - Release
+name: Build
+run-name: ${{ github.ref_name }} - Build
 on:
   push:
     tags:
@@ -11,15 +11,15 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'App'
+          - name: 'resticity-${{ github.ref_name }}'
             platform:  'linux/amd64'
             os: 'ubuntu-latest'
-          - name: 'App'
+          - name: 'Resticity-${{ github.ref_name }}'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          - name: 'App'
-            platform:  'darwin/universal'
-            os: 'macos-latest'
+          # - name: 'Resticity'
+          #   platform:  'darwin/universal'
+          #   os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
     steps:
