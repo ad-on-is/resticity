@@ -15,5 +15,5 @@ jobs:
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }} # The private SSH key to use to push the changes to the AUR
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pkgbuild_path: packaging/PKGBUILD
-          update_pkgbuild: true
+          update_pkgbuild: false
           try_build_and_install: true
