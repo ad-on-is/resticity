@@ -2,7 +2,7 @@ name: aur
 run-name: Publishing to AUR
 on:
   release:
-    types: [published]
+    types: [created]
 jobs:
   Deploy:
     runs-on: ubuntu-latest
