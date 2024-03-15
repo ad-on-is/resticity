@@ -11,10 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'resticity'
+          - name: 'resticity-Linux-${{ github.ref_name }}'
             platform:  'linux/amd64'
             os: 'ubuntu-latest'
-          - name: 'Resticity'
+          - name: 'Resticity-Windows-${{ github.ref_name }}'
             platform:  'windows/amd64'
             os: 'windows-latest'
           # - name: 'Resticity'
