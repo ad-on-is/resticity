@@ -1,0 +1,14 @@
+name: release
+run-name: Release
+on:
+  release:
+    tags:
+      - "*"
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Release
+        uses: softprops/action-gh-release@v2
