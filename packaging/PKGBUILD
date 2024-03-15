@@ -29,13 +29,15 @@ prepare() {
         export GOPATH=/tmp/go
         export GOBIN=/tmp/go/bin
         go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        npm i -g pnpm@latest
 }
 
 build() {
         cd "$pkgname-$pkgver"
         export GOPATH=/tmp/go
         export GOBIN=/tmp/go/bin
-        /tmp/go/bin/wails build
+        export PATH=$GOBIN:$PATH
+        ./build.sh desktop $pkgver
 }
 
 check() {
