@@ -1,10 +1,10 @@
-name: aur
+name: container
 run-name: ${{ github.ref_name }} - Publishing Container 
 on:
   release:
     types: [published]
 jobs:
-  publish-to-aur:
+  publish-container:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,4 +12,4 @@ jobs:
         uses: macbre/push-to-ghcr@master
         with:
           image_name: ${{ github.repository }}  # it will be lowercased internally
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_TOKEN }}
