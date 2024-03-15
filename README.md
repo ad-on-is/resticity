@@ -10,6 +10,12 @@
 
 ![screenshot](./images/resticity_screenshot.png)
 
+## Status
+
+![release](https://github.com/ad-on-is/resticity/actions/workflows/release.yml/badge.svg)
+![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg)
+![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg)
+
 ## Key Features
 
 - Easy to use
