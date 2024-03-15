@@ -2,9 +2,9 @@ name: aur
 run-name: Publishing to AUR
 on:
   release:
-    types: [created]
+    types: [published]
 jobs:
-  Deploy:
+  publish-to-aur:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
