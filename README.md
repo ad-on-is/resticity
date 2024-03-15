@@ -16,6 +16,9 @@
 ![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg)
 ![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg)
 
+> [!IMPORTANT]  
+> I'm still working on the Windows and macOS version. They're not ready yet.
+
 ## Key Features
 
 - Easy to use
@@ -29,7 +32,7 @@
 - Supports local and remote repositories
   - Local folder or mounted network drive
   - AWS
-  - Backblazez
+  - Backblaze
   - Azure
   - Google
 - System tray support
@@ -96,10 +99,17 @@ Set `RESTICITY_LOG_LEVEL=debug` as environment variable for detailed debug messa
 
 ## Installation
 
+### Linux
+
 ```bash
 # Arch Linux
 paru -S resticity
 ```
+
+### Windows
+
+- install [restic](https://restic.readthedocs.io/en/latest/020_installation.html#windows) on your system
+- Download the Resticity binary for Windows from the latest [release](https://github.com/ad-on-is/resticity/releases)
 
 ## Build yourself
 
