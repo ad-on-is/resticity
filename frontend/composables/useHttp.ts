@@ -13,7 +13,7 @@ export default class HttpClient {
 	public static doFetch = async (url: string, opts: { method: FetchMethod; body?: any; query?: any }, notify: false | { title: string; text: string; type?: string } = false) => {
 		const getUrl = (): string => {
 			const url = useRequestURL()
-			return url.protocol === 'wails:' ? 'http://localhost:11278' : `${url.protocol}//${url.host}`
+			return url.protocol === 'wails:' || url.host === 'wails.localhost' ? 'http://localhost:11278' : `${url.protocol}//${url.host}`
 		}
 		const baseUrl = `${getUrl()}/api`
 		try {

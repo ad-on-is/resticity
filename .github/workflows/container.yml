@@ -2,7 +2,7 @@ name: container
 run-name: ${{ github.ref_name }} - Publishing Container 
 on:
   release:
-    types: [published]
+    types: [created]
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}

@@ -2,7 +2,7 @@ name: aur
 run-name: ${{ github.ref_name }} - Publishing to AUR 
 on:
   release:
-    types: [published]
+    types: [created]
 jobs:
   publish-to-aur:
     runs-on: ubuntu-latest
