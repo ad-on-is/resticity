@@ -12,7 +12,7 @@
 
 ## Status
 
-![release](https://github.com/ad-on-is/resticity/actions/workflows/release.yml/badge.svg)
+![release](https://github.com/ad-on-is/resticity/actions/workflows/build.yml/badge.svg)
 ![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg)
 ![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg)
 
