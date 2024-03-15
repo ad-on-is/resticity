@@ -1,0 +1,15 @@
+name: aur
+run-name: ${{ github.ref_name }} - Publishing Container 
+on:
+  release:
+    types: [published]
+jobs:
+  publish-to-aur:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish Container
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}  # it will be lowercased internally
+          github_token: ${{ secrets.GITHUB_TOKEN }}
