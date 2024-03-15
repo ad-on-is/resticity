@@ -5,8 +5,6 @@ if [ -z "$VERSION" ]; then
   VERSION=$(git describe --tags)
 fi
 
-echo $VERSION
-exit
 BUILD=$(date +%FT%T%z)
 LD_FLAGS="-X main.Version=$VERSION -X main.Build=$BUILD"
 wails=$(which wails)
