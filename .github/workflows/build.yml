@@ -11,10 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'resticity-${{ github.ref_name }}'
+          - name: 'resticity'
             platform:  'linux/amd64'
             os: 'ubuntu-latest'
-          - name: 'Resticity-${{ github.ref_name }}'
+          - name: 'Resticity'
             platform:  'windows/amd64'
             os: 'windows-latest'
           # - name: 'Resticity'
@@ -34,7 +34,7 @@ jobs:
         with:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
-          package: false
+          package: true
           go-version: '1.21'
   # release:
   #   runs-on: ubuntu-latest
