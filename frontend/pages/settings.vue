@@ -38,7 +38,9 @@
 				</UAlert>
 			</div>
 		</div>
-		<div class="text-xs text-center mt-10">Resticity<br />Version: {{ version }}<br />Build: {{ build }}</div>
+		<div class="text-xs text-center mt-10">
+			Resticity<br />Version: {{ version }}<br />Build: {{ build }} <br />Server: {{ `${useRequestURL().protocol}//${useRequestURL().host}` }}
+		</div>
 	</div>
 </template>
 

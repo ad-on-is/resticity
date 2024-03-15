@@ -21,7 +21,7 @@ case $1 in
     cd frontend && pnpm install && pnpm build
     ;;
   "dev")
-    $wails dev -ldflags="$LD_FLAGS" -loglevel "Error"
+    RESTICITY_LOG_LEVEL=debug $wails dev -ldflags="$LD_FLAGS" -loglevel "Error"
     ;;
   *)
     ;;

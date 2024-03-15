@@ -5,6 +5,7 @@ type Log = {
 export const useLogs = defineStore('useLogs', () => {
 	const out = ref<Log>({})
 	const err = ref<Log>({})
+	const serverErr = ref<string[]>([])
 
 	function setOut(id: string, data: string) {
 		if (out.value[id] === undefined) {
@@ -23,10 +24,16 @@ export const useLogs = defineStore('useLogs', () => {
 		}
 	}
 
+	function setServerError(data: string) {
+		serverErr.value.push(data)
+	}
+
 	return {
 		out,
 		err,
 		setOut,
 		setErr,
+		serverErr,
+		setServerError,
 	}
 })

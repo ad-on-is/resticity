@@ -133,6 +133,6 @@ func (a *App) SelectFile(title string) string {
 	return ""
 }
 
-func (a *App) FakeCreateForModels() (internal.SnapshotGroup, internal.Repository, internal.Backup, internal.Config, internal.Schedule, internal.FileDescriptor) {
-	return internal.SnapshotGroup{}, internal.Repository{}, internal.Backup{}, internal.Config{}, internal.Schedule{}, internal.FileDescriptor{}
+func (a *App) FakeCreateForModels() (internal.SnapshotGroup, internal.Repository, internal.Backup, internal.Config, internal.Schedule, internal.FileDescriptor, internal.ScheduleObject) {
+	return internal.SnapshotGroup{}, internal.Repository{}, internal.Backup{}, internal.Config{}, internal.Schedule{}, internal.FileDescriptor{}, internal.ScheduleObject{}
 }

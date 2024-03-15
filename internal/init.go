@@ -58,6 +58,6 @@ func SetLogLevel() {
 	if err == nil {
 		log.SetLevel(l)
 	} else {
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(log.ErrorLevel)
 	}
 }

@@ -31,9 +31,9 @@ export default class HttpClient {
 			}
 			return res._data
 		} catch (e: any) {
-			console.log(e)
+			console.error(e)
+			useLogs().setServerError(e)
 			this.notifyError(e, notify)
-
 			return e.data
 		}
 	}

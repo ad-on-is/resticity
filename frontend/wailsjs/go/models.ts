@@ -83,6 +83,12 @@ export namespace internal {
 	
 	
 	
+	export interface ScheduleObject {
+	    schedule: Schedule;
+	    to_repository?: Repository;
+	    from_repository?: Repository;
+	    backup?: Backup;
+	}
 	export interface Snapshot {
 	    id: string;
 	    // Go type: time

@@ -14,7 +14,7 @@ jobs:
           - name: 'resticity-Linux-${{ github.ref_name }}'
             platform:  'linux/amd64'
             os: 'ubuntu-latest'
-          - name: 'Resticity-Windows-${{ github.ref_name }}'
+          - name: 'Resticity-Windows-Portable-${{ github.ref_name }}.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
           # - name: 'Resticity'

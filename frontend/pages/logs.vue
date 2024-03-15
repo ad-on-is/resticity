@@ -22,6 +22,9 @@
 					</template>
 				</UAccordion>
 				<p v-else>No errors</p>
+				<h4 class="text-teal-500 mt-5">Server errors</h4>
+				<pre v-if="useLogs().serverErr.length > 0" class="text-xs overflow-scroll h-72">{{ useLogs().serverErr.join('\n') }}</pre>
+				<p v-else>No errors</p>
 			</div>
 			<div>
 				<h4 class="text-teal-500">Archive logs</h4>
