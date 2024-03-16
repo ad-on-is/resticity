@@ -69,7 +69,7 @@
 						<PathAutocomplete title="Select local folder" @selected="(p) => (newRepository.path = p)" />
 						<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
 						<UDivider label="OR" class="my-3" />
-						<UInput v-model="newRepository.path" placeholder="Other folder like smtp: rclone:, etc.." />
+						<UInput v-model="newRepository.path" placeholder="Other folder like sftp: rclone:, etc.." />
 						<p class="text-xs text-yellow-500">Remote folder scheme must bei sftp: or rclone: or rest:</p>
 						<UButtonGroup class="flex mt-5">
 							<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
