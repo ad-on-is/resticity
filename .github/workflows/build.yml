@@ -17,9 +17,9 @@ jobs:
           - name: 'Resticity-Windows-Portable-${{ github.ref_name }}.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          # - name: 'Resticity'
-          #   platform:  'darwin/universal'
-          #   os: 'macos-latest'
+          - name: 'Resticity'
+            platform:  'darwin/universal'
+            os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
     steps:
