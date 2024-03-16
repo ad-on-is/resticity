@@ -284,35 +284,17 @@ func RunServer(
 
 		}
 
-		if r.Type == "local" {
-			files, err := os.ReadDir(r.Path)
-			if err != nil {
-				c.SendStatus(500)
-				return c.SendString(err.Error())
+		if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
+			if strings.Contains(err.Error(), "key does not exist") ||
+				strings.Contains(err.Error(), "/config: no such file") {
+				return c.SendString("OK_REPO_EMPTY")
 			}
-			if len(files) > 0 {
-				if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
-					c.SendStatus(500)
-					return c.SendString(err.Error())
-				} else {
-					return c.SendString("OK_REPO_EXISTING")
-				}
-			}
+			c.SendStatus(500)
+			return c.SendString(err.Error())
+		} else {
+			return c.SendString("OK_REPO_EXISTING")
 		}
 
-		if r.Type == "s3" || r.Type == "gcs" || r.Type == "azure" {
-			if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
-				if strings.Contains(err.Error(), "key does not exist") {
-					return c.SendString("OK_REPO_EMPTY")
-				}
-				c.SendStatus(500)
-				return c.SendString(err.Error())
-			} else {
-				return c.SendString("OK_REPO_EXISTING")
-			}
-		}
-
-		return c.SendString("OK_REPO_EMPTY")
 	})
 	api.Post("/init", func(c *fiber.Ctx) error {
 		var r Repository

@@ -64,10 +64,13 @@
 				</template>
 				<template #local="{ item }">
 					<div class="mt-5">
-						<h1 class="text-purple-500 font-bold mb-2">Local folder</h1>
+						<h1 class="text-purple-500 font-bold mb-2">Local or remote folder</h1>
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
-						<PathAutocomplete @selected="(p) => (newRepository.path = p)" />
+						<PathAutocomplete title="Select local folder" @selected="(p) => (newRepository.path = p)" />
 						<p class="text-xs opacity-70">Path must be either an empty folder or an existing repository</p>
+						<UDivider label="OR" class="my-3" />
+						<UInput v-model="newRepository.path" placeholder="Other folder like smtp: rclone:, etc.." />
+						<p class="text-xs text-yellow-500">Remote folder scheme must bei sftp: or rclone: or rest:</p>
 						<UButtonGroup class="flex mt-5">
 							<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow" />
 							<UButton icon="i-heroicons-eye" color="gray" @click="togglePw" />
@@ -77,7 +80,7 @@
 				</template>
 				<template #s3="{ item }">
 					<div class="mt-5">
-						<h1 class="text-purple-500 font-bold mb-2">S3 compatible bucket (AWS/Backblaze)</h1>
+						<h1 class="text-purple-500 font-bold mb-2">S3 compatible bucket (AWS, Backblaze, etc.)</h1>
 						<UAlert icon="i-heroicons-exclamation-circle" title="Attention" description="Please make sure the bucket is empty." class="mb-5" color="yellow" />
 						<UInput variant="outline" v-model="newRepository.name" placeholder="Name" class="mb-5" />
 						<UInput v-model="newRepository.password" :type="pwType" placeholder="Password" class="flex-grow mb-5" />
@@ -144,12 +147,12 @@
 			type: 'local',
 			icon: 'i-heroicons-server',
 		},
+
 		{
 			slot: 's3',
 			label: 'S3',
 			type: 's3',
 			icon: 'i-fa6-brands-amazon',
-			icon2: 'i-simple-icons-backblaze',
 		},
 
 		{
