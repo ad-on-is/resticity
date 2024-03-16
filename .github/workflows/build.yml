@@ -11,14 +11,14 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: 'resticity-Linux-${{ github.ref_name }}'
+          - name: 'resticity-Linux-${{ github.ref_name }}_amd64'
             platform:  'linux/amd64'
             os: 'ubuntu-latest'
-          - name: 'Resticity-Windows-Portable-${{ github.ref_name }}.exe'
+          - name: 'Resticity-Windows-Portable-${{ github.ref_name }}_amd64.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
-          - name: 'Resticity'
-            platform:  'darwin/universal'
+          - name: 'Resticity-${{ github.ref_name }}_amd64'
+            platform:  'darwin/amd64'
             os: 'macos-latest'
 
     runs-on: ${{ matrix.build.os }}
