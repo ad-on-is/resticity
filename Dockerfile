@@ -6,7 +6,7 @@ RUN ./build.sh server
 RUN ./build.sh frontend
 
 FROM alpine
-RUN apk --update add ca-certificates curl mailcap restic
+RUN apk --update add ca-certificates curl mailcap restic openssh-client openssl rclone
 WORKDIR /
 COPY --from=builder /build/server /resticity-server
 COPY --from=builder /build/frontend/.output/public /public
