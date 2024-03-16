@@ -54,14 +54,6 @@ func getFile(t string) string {
 
 func appendToFile(f string, m ChanMsg) {
 
-	if _, err := os.Stat(f); os.IsNotExist(err) {
-		_, err := os.Create(f)
-		if err != nil {
-			log.Error("filelogger: create "+f, "error", err)
-			return
-		}
-	}
-
 	d, err := json.Marshal(m)
 	if err != nil {
 		log.Error("filelogger: marshal "+f, "error", err)
@@ -75,6 +67,12 @@ func appendToFile(f string, m ChanMsg) {
 }
 
 func WriteFile(name string, data []byte) error {
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		_, err := os.Create(name)
+		if err != nil {
+			return err
+		}
+	}
 	f, err := os.OpenFile(name, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return err

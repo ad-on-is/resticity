@@ -26,7 +26,6 @@ type Resticity struct {
 
 func NewResticity() (Resticity, error) {
 	flagArgs := ParseFlags()
-
 	outputChan := make(chan ChanMsg)
 	errorChan := make(chan ChanMsg)
 	go NewFileLogger(&outputChan, &errorChan)

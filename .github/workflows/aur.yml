@@ -1,4 +1,4 @@
-name: aur
+name: AUR
 run-name: ${{ github.ref_name }} - Publishing to AUR 
 on:
   release:

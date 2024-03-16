@@ -1,4 +1,4 @@
-name: container
+name: Container
 run-name: ${{ github.ref_name }} - Publishing Container 
 on:
   release:

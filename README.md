@@ -12,9 +12,9 @@
 
 ## Status
 
-![release](https://github.com/ad-on-is/resticity/actions/workflows/build.yml/badge.svg)
-![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg)
-![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg)
+![release](https://github.com/ad-on-is/resticity/actions/workflows/build.yml/badge.svg?branch=)
+![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg?branch=)
+![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg?branch=)
 
 > [!IMPORTANT]  
 > I'm still working on the Windows and macOS version. They're not ready yet.

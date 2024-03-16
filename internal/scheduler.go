@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/charmbracelet/log"
 	"github.com/gen2brain/beeep"
 	"github.com/go-co-op/gocron/v2"
@@ -179,7 +180,7 @@ func (s *Scheduler) Notifiy(schedule Schedule, finished bool, hasError bool) {
 	if hasError {
 		title += " with error"
 	}
-	beeep.Notify(title, description, "")
+	beeep.Notify(title, description, xdg.CacheHome+"/resticity/appicon_active.png")
 }
 
 func (s *Scheduler) RescheduleBackups() {

@@ -4,9 +4,11 @@ import (
 	"context"
 	"embed"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ad-on-is/resticity/internal"
+	"github.com/adrg/xdg"
 
 	"github.com/charmbracelet/log"
 	"github.com/energye/systray"
@@ -35,12 +37,20 @@ func NewApp(
 	return &App{restic: restic, scheduler: scheduler, settings: settings}
 }
 
+func (a *App) SaveIcon(icon []byte, file string) {
+	path := filepath.Join(xdg.CacheHome, "resticity")
+	os.WriteFile(filepath.Join(path, file), icon, 0644)
+}
+
 func (a *App) toggleSysTrayIcon() {
 	default_icon, err := assets.ReadFile(
 		"frontend/.output/public/appicon.png",
 	)
 	if err != nil {
 		log.Error(err)
+	} else {
+		a.SaveIcon(default_icon, "appicon.png")
+
 	}
 	active_icon, err := assets.ReadFile(
 		"frontend/.output/public/appicon_active.png",
@@ -48,6 +58,9 @@ func (a *App) toggleSysTrayIcon() {
 
 	if err != nil {
 		log.Error(err)
+	} else {
+		a.SaveIcon(active_icon, "appicon_active.png")
+
 	}
 
 	_, err = a.scheduler.Gocron.NewJob(

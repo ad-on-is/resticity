@@ -5,6 +5,8 @@ import {uuid} from '../models';
 
 export function FakeCreateForModels():Promise<internal.SnapshotGroup>;
 
+export function SaveIcon(arg1:Array<number>,arg2:string):Promise<void>;
+
 export function SelectDirectory(arg1:string):Promise<string>;
 
 export function SelectFile(arg1:string):Promise<string>;
