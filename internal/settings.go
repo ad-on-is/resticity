@@ -23,6 +23,8 @@ func NewSettings(flagFile string) *Settings {
 	}
 
 	if _, err := os.Stat(s.file); os.IsNotExist(err) {
+		os.Mkdir(filepath.Dir(s.file), 0755)
+		os.Create(s.file)
 		s.Init()
 	} else {
 		log.Info("Loading existing settings", "file", s.file)
