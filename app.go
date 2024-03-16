@@ -85,13 +85,8 @@ func (a *App) toggleSysTrayIcon() {
 }
 
 func (a *App) systemTray() {
-	ico, _ := os.ReadFile(
-		"/home/adonis/Development/Go/resticity/build/appicon.png",
-	)
 
 	systray.CreateMenu()
-
-	systray.SetIcon(ico) // read the icon from a file
 
 	systray.SetTitle("resticity")
 	systray.SetTooltip("Resticity")
