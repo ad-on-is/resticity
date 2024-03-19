@@ -19,6 +19,7 @@ func MaybeToWindowsPath(path string) string {
 		return path
 	}
 	p := strings.Split(path, "/")
+	p = p[1:] // skip first empty string
 	p[0] = p[0] + ":"
 	path = strings.Join(p, "\\")
 	return path

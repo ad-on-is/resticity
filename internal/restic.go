@@ -127,6 +127,7 @@ func (r *Restic) core(
 	cmd []string,
 	envs []string,
 	job *Job,
+	canceler *Canceler,
 ) (string, error) {
 
 	// trigger start
@@ -145,11 +146,18 @@ func (r *Restic) core(
 
 	}
 
-	if job != nil && job.Ctx != nil {
-		c = exec.CommandContext(job.Ctx, resticCmd, cmds...)
-		if job.Cancel != nil {
-
-			defer (job.Cancel)()
+	if job != nil && job.Canceler.Ctx != nil {
+		c = exec.CommandContext(job.Canceler.Ctx, resticCmd, cmds...)
+		if job.Canceler.Cancel != nil {
+			defer (job.Canceler.Cancel)()
+		}
+	} else if canceler != nil && canceler.Ctx != nil {
+		c = exec.CommandContext(canceler.Ctx, resticCmd, cmds...)
+		c.Cancel = func() error {
+			return c.Process.Signal(os.Interrupt)
+		}
+		if canceler.Cancel != nil {
+			defer canceler.Cancel()
 		}
 	} else {
 		c = exec.Command(resticCmd, cmds...)
@@ -170,7 +178,7 @@ func (r *Restic) core(
 		log.Error("executing restic command", "err", err)
 	}
 	c.Wait()
-
+	log.Debug("restic command finished")
 	if serr.Len() > 0 {
 		return "", errors.New(serr.String())
 	}
@@ -179,8 +187,13 @@ func (r *Restic) core(
 
 }
 
-func (r *Restic) Exec(repository Repository, cmds []string, envs []string) (string, error) {
-	if data, err := r.core(repository, cmds, envs, nil); err != nil {
+func (r *Restic) Exec(
+	repository Repository,
+	cmds []string,
+	envs []string,
+	canceler *Canceler,
+) (string, error) {
+	if data, err := r.core(repository, cmds, envs, nil, canceler); err != nil {
 		return "", err
 	} else {
 		return data, nil
@@ -193,7 +206,7 @@ func (r *Restic) BrowseSnapshot(
 	path string,
 ) ([]FileDescriptor, error) {
 
-	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil); err == nil {
+	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil, nil); err == nil {
 		res = strings.ReplaceAll(res, "}", "},")
 		res = strings.ReplaceAll(res, "\n", "")
 		res = "[" + res + "]"
@@ -235,7 +248,7 @@ func (r *Restic) RunSchedule(
 			cmds = append(cmds, p...)
 		}
 
-		_, err := r.core(*toRepository, cmds, []string{}, job)
+		_, err := r.core(*toRepository, cmds, []string{}, job, nil)
 		if err != nil {
 			log.Error("runschedule", "err", err)
 			return err
@@ -263,7 +276,7 @@ func (r *Restic) RunSchedule(
 				"RESTIC_FROM_PASSWORD_FILE="+fromRepository.PasswordFile)
 		}
 
-		r.core(*toRepository, cmds, envs, job)
+		r.core(*toRepository, cmds, envs, job, nil)
 		break
 	case "prune-repository":
 		if toRepository == nil {
@@ -279,9 +292,10 @@ func (r *Restic) RunSchedule(
 			[]string{"unlock"},
 			[]string{},
 			job,
+			nil,
 		)
 		if err == nil {
-			_, err := r.core(*toRepository, cmds, []string{}, job)
+			_, err := r.core(*toRepository, cmds, []string{}, job, nil)
 			if err != nil {
 				log.Error("prune-repository", "err", err)
 				return err

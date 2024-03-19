@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"context"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -24,6 +24,8 @@ var broadcast = make(chan string)
 var unregister = make(chan *websocket.Conn)
 var outs = []WsMsg{}
 var errs = []WsMsg{}
+
+var mountCanceler = make(map[string]*Canceler)
 
 func runHub() {
 	for {
@@ -284,7 +286,7 @@ func RunServer(
 
 		}
 
-		if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
+		if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}, nil); err != nil {
 			if strings.Contains(err.Error(), "key does not exist") ||
 				strings.Contains(err.Error(), "config:") {
 				return c.SendString("OK_REPO_EMPTY")
@@ -302,7 +304,7 @@ func RunServer(
 			c.SendStatus(500)
 			return c.SendString(err.Error())
 		}
-		if _, err := restic.Exec(r, []string{"init"}, []string{}); err != nil {
+		if _, err := restic.Exec(r, []string{"init"}, []string{}, nil); err != nil {
 			c.SendStatus(500)
 			return c.SendString(err.Error())
 		}
@@ -341,10 +343,13 @@ func RunServer(
 			}
 
 			go func(id string) {
+				ctx, cancel := context.WithCancel(context.Background())
+				mountCanceler[data.Path] = &Canceler{Ctx: ctx, Cancel: cancel}
 				restic.Exec(
 					*settings.Config.GetRepositoryById(id),
 					[]string{act, FixPath(data.Path)},
 					[]string{},
+					mountCanceler[data.Path],
 				)
 			}(c.Params("id"))
 
@@ -356,8 +361,11 @@ func RunServer(
 				return c.SendString(err.Error())
 			}
 
-			e := exec.Command("/usr/bin/umount", "-l", data.Path)
-			e.Output()
+			if canceler, ok := mountCanceler[data.Path]; ok {
+				log.Debug("canceling mount", "path", data.Path, "sig", os.Interrupt)
+				canceler.Cancel()
+				canceler.Ctx.Done()
+			}
 
 			return c.SendString("OK")
 		case "snapshots":
@@ -369,6 +377,7 @@ func RunServer(
 				*settings.Config.GetRepositoryById(c.Params("id")),
 				[]string{act, "--group-by", groupBy},
 				[]string{},
+				nil,
 			)
 			if err != nil {
 				c.SendStatus(500)
@@ -420,7 +429,7 @@ func RunServer(
 						c.Params("snapshot_id") + ":" + FixPath(data.RootPath),
 						"--target",
 						MaybeToWindowsPath(data.ToPath),
-						"--include", FixPath(strings.Replace(data.FromPath, FixPath(data.RootPath), "", -1))}, []string{},
+						"--include", FixPath(strings.Replace(data.FromPath, FixPath(data.RootPath), "", -1))}, []string{}, nil,
 				); err != nil {
 					c.SendStatus(500)
 					return c.SendString(err.Error())

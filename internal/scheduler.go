@@ -21,8 +21,12 @@ type Job struct {
 	Schedule Schedule `json:"schedule"`
 	Running  bool     `json:"running"`
 	Force    bool     `json:"force"`
-	Ctx      context.Context
-	Cancel   context.CancelFunc
+	Canceler Canceler
+}
+
+type Canceler struct {
+	Ctx    context.Context
+	Cancel context.CancelFunc
 }
 
 type Scheduler struct {
@@ -77,7 +81,7 @@ func (s *Scheduler) StopJobById(id string) {
 	for _, j := range s.Jobs {
 		if j.Id == id {
 			(*s.OutputCh) <- ChanMsg{Id: j.Schedule.Id, Msg: "{\"running\": false}", Time: time.Now()}
-			j.Cancel()
+			j.Canceler.Cancel()
 			log.Warn("Canceling context", "id", id)
 			break
 		}
@@ -128,8 +132,8 @@ func (s *Scheduler) RecreateCtx(name string) {
 		if j.job.Name() == name {
 			log.Debug("Recreating context for job", "id", name)
 			ctx, cancel := context.WithCancel(context.Background())
-			s.Jobs[i].Ctx = ctx
-			s.Jobs[i].Cancel = cancel
+			s.Jobs[i].Canceler.Ctx = ctx
+			s.Jobs[i].Canceler.Cancel = cancel
 			break
 		}
 	}
@@ -299,8 +303,7 @@ func (s *Scheduler) RescheduleBackups() {
 				Id:       schedule.Id,
 				Running:  false,
 				Force:    false,
-				Ctx:      ctx,
-				Cancel:   cancel,
+				Canceler: Canceler{Ctx: ctx, Cancel: cancel},
 			},
 		)
 
