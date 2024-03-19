@@ -152,7 +152,7 @@ func (r *Restic) core(
 			defer (job.Cancel)()
 		}
 	} else {
-		c = exec.Command("/usr/bin/restic", cmds...)
+		c = exec.Command(resticCmd, cmds...)
 	}
 
 	r.PipeOutErr(c, &sout, &serr, job)

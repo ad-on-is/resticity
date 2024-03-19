@@ -286,7 +286,7 @@ func RunServer(
 
 		if _, err := restic.Exec(r, []string{"cat", "config"}, []string{}); err != nil {
 			if strings.Contains(err.Error(), "key does not exist") ||
-				strings.Contains(err.Error(), "/config: no such file") {
+				strings.Contains(err.Error(), "config:") {
 				return c.SendString("OK_REPO_EMPTY")
 			}
 			c.SendStatus(500)

@@ -2,7 +2,7 @@ export const useSocket = defineStore('useSocket', () => {
 	function init() {
 		const getUrl = (): string => {
 			const url = useRequestURL()
-			return url.protocol === 'wails:' || url.host === 'wails.localhost' ? 'ws://localhost:11278' : `${url.protocol === 'http:' ? 'ws:' : 'wss:'}//${url.host}`
+			return url.protocol === 'wails:' || url.host.includes('wails.localhost') ? 'ws://localhost:11278' : `${url.protocol === 'http:' ? 'ws:' : 'wss:'}//${url.host}`
 		}
 		const socket = new WebSocket(`${getUrl()}/api/ws`)
 		socket.onmessage = (event) => {
