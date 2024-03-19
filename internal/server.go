@@ -419,7 +419,7 @@ func RunServer(
 					[]string{"restore",
 						c.Params("snapshot_id") + ":" + FixPath(data.RootPath),
 						"--target",
-						data.ToPath,
+						MaybeToWindowsPath(data.ToPath),
 						"--include", FixPath(strings.Replace(data.FromPath, FixPath(data.RootPath), "", -1))}, []string{},
 				); err != nil {
 					c.SendStatus(500)
