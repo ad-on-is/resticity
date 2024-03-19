@@ -83,7 +83,6 @@
 		repo.value = useSettings().settings?.repositories.find((r: Repository) => r.id === useRoute().params.id)
 		prunes.value = repo.value.prune_params
 		idx.value = useSettings().settings!.repositories.findIndex((r: Repository) => r.id === repo.value.id)
-		mountPath.value = useSettings().settings.mounts.find((m: Mount) => m.id === useRoute().params.id)?.path ?? ''
 		watch(
 			() => [JSON.stringify(prunes.value)],
 			() => {
