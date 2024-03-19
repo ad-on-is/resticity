@@ -192,6 +192,8 @@ func (r *Restic) BrowseSnapshot(
 	snapshotId string,
 	path string,
 ) ([]FileDescriptor, error) {
+	path = strings.Replace(path, ":\\", "/", -1)
+	path = strings.Replace(path, "\\", "/", -1)
 	if res, err := r.core(repository, []string{"ls", "-l", "--human-readable", snapshotId, path}, []string{}, nil); err == nil {
 		res = strings.ReplaceAll(res, "}", "},")
 		res = strings.ReplaceAll(res, "\n", "")
