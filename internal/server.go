@@ -343,7 +343,7 @@ func RunServer(
 			go func(id string) {
 				restic.Exec(
 					*settings.Config.GetRepositoryById(id),
-					[]string{act, data.Path},
+					[]string{act, FixPath(data.Path)},
 					[]string{},
 				)
 			}(c.Params("id"))
@@ -418,7 +418,7 @@ func RunServer(
 					[]string{"restore",
 						c.Params("snapshot_id") + ":" + FixPath(data.RootPath),
 						"--target",
-						data.ToPath,
+						FixPath(data.ToPath),
 						"--include", FixPath(data.FromPath)}, []string{},
 				); err != nil {
 					c.SendStatus(500)
