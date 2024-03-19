@@ -65,11 +65,6 @@ type FileDescriptor struct {
 	Mtime string `json:"mtime"`
 }
 
-type Mount struct {
-	RepositoryId string `json:"repository_id"`
-	Path         string `json:"path"`
-}
-
 type Repository struct {
 	Id           string     `json:"id"`
 	Name         string     `json:"name"`
@@ -122,7 +117,6 @@ type AppSettings struct {
 }
 
 type Config struct {
-	Mounts       []Mount      `json:"mounts"`
 	Repositories []Repository `json:"repositories"`
 	Backups      []Backup     `json:"backups"`
 	Schedules    []Schedule   `json:"schedules"`
@@ -161,11 +155,16 @@ type ChanMsg struct {
 	Time time.Time
 }
 
-type WsMsg struct {
+type JobMsg struct {
 	Id   string    `json:"id"`
 	Out  string    `json:"out"`
 	Err  string    `json:"err"`
 	Time time.Time `json:"time"`
+}
+
+type MountMsg struct {
+	Id   string `json:"id"`
+	Path string `json:"path"`
 }
 
 type ScheduleObject struct {

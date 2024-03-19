@@ -8,7 +8,8 @@ export const useSocket = defineStore('useSocket', () => {
 		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data)
-				data.forEach((j: any) => {
+
+				data['jobs'].forEach((j: any) => {
 					if (j.out !== undefined) {
 						useLogs().setOut(j.id, j.out)
 					}
@@ -16,8 +17,10 @@ export const useSocket = defineStore('useSocket', () => {
 						useLogs().setErr(j.id, j.err)
 					}
 				})
+				console.log(data['mounts'])
+				useMounts().mounts = data['mounts'] || []
 				useJobs().running =
-					data.map((j: any) => {
+					data['jobs'].map((j: any) => {
 						try {
 							j.out = JSON.parse(j.out)
 						} catch {

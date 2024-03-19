@@ -57,12 +57,7 @@ export namespace internal {
 	    // Go type: Options
 	    options: any;
 	}
-	export interface Mount {
-	    repository_id: string;
-	    path: string;
-	}
 	export interface Config {
-	    mounts: Mount[];
 	    repositories: Repository[];
 	    backups: Backup[];
 	    schedules: Schedule[];
@@ -80,7 +75,6 @@ export namespace internal {
 	    paths: string[];
 	    tags: string[];
 	}
-	
 	
 	
 	export interface ScheduleObject {

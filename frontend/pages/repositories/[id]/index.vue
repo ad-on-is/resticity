@@ -5,10 +5,12 @@
 				<h1 class="text-purple-500 font-bold"><UIcon :name="getRepoIcon(repo)" class="mr-3" />{{ repo.name }}</h1>
 				<h2 class="mb-5">{{ repo.path }}</h2>
 			</div>
+
 			<div class="mt-3">
-				<UButton v-if="mountPath === ''" color="yellow" variant="outline" icon="i-heroicons-folder" @click="isOpen = true">Mount</UButton>
+				<UButton v-if="!useMounts().repoIsMounted(repo.id)" color="yellow" variant="outline" icon="i-heroicons-folder" @click="isOpen = true">Mount</UButton>
+
 				<UButtonGroup v-else>
-					<UButton color="gray" disabled icon="i-heroicons-folder">{{ mountPath }}</UButton>
+					<UButton color="gray" disabled icon="i-heroicons-folder">{{ useMounts().repoIsMounted(repo.id)?.path }}</UButton>
 					<UButton @click="unmount" color="indigo">Unmount</UButton>
 				</UButtonGroup>
 				<UButton icon="i-heroicons-trash" color="red" class="ml-2" @click="openDelete = true">Delete</UButton>
@@ -59,18 +61,12 @@
 	}
 	const mount = async () => {
 		mountPath.value = shouldMountPath.value
-		useSettings().settings.mounts.push({
-			id: useRoute().params.id as string,
-			path: mountPath.value,
-		})
-		useSettings().save()
+
 		useApi().mount(useRoute().params.id as string, mountPath.value)
 
 		isOpen.value = false
 	}
 	const unmount = () => {
-		useSettings().settings.mounts = useSettings().settings.mounts.filter((m: Mount) => m.id !== useRoute().params.id)
-		useSettings().save()
 		useApi().unmount(useRoute().params.id as string, mountPath.value)
 		mountPath.value = ''
 	}

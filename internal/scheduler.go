@@ -29,6 +29,11 @@ type Canceler struct {
 	Cancel context.CancelFunc
 }
 
+type MountTracker struct {
+	canceler Canceler
+	mount    MountMsg
+}
+
 type Scheduler struct {
 	Gocron   gocron.Scheduler
 	restic   *Restic

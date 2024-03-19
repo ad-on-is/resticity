@@ -22,10 +22,10 @@ var clients = make(map[*websocket.Conn]client)
 var register = make(chan *websocket.Conn)
 var broadcast = make(chan string)
 var unregister = make(chan *websocket.Conn)
-var outs = []WsMsg{}
-var errs = []WsMsg{}
+var outs = []JobMsg{}
+var errs = []JobMsg{}
 
-var mountCanceler = make(map[string]*Canceler)
+var mountTracker = make(map[string]*MountTracker)
 
 func runHub() {
 	for {
@@ -105,11 +105,11 @@ func handlePing(c *websocket.Conn) {
 
 }
 
-func handleArray(arr []WsMsg, m WsMsg) []WsMsg {
+func handleArray(arr []JobMsg, m JobMsg) []JobMsg {
 	if m.Id != "" {
 		if funk.Find(
 			arr,
-			func(arrm WsMsg) bool { return arrm.Id == m.Id },
+			func(arrm JobMsg) bool { return arrm.Id == m.Id },
 		) == nil {
 			arr = append(arr, m)
 		} else {
@@ -125,11 +125,19 @@ func handleArray(arr []WsMsg, m WsMsg) []WsMsg {
 	return arr
 }
 
-func doBroadcast(outs []WsMsg, errs []WsMsg) {
-	o := funk.Filter(outs, func(o WsMsg) bool { return o.Out != "" && o.Out != "{}" })
-	e := funk.Filter(errs, func(o WsMsg) bool { return o.Err != "" && o.Err != "{}" })
-	arr := append(o.([]WsMsg), e.([]WsMsg)...)
-	if j, err := json.Marshal(arr); err == nil {
+func doBroadcast(outs []JobMsg, errs []JobMsg, mountTracker map[string]*MountTracker) {
+	o := funk.Filter(outs, func(o JobMsg) bool { return o.Out != "" && o.Out != "{}" })
+	e := funk.Filter(errs, func(o JobMsg) bool { return o.Err != "" && o.Err != "{}" })
+	arr := append(o.([]JobMsg), e.([]JobMsg)...)
+
+	m := []MountMsg{}
+	for _, mt := range mountTracker {
+		m = append(m, mt.mount)
+
+	}
+
+	msg := map[string]interface{}{"jobs": arr, "mounts": m}
+	if j, err := json.Marshal(msg); err == nil {
 		broadcast <- string(j)
 
 	} else {
@@ -146,17 +154,18 @@ func handleChannels(
 	for {
 		select {
 		case o := <-*outputChan:
-			m := WsMsg{Id: o.Id, Out: o.Msg, Err: "", Time: o.Time}
+			m := JobMsg{Id: o.Id, Out: o.Msg, Err: "", Time: o.Time}
 			outs = handleArray(outs, m)
-			doBroadcast(outs, errs)
+			doBroadcast(outs, errs, mountTracker)
 			break
 		case e := <-*errorChan:
-			m := WsMsg{Id: e.Id, Out: "", Err: e.Msg, Time: e.Time}
+			m := JobMsg{Id: e.Id, Out: "", Err: e.Msg, Time: e.Time}
 			log.Warn(m)
 			errs = handleArray(errs, m)
-			doBroadcast(outs, errs)
+			doBroadcast(outs, errs, mountTracker)
 
 			break
+
 		}
 
 	}
@@ -344,12 +353,16 @@ func RunServer(
 
 			go func(id string) {
 				ctx, cancel := context.WithCancel(context.Background())
-				mountCanceler[data.Path] = &Canceler{Ctx: ctx, Cancel: cancel}
+				mountTracker[data.Path] = &MountTracker{
+					canceler: Canceler{Ctx: ctx, Cancel: cancel},
+					mount:    MountMsg{Id: id, Path: data.Path},
+				}
+				doBroadcast(outs, errs, mountTracker)
 				restic.Exec(
 					*settings.Config.GetRepositoryById(id),
 					[]string{act, FixPath(data.Path)},
 					[]string{},
-					mountCanceler[data.Path],
+					&mountTracker[data.Path].canceler,
 				)
 			}(c.Params("id"))
 
@@ -361,10 +374,13 @@ func RunServer(
 				return c.SendString(err.Error())
 			}
 
-			if canceler, ok := mountCanceler[data.Path]; ok {
+			if tracker, ok := mountTracker[data.Path]; ok {
 				log.Debug("canceling mount", "path", data.Path, "sig", os.Interrupt)
-				canceler.Cancel()
-				canceler.Ctx.Done()
+				delete(mountTracker, data.Path)
+				doBroadcast(outs, errs, mountTracker)
+				tracker.canceler.Cancel()
+				tracker.canceler.Ctx.Done()
+
 			}
 
 			return c.SendString("OK")

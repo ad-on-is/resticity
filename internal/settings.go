@@ -50,7 +50,6 @@ func (s *Settings) freshConfig() Config {
 	c := Config{}
 	c.Repositories = []Repository{}
 	c.Backups = []Backup{}
-	c.Mounts = []Mount{}
 	c.Schedules = []Schedule{}
 	c.AppSettings = AppSettings{
 		Theme: "auto",
