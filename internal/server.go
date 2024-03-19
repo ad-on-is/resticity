@@ -413,13 +413,14 @@ func RunServer(
 				c.SendStatus(500)
 				return c.SendString(err.Error())
 			} else {
+
 				if _, err := restic.Exec(
 					*settings.Config.GetRepositoryById(c.Params("id")),
 					[]string{"restore",
 						c.Params("snapshot_id") + ":" + FixPath(data.RootPath),
 						"--target",
-						FixPath(data.ToPath),
-						"--include", FixPath(data.FromPath)}, []string{},
+						data.ToPath,
+						"--include", FixPath(strings.Replace(data.FromPath, data.RootPath, "", -1))}, []string{},
 				); err != nil {
 					c.SendStatus(500)
 					return c.SendString(err.Error())
