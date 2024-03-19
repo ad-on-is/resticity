@@ -7,9 +7,12 @@
 		</USelectMenu>
 		<UButton v-if="selected.length > 0" icon="i-heroicons-trash" color="orange" variant="outline">Prune snapshots</UButton>
 	</UButtonGroup>
-	<div v-if="loading" class="mt-10">LOADING Snapshots</div>
+	<div v-if="loading">
+		<UProgress animation="carousel" class="mt-5" color="purple" />
+		<p class="text-purple-500 text-center">Loading snapshots</p>
+	</div>
 	<div v-else class="mt-10">
-		<UAccordion :items="snapshotGroups" color="gray" variant="outline">
+		<UAccordion :items="snapshotGroups" color="gray" variant="outline" loading="true">
 			<template #default="{ item, index, open }">
 				<UButton color="gray" variant="ghost" :class="open ? 'bg-gray-950/50' : ''" :ui="{ padding: { sm: 'p-3' } }">
 					<template #leading>
