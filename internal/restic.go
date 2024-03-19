@@ -291,20 +291,23 @@ func (r *Restic) RunSchedule(
 			*toRepository,
 			[]string{"unlock"},
 			[]string{},
-			job,
+			nil,
 			nil,
 		)
-		if err == nil {
-			_, err := r.core(*toRepository, cmds, []string{}, job, nil)
-			if err != nil {
-				log.Error("prune-repository", "err", err)
-				return err
-			}
+		log.Debug("unlocking repository")
+		if err != nil {
+			log.Error("unlocking repository", "err", err)
+			return err
+		}
+		_, err = r.core(*toRepository, cmds, []string{}, job, nil)
+		if err != nil {
+			log.Error("prune-repository", "err", err)
+			return err
 		}
 
 		break
 	}
-
+	(*r.OutputCh) <- ChanMsg{Id: job.Schedule.Id, Msg: "{\"running\": false}", Time: time.Now()}
 	return nil
 
 }
