@@ -3,8 +3,6 @@ package internal
 import (
 	"runtime"
 	"strings"
-
-	"github.com/charmbracelet/log"
 )
 
 func FixPath(path string) string {
@@ -17,6 +15,11 @@ func FixPath(path string) string {
 }
 
 func MaybeToWindowsPath(path string) string {
-	log.Debug(runtime.GOOS)
+	if runtime.GOOS != "windows" {
+		return path
+	}
+	p := strings.Split(path, "/")
+	p[0] = p[0] + ":"
+	path = strings.Join(p, "\\")
 	return path
 }
