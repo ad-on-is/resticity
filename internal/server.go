@@ -420,7 +420,7 @@ func RunServer(
 						c.Params("snapshot_id") + ":" + FixPath(data.RootPath),
 						"--target",
 						data.ToPath,
-						"--include", FixPath(strings.Replace(data.FromPath, data.RootPath, "", -1))}, []string{},
+						"--include", FixPath(strings.Replace(data.FromPath, FixPath(data.RootPath), "", -1))}, []string{},
 				); err != nil {
 					c.SendStatus(500)
 					return c.SendString(err.Error())

@@ -6,7 +6,7 @@ export const useApi = defineStore('useApi', () => {
 	const restoreFromSnapshot = async (repoId: string, snapshotId: string, rootPath: string, fromPath: string, toPath: string) =>
 		(await useHttp.post(
 			`/repositories/${repoId}/snapshots/${snapshotId}/restore`,
-			{ root_path: rootPath, from_path: fromPath.replaceAll(rootPath, ''), to_path: toPath },
+			{ root_path: rootPath, from_path: fromPath, to_path: toPath },
 			{},
 			{ title: 'Restoring', text: 'Successfully restored' }
 		)) ?? []
