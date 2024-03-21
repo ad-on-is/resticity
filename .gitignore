@@ -3,3 +3,5 @@ node_modules
 frontend/dist
 .flatpak-builder
 deploy.sh
+packaging/build-dir
+packaging/.flatpak-builder
