@@ -11,7 +11,10 @@ finish-args:
   - --device=dri # OpenGL rendering support.
   - --talk-name=org.freedesktop.Notifications
   - --filesystem=home
+  - --filesystem=host
+  - --socket=wayland
   - --share=network
+  - --talk-name=org.kde.StatusNotifierWatcher
 
 build-options:
   build-args:
@@ -26,6 +29,7 @@ modules:
   - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
   - ./webkit2.yaml
   - ./restic.yaml
+  - ./rclone.yaml
   - name: resticity
     buildsystem: simple
     build-commands:
