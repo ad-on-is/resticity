@@ -1,0 +1,22 @@
+name: Flathub
+run-name: ${{ github.ref_name }} - Publishing to Flathub
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  flatpak:
+    name: "Flatpak"
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-44
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v4
+    - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        manifest-path: packaging/flatpak/io.github.ad_on_is.Resticity.yml
+        cache-key: flatpak-builder-${{ github.sha }}
+        upload-artifact: true
+    
+        

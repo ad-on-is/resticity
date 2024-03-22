@@ -1,4 +1,4 @@
-id: com.github.Resticity
+id: io.github.ad_on_is.Resticity
 runtime: org.gnome.Platform
 runtime-version: '45'
 sdk: org.gnome.Sdk
@@ -8,11 +8,12 @@ command: resticity
 finish-args:
   - --share=ipc # Share IPC namespace with the host (necessary for X11).
   - --socket=x11
+  - --socket=wayland
+  - --socket=fallback-x11
   - --device=dri # OpenGL rendering support.
   - --talk-name=org.freedesktop.Notifications
   - --filesystem=home
   - --filesystem=host
-  - --socket=wayland
   - --share=network
   - --talk-name=org.kde.StatusNotifierWatcher
 
@@ -27,17 +28,25 @@ build-options:
 
 modules:
   - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+  # - shared-modules/libsoup/libsoup-2.4.json
+  # - ./unifdef.yaml
   - ./webkit2.yaml
-  - ./restic.yaml
-  - ./rclone.yaml
-  - name: resticity
+  # - ./restic.yaml
+  # - ./rclone.yaml
+
+  - name: wails
     buildsystem: simple
     build-commands:
       - $GOROOT/bin/go install github.com/wailsapp/wails/v2/cmd/wails@v2.8.0
-      - PATH=$PATH:$GOROOT/bin $GOBIN/wails build -s
+    
+    
+  - name: resticity
+    buildsystem: simple
+    build-commands:
+      - PATH=$PATH:$GOROOT/bin $GOBIN/wails build -s -webview2 embed
       - install -Dm00755 build/bin/resticity $FLATPAK_DEST/bin/resticity
-      - install -Dm00644 packaging/resticity.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/resticity.png
-      - install -Dm00644 packaging/resticity.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop
+      - install -Dm00644 packaging/$FLATPAK_ID.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/$FLATPAK_ID.png
+      - install -Dm00644 packaging/$FLATPAK_ID.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop
       - install -Dm00644 packaging/flatpak/$FLATPAK_ID.appdata.xml $FLATPAK_DEST/share/appdata/$FLATPAK_ID.appdata.xml
     sources:
       - type: dir
