@@ -1,5 +1,5 @@
 name: Flathub
-run-name: ${{ github.ref_name }} - Publishing to Flathub
+run-name: ${{ github.ref_name }} - Building Flatpak
 on:
   push:
     tags:
@@ -17,6 +17,4 @@ jobs:
       with:
         manifest-path: packaging/flatpak/io.github.ad_on_is.Resticity.yml
         cache-key: flatpak-builder-${{ github.sha }}
-        upload-artifact: true
-    
         
