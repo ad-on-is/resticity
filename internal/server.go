@@ -56,12 +56,12 @@ func runHub() {
 			}
 
 		case connection := <-unregister:
-
+			addr := connection.RemoteAddr().String()
 			delete(clients, connection)
 			log.Debug(
 				"connection unregistered",
 				"addr",
-				connection.RemoteAddr().String(),
+				addr,
 				"clients",
 				len(clients),
 			)
