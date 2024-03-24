@@ -3,7 +3,7 @@ run-name: ${{ github.ref_name }} - Building Flatpak
 on:
   push:
     tags:
-      - "*"
+      - "flatpak"
 jobs:
   flatpak:
     name: "Flatpak"
@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: 'true'
+        submodules: 'recursive'
     - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
       with:
         manifest-path: packaging/flatpak/io.github.ad_on_is.Resticity.yml

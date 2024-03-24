@@ -9,6 +9,7 @@ sources:
         version-pattern: LATEST-STABLE-(\d[\.\d]+\d)
         url-template: https://webkitgtk.org/releases/webkitgtk-$version.tar.xz
 buildsystem: cmake-ninja
+
 config-opts:
   - -DPORT=GTK
   - -DCMAKE_BUILD_TYPE=RelWithDebInfo

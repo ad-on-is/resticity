@@ -4,6 +4,8 @@ runtime-version: '45'
 sdk: org.gnome.Sdk
 
 
+
+
 command: resticity
 finish-args:
   - --share=ipc # Share IPC namespace with the host (necessary for X11).
@@ -27,10 +29,10 @@ build-options:
 
 
 modules:
-  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+  # - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
   # - shared-modules/libsoup/libsoup-2.4.json
   # - ./unifdef.yaml
-  - ./webkit2.yaml
+  # - ./webkit2.yaml
   # - ./restic.yaml
   # - ./rclone.yaml
 
@@ -43,7 +45,8 @@ modules:
   - name: resticity
     buildsystem: simple
     build-commands:
-      - PATH=$PATH:$GOROOT/bin $GOBIN/wails build -s -webview2 embed
+      - install -Dm00755 packaging/flatpak/lib/* $FLATPAK_DEST/lib/
+      - PATH=$PATH:$GOROOT/bin $GOBIN/wails build -s
       - install -Dm00755 build/bin/resticity $FLATPAK_DEST/bin/resticity
       - install -Dm00644 packaging/$FLATPAK_ID.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/$FLATPAK_ID.png
       - install -Dm00644 packaging/$FLATPAK_ID.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop
