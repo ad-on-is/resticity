@@ -43,7 +43,6 @@ modules:
   - name: resticity
     buildsystem: simple
     build-commands:
-      - install -Dm00755 packaging/flatpak/lib/* $FLATPAK_DEST/lib/
       - PATH=$PATH:$GOROOT/bin $GOBIN/wails build -s
       - install -Dm00755 build/bin/resticity $FLATPAK_DEST/bin/resticity
       - install -Dm00644 packaging/$FLATPAK_ID.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/$FLATPAK_ID.png
