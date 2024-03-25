@@ -29,12 +29,10 @@ build-options:
 
 
 modules:
-  # - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
-  # - shared-modules/libsoup/libsoup-2.4.json
-  # - ./unifdef.yaml
-  # - ./webkit2.yaml
-  # - ./restic.yaml
-  # - ./rclone.yaml
+  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+  - ./webkit2.yaml
+  - ./restic.yaml
+  - ./rclone.yaml
 
   - name: wails
     buildsystem: simple
