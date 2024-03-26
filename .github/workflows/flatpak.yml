@@ -26,4 +26,13 @@ jobs:
       with:
         manifest-path: packaging/flatpak/io.github.ad_on_is.Resticity.yml
         cache-key: flatpak-builder-${{ github.sha }}
+        bundle: Resticity.flatpak
+    - name: "Upload artifact"
+      uses: actions/upload-artifact@v2
+      with:
+        name: Resticity.flatpak
+        path: Resticity.flatpak
+
+
+
         

@@ -30,9 +30,8 @@ build-options:
 
 modules:
   # - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
-  # - ./restic.yaml
-  # - ./rclone.yaml
-
+  - ./restic.yaml
+  - ./rclone.yaml
   - name: golang
     buildsystem: simple
     build-commands:
