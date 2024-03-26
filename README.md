@@ -15,6 +15,7 @@
 ![release](https://github.com/ad-on-is/resticity/actions/workflows/build.yml/badge.svg?branch=)
 ![aur](https://github.com/ad-on-is/resticity/actions/workflows/aur.yml/badge.svg?branch=)
 ![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg?branch=)
+![flatpak](https://github.com/ad-on-is/resticity/actions/workflows/flatpak.yml/badge.svg?branch=)
 [![Version](https://img.shields.io/github/release/ad-on-is/resticity.svg?style=flat)]()
 [![GitHub stars](https://img.shields.io/github/stars/ad-on-is/resticity.svg?style=social&label=Star)](https://github.com/JonSnow/MyBadges)
 [![GitHub watchers](https://img.shields.io/github/watchers/ad-on-is/resticity.svg?style=social&label=Watch)](https://github.com/JonSnow/MyBadges)

@@ -1,4 +1,4 @@
-name: Flathub
+name: Flatpak
 run-name: ${{ github.ref_name }} - Building Flatpak
 on:
   push:
