@@ -20,8 +20,8 @@ finish-args:
   - --talk-name=org.kde.StatusNotifierWatcher
 
 build-options:
-  # build-args:
-  #   - --share=network
+  build-args:
+    - --share=network
   env:
     - GOROOT=/app/sdk/golang
     - GOBIN=/app/go/bin
@@ -55,17 +55,6 @@ modules:
     buildsystem: simple
     build-commands:
       - $GOROOT/bin/go install github.com/wailsapp/wails/v2/cmd/wails@v2.8.0
-
-  # - name: wails
-  #   buildsystem: simple
-  #   build-commands:
-  #     - cd v2 && $GOROOT/bin/go install
-  #   sources:
-  #     - type: archive
-  #       url: https://github.com/wailsapp/wails/archive/refs/tags/v2.8.0.zip
-  #       sha256: e9e8faf7c2432caa124aeed1cb21ad2349335fbaf418971c7622b215c11f1c25
-    
-    
   - name: resticity
     buildsystem: simple
     build-commands:
