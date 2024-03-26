@@ -58,7 +58,7 @@ modules:
   - name: resticity
     buildsystem: simple
     build-commands:
-      - PATH=$PATH:$GOROOT/bin:$NODEROOT/bin $GOBIN/wails build -ldflags="-X main.Version=1.0.44 -X main.Build=$(date +%FT%T%z)"
+      - PATH=$PATH:$GOROOT/bin:$NODEROOT/bin $GOBIN/wails build -ldflags="-X main.Version=1.0.45 -X main.Build=$(date +%FT%T%z)"
       - install -Dm00755 build/bin/resticity $FLATPAK_DEST/bin/resticity
       - install -Dm00644 packaging/$FLATPAK_ID.png $FLATPAK_DEST/share/icons/hicolor/256x256/apps/$FLATPAK_ID.png
       - install -Dm00644 packaging/$FLATPAK_ID.desktop $FLATPAK_DEST/share/applications/$FLATPAK_ID.desktop

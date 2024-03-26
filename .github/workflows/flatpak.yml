@@ -32,7 +32,7 @@ jobs:
       with:
         files: | 
           Resticity.flatpak
-          /__w/resticity/resticity/flatpak_app/files/bin/go/bin/wails
+          /__w/resticity/resticity/flatpak_app/files/bin/resticity
 
 
         

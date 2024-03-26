@@ -42,12 +42,7 @@
   <content_rating type="oars-1.1" />
 
   <releases>
-    <release version="1.0.0" date="2024-03-10" type="stable">
-      <description>
-        <p>Initial release</p>
-      </description>
-      <url type="details">https://github.com/ad-on-is/resticity/releases/tag/1.0.0</url>
-    </release>
+    <release version="1.0.44" date="2024-03-10" type="stable"></release>
   </releases>
 
 </component>
