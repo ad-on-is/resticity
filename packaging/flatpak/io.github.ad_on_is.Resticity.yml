@@ -1,6 +1,6 @@
 id: io.github.ad_on_is.Resticity
 runtime: org.gnome.Platform
-runtime-version: '45'
+runtime-version: '3.38'
 sdk: org.gnome.Sdk
 
 
@@ -23,16 +23,25 @@ build-options:
   build-args:
     - --share=network
   env:
-    - GOROOT=/usr/lib/sdk/golang
+    - GOROOT=/app/sdk/golang
     - GOBIN=/app/go/bin
     - CGO_ENABLED=0
 
 
 modules:
-  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
-  - ./webkit2.yaml
-  - ./restic.yaml
-  - ./rclone.yaml
+  # - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+  # - ./restic.yaml
+  # - ./rclone.yaml
+
+  - name: golang
+    buildsystem: simple
+    build-commands:
+      - mkdir -p $GOROOT
+      - mv $(pwd)/* $GOROOT
+    sources:
+      - type: archive
+        url: https://go.dev/dl/go1.22.1.linux-amd64.tar.gz
+        sha256: aab8e15785c997ae20f9c88422ee35d962c4562212bb0f879d052a35c8307c7f
 
   - name: wails
     buildsystem: simple
