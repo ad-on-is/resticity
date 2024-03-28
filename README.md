@@ -113,7 +113,7 @@ paru -S resticity
 
 ### Windows
 
-- install [restic](https://restic.readthedocs.io/en/latest/020_installation.html#windows) on your system
+- install [restic](https://restic.readthedocs.io/en/latest/020_installation.html#windows) and [rclone](https://rclone.org/downloads/) on your system
 - Download the Resticity binary for Windows from the latest [release](https://github.com/ad-on-is/resticity/releases)
 
 ## Build yourself
@@ -140,7 +140,6 @@ $ ./build/bin/resticity
 ## TODOs
 
 - [ ] Packaging for different platforms
-- [ ] CI/CD and versioning
 
 ---
 
