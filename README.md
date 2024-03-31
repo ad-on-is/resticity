@@ -71,7 +71,7 @@ $ resticity --config /path/to/config.json
 ```bash
 # Run within Docker
 # Add the paths that you want resticity to grant access to
-$ docker run -d --name resticity -h myHostname -p 11278:11278 -v /path/to/config.json:/config.json -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity
+$ docker run -d --name resticity -h myHostnameChangeMe -p 11278:11278 -v /path/to/config.json:/config.json -v /mnt:/mnt -v /home:/home ghcr.io/ad-on-is/resticity
 ```
 
 #### Docker compose
@@ -82,13 +82,13 @@ services:
   reseticity:
   image: ghcr.io/ad-on-is/resticity
   container_name: resticity
-  hostname: myHostname
+  hostname: myHostnameChangeMe
   ports:
     - 11278:11278
   volumes:
     - /mnt:/mnt # Add the paths that you want resticity to grant access to
     - /home:/home
-    - /path/to/config.json:/config.json
+    - /path/to/config.json:/config.json # changeMe
 ```
 
 ## Configuration
