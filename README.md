@@ -21,7 +21,7 @@
 [![GitHub watchers](https://img.shields.io/github/watchers/ad-on-is/resticity.svg?style=social&label=Watch)](https://github.com/JonSnow/MyBadges)
 [![GitHub forks](https://img.shields.io/github/forks/ad-on-is/resticity.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)
 
-> [!IMPORTANT]  
+> [!CAUTION]  
 > I'm still working on the Windows and macOS version. They're not ready yet.
 
 ## Key Features
@@ -65,7 +65,7 @@ $ resticity --config /path/to/config.json
 
 ### Docker
 
-> [!Attention]  
+> [!NOTE]  
 > Make sure to set the hostname for the container since it gets changed after each restart.
 
 ```bash
