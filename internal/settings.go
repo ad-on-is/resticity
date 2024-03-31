@@ -15,6 +15,15 @@ import (
 func NewSettings(flagFile string) *Settings {
 	s := &Settings{}
 	s.file = flagFile
+
+	cd, err := os.Getwd()
+	if err == nil {
+		relative := filepath.Join(cd, "config.json")
+		if _, err := os.Stat(relative); err == nil {
+			s.file = relative
+		}
+	}
+
 	if s.file == "" {
 		s.file = os.Getenv("RESTICITY_SETTINGS_FILE")
 	}

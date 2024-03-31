@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -139,7 +140,31 @@ func (r *Restic) core(
 	var c *exec.Cmd
 
 	resticCmd, err := exec.LookPath("restic")
-	if err != nil {
+	isRealtive := false
+	cd, err2 := os.Getwd()
+	if err2 == nil {
+		relative := filepath.Join(cd, "restic")
+		relativeWin := filepath.Join(cd, "restic.exe")
+
+		if _, err := os.Stat(relative); err == nil {
+			isRealtive = true
+			resticCmd = relative
+			cmds = append(
+				[]string{"-o", "rclone.program=" + filepath.Join(cd, "rclone")},
+				cmd...)
+		}
+
+		if _, err := os.Stat(relativeWin); err == nil {
+			isRealtive = true
+			resticCmd = relativeWin
+			cmds = append(
+				[]string{"-o", "rclone.program=" + filepath.Join(cd, "rclone.exe")},
+				cmd...)
+		}
+
+	}
+
+	if err != nil && !isRealtive {
 		(*r.ErrorCh) <- ChanMsg{Id: "", Msg: "restic not found", Time: time.Now()}
 		log.Error("restic not found", "err", err)
 		return "", err
