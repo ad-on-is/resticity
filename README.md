@@ -17,9 +17,9 @@
 ![container](https://github.com/ad-on-is/resticity/actions/workflows/container.yml/badge.svg?branch=)
 ![flatpak](https://github.com/ad-on-is/resticity/actions/workflows/flatpak.yml/badge.svg?branch=)
 [![Version](https://img.shields.io/github/release/ad-on-is/resticity.svg?style=flat)]()
-[![GitHub stars](https://img.shields.io/github/stars/ad-on-is/resticity.svg?style=social&label=Star)](https://github.com/JonSnow/MyBadges)
-[![GitHub watchers](https://img.shields.io/github/watchers/ad-on-is/resticity.svg?style=social&label=Watch)](https://github.com/JonSnow/MyBadges)
-[![GitHub forks](https://img.shields.io/github/forks/ad-on-is/resticity.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)
+[![GitHub stars](https://img.shields.io/github/stars/ad-on-is/resticity.svg?style=social&label=Star)]()
+[![GitHub watchers](https://img.shields.io/github/watchers/ad-on-is/resticity.svg?style=social&label=Watch)]()
+[![GitHub forks](https://img.shields.io/github/forks/ad-on-is/resticity.svg?style=social&label=Fork)]()
 
 > [!CAUTION]  
 > I'm still working on the Windows and macOS version. They're not ready yet.
